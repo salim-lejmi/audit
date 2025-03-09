@@ -1,15 +1,15 @@
-﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using server.Data;
 using server.Models;
-using System.Security.Cryptography;
+using System.Threading.Tasks;
+using BCrypt.Net;
 
 namespace server.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : Controller
+    [Route("api/auth")]
+    public class AuthController : ControllerBase
     {
         private readonly AuditDbContext _context;
 
@@ -18,126 +18,161 @@ namespace server.Controllers
             _context = context;
         }
 
-        public IActionResult Login()
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            return View();
-        }
-
-        public IActionResult Signup()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Signup(string companyName, string managerName,
-            string email, string phone, string industry, string password, string confirmPassword)
-        {
-            if (!ModelState.IsValid)
-                return View();
-
-            if (password != confirmPassword)
+            // Validate request
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             {
-                ModelState.AddModelError("", "Passwords do not match");
-                return View();
+                return BadRequest(new { message = "Email and password are required" });
             }
 
-            // Check if company exists
-            if (await _context.Companies.AnyAsync(c => c.CompanyName == companyName))
-            {
-                ModelState.AddModelError("", "Company name already exists");
-                return View();
-            }
-
-            // Check if email exists
-            if (await _context.Users.AnyAsync(u => u.Email == email))
-            {
-                ModelState.AddModelError("", "Email already exists");
-                return View();
-            }
-
-            // Create company
-            var company = new Company
-            {
-                CompanyName = companyName,
-                Industry = industry,
-                Status = "Pending"
-            };
-
-            _context.Companies.Add(company);
-            await _context.SaveChangesAsync();
-
-            // Hash password
-            var salt = RandomNumberGenerator.GetBytes(128 / 8);
-            var hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: password,
-                salt: salt,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
-                numBytesRequested: 256 / 8));
-
-            // Create subscription manager
-            var user = new User
-            {
-                CompanyId = company.CompanyId,
-                Name = managerName,
-                Email = email,
-                PhoneNumber = phone,
-                PasswordHash = hashedPassword,
-                Role = "SubscriptionManager"
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = "Signup successful. Awaiting admin approval.";
-            return RedirectToAction("Login");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Login(string email, string password)
-        {
+            // Find user by email
             var user = await _context.Users
                 .Include(u => u.Company)
-                .FirstOrDefaultAsync(u => u.Email == email);
+                .FirstOrDefaultAsync(u => u.Email == request.Email);
 
             if (user == null)
             {
-                ModelState.AddModelError("", "Invalid credentials");
-                return View();
+                return Unauthorized(new { message = "Invalid email or password" });
             }
 
             // Verify password
-            var hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: password,
-                salt: Convert.FromBase64String(user.PasswordHash.Split('.')[0]),
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
-                numBytesRequested: 256 / 8));
-
-            if (hashedPassword != user.PasswordHash.Split('.')[1])
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
-                ModelState.AddModelError("", "Invalid credentials");
-                return View();
+                return Unauthorized(new { message = "Invalid email or password" });
             }
 
-            // Set session
+            // Check if user is part of a company and if company is approved (except for SuperAdmin)
+            if (user.Role != "SuperAdmin" && (user.Company == null || user.Company.Status != "Approved"))
+            {
+                return Unauthorized(new { message = "Your account is pending approval" });
+            }
+
+            // Store user info in session
             HttpContext.Session.SetInt32("UserId", user.UserId);
             HttpContext.Session.SetString("UserRole", user.Role);
-            HttpContext.Session.SetString("UserName", user.Name);
 
             if (user.CompanyId.HasValue)
             {
                 HttpContext.Session.SetInt32("CompanyId", user.CompanyId.Value);
-                HttpContext.Session.SetString("CompanyName", user.Company.CompanyName);
             }
 
-            return RedirectToAction("Index", "Home");
+            // Return user info
+            return Ok(new
+            {
+                userId = user.UserId,
+                name = user.Name,
+                email = user.Email,
+                role = user.Role,
+                companyId = user.CompanyId,
+                companyName = user.Company?.CompanyName
+            });
         }
 
+        [HttpPost("signup")]
+        public async Task<IActionResult> Signup([FromBody] SignupRequest request)
+        {
+            // Validate request
+            if (string.IsNullOrEmpty(request.CompanyName) ||
+                string.IsNullOrEmpty(request.ManagerName) ||
+                string.IsNullOrEmpty(request.Email) ||
+                string.IsNullOrEmpty(request.Password) ||
+                string.IsNullOrEmpty(request.Industry))
+            {
+                return BadRequest(new { message = "All fields are required except phone number" });
+            }
+
+            // Check if email is already registered
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            {
+                return BadRequest(new { message = "Email is already registered" });
+            }
+
+            // Create transaction
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Create company
+                var company = new Company
+                {
+                    CompanyName = request.CompanyName,
+                    Industry = request.Industry,
+                    Status = "Pending",
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Companies.Add(company);
+                await _context.SaveChangesAsync();
+
+                // Create subscription manager user
+                var user = new User
+                {
+                    CompanyId = company.CompanyId,
+                    Name = request.ManagerName,
+                    Email = request.Email,
+                    PhoneNumber = request.PhoneNumber ?? "",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                    Role = "SubscriptionManager",
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Signup successful. Your account is pending approval." });
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "An error occurred while processing your request" });
+            }
+        }
+
+        [HttpGet("verify")]
+        public IActionResult VerifyAuth()
+        {
+            // Check if user is authenticated
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var userRole = HttpContext.Session.GetString("UserRole");
+
+            if (!userId.HasValue || string.IsNullOrEmpty(userRole))
+            {
+                return Unauthorized(new { message = "Not authenticated" });
+            }
+
+            return Ok(new
+            {
+                userId = userId.Value,
+                role = userRole
+            });
+        }
+
+        [HttpPost("logout")]
         public IActionResult Logout()
         {
+            // Clear session
             HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            return Ok(new { message = "Logged out successfully" });
         }
+    }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class SignupRequest
+    {
+        public string CompanyName { get; set; }
+        public string ManagerName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Industry { get; set; }
+        public string Password { get; set; }
     }
 }

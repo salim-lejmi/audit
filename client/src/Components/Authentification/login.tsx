@@ -1,8 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../../styles/login.css';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from 'axios';
 
 const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const response = await axios.post('/api/auth/login', {
+        email,
+        password
+      });
+      
+      // Handle successful login based on role
+      const { role } = response.data;
+      
+      if (role === 'SuperAdmin') {
+        navigate('/admin/dashboard');
+      } else if (role === 'SubscriptionManager') {
+        navigate('/company/dashboard');
+      } else {
+        navigate('/user/dashboard');
+      }
+      
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Login failed. Please check your credentials.');
+      } else {
+        setError('Unable to connect to the server. Please try again later.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <section className="login-section">
       <div className="login-container">
@@ -15,8 +61,10 @@ const Login: React.FC = () => {
             </div>
 
             <div className="form-wrapper">
-              <form className="login-form">
+              <form className="login-form" onSubmit={handleLogin}>
                 <h3 className="login-title">Log in</h3>
+                
+                {error && <div className="error-message">{error}</div>}
 
                 <div className="form-group">
                   <input
@@ -24,6 +72,9 @@ const Login: React.FC = () => {
                     id="form2Example18"
                     className="form-input"
                     placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </div>
 
@@ -33,12 +84,19 @@ const Login: React.FC = () => {
                     id="form2Example28"
                     className="form-input"
                     placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                 </div>
 
                 <div className="form-group">
-                  <button type="button" className="login-button">
-                    Login
+                  <button 
+                    type="submit" 
+                    className="login-button" 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Logging in...' : 'Login'}
                   </button>
                 </div>
 
