@@ -1,0 +1,174 @@
+/* Dashboard Layout */
+.subscription-dashboard {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding: 2rem;
+  }
+  
+  .dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .dashboard-header {
+    margin-bottom: 2rem;
+  }
+  
+  .dashboard-title h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+  
+  .text-muted {
+    color: #6c757d;
+    font-size: 1rem;
+  }
+  
+  /* Company Overview Card */
+  .overview-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  
+  .overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .card-header h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #212529;
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .info-item {
+    margin-bottom: 1rem;
+  }
+  
+  .info-label {
+    font-weight: 600;
+    color: #495057;
+    margin-right: 0.5rem;
+  }
+  
+  /* Quick Actions */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.2s, background-color 0.2s;
+    font-weight: 500;
+  }
+  
+  .action-button i {
+    margin-right: 0.5rem;
+  }
+  
+  .action-button.primary {
+    border: 1px solid #007bff;
+    color: #007bff;
+  }
+  
+  .action-button.primary:hover {
+    background-color: #f0f7ff;
+    transform: translateY(-3px);
+  }
+  
+  .action-button.info {
+    border: 1px solid #17a2b8;
+    color: #17a2b8;
+  }
+  
+  .action-button.info:hover {
+    background-color: #f0fcff;
+    transform: translateY(-3px);
+  }
+  
+  .action-button.danger {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+  }
+  
+  .action-button.danger:hover {
+    background-color: #fff5f5;
+    transform: translateY(-3px);
+  }
+  
+  /* Status Badge */
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .status-badge.approved {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .status-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  /* Loading and Error States */
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    font-size: 1.1rem;
+    color: #6c757d;
+  }
+  
+  .error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .subscription-dashboard {
+      padding: 1rem;
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .actions-grid {
+      grid-template-columns: 1fr;
+    }
+  }
