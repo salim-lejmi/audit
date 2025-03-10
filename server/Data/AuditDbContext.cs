@@ -12,6 +12,9 @@ namespace server.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Company> Companies { get; set; }
+        private static readonly DateTime SeedCreatedAt = new DateTime(2025, 3, 10, 1, 2, 0, DateTimeKind.Utc);
+        // Pre-computed hash for "admin123"
+        private const string AdminPasswordHash = "$2b$12$ovPPLXG.u1usgak7T7fnAeJEZjgdCOJ4GgIEpL1bM9QAbdUXNDib2";
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,11 +31,11 @@ namespace server.Data
                 {
                     UserId = 1,
                     Name = "Super Admin",
-                    Email = "admin@example.com",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"), // Hashed password
+                    Email = "admin@gmail.com",
+                    PasswordHash = AdminPasswordHash,  // Use the pre-computed hash
                     Role = "SuperAdmin",
-                    PhoneNumber = "",
-                    CreatedAt = DateTime.Now
+                    PhoneNumber = "99999999",
+                    CreatedAt = SeedCreatedAt
                 }
             );
         }
