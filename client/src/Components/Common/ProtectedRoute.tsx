@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Navbar from '../shared/navbar';
 
 interface ProtectedRouteProps {
   role: string;
@@ -41,7 +42,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ role }) => {
     return <Navigate to="/" replace />;
   }
   
-  return <Outlet />;
+  return (
+    <>
+      <Navbar userRole={userRole} />
+      <main className="content">
+        <Outlet />
+      </main>
+    </>
+  );
 };
 
 export default ProtectedRoute;

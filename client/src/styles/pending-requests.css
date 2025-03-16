@@ -1,213 +1,243 @@
 /* Pending Requests Styles */
 .pending-section {
-    min-height: 100vh;
-    background-color: #f8f9fa;
-    padding: 2rem;
-  }
-  
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: clamp(1rem, 2vw, 2rem);
+}
+
+.pending-container {
+  max-width: clamp(1000px, 90%, 1200px);
+  margin: 0 auto;
+}
+
+.pending-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(1.5rem, 2vw, 2rem);
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 1vw, 1rem);
+}
+
+.header-title h2 {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.subtitle {
+  color: #6c757d;
+  font-size: clamp(0.875rem, 1vw, 1rem);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.5rem, 0.625vw, 0.625rem) clamp(1rem, 1.25vw, 1.25rem);
+  background-color: transparent;
+  border: 1px solid #007bff;
+  border-radius: 5px;
+  color: #007bff;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+  font-size: clamp(0.875rem, 0.9vw, 0.9rem);
+}
+
+.back-button:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Success and Error Messages */
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: clamp(0.875rem, 1vw, 1rem);
+  border-radius: 8px;
+  margin-bottom: clamp(1.25rem, 1.5vw, 1.5rem);
+  font-size: clamp(0.875rem, 0.9vw, 0.9rem);
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: clamp(0.875rem, 1vw, 1rem);
+  border-radius: 8px;
+  margin-bottom: clamp(1.25rem, 1.5vw, 1.5rem);
+  font-size: clamp(0.875rem, 0.9vw, 0.9rem);
+}
+
+.info-message {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  padding: clamp(0.875rem, 1vw, 1rem);
+  border-radius: 8px;
+  margin-bottom: clamp(1.25rem, 1.5vw, 1.5rem);
+  font-size: clamp(0.875rem, 0.9vw, 0.9rem);
+}
+
+/* Table Card */
+.table-card {
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.requests-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.requests-table th {
+  background-color: #f8f9fa;
+  padding: clamp(0.875rem, 1vw, 1rem) clamp(1.25rem, 1.5vw, 1.5rem);
+  text-align: left;
+  color: #495057;
+  font-weight: 600;
+  border-bottom: 1px solid #e9ecef;
+  font-size: clamp(0.875rem, 0.9vw, 0.9rem);
+}
+
+.requests-table td {
+  padding: clamp(0.875rem, 1vw, 1rem) clamp(1.25rem, 1.5vw, 1.5rem);
+  border-bottom: 1px solid #e9ecef;
+  color: #212529;
+  font-size: clamp(0.85rem, 0.875vw, 0.875rem);
+}
+
+.requests-table tr:last-child td {
+  border-bottom: none;
+}
+
+.requests-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.company-name {
+  font-weight: 600;
+}
+
+.phone-number {
+  display: block;
+  color: #6c757d;
+  margin-top: 0.25rem;
+  font-size: clamp(0.8rem, 0.825vw, 0.825rem);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.approve-button,
+.reject-button {
+  padding: clamp(0.3rem, 0.375vw, 0.375rem) clamp(0.65rem, 0.75vw, 0.75rem);
+  border: none;
+  border-radius: 4px;
+  font-size: clamp(0.825rem, 0.875vw, 0.875rem);
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.approve-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.approve-button:hover {
+  background-color: #218838;
+}
+
+.reject-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.reject-button:hover {
+  background-color: #c82333;
+}
+
+.approve-button:disabled,
+.reject-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: clamp(250px, 30vh, 300px);
+  font-size: clamp(1rem, 1.1vw, 1.1rem);
+  color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1366px) {
   .pending-container {
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 95%;
   }
   
+  .requests-table th,
+  .requests-table td {
+    padding: 0.875rem 1.25rem;
+  }
+}
+
+@media (max-width: 992px) {
   .pending-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  
-  .header-title h2 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    color: #333;
-  }
-  
-  .subtitle {
-    color: #6c757d;
-    font-size: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
   }
   
   .header-actions {
-    display: flex;
-    align-items: center;
+    margin-top: 1rem;
+  }
+  
+  .pending-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .pending-section {
+    padding: 1rem;
+  }
+  
+  .requests-table th,
+  .requests-table td {
+    padding: 0.75rem;
   }
   
   .back-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background-color: transparent;
-    border: 1px solid #007bff;
-    border-radius: 5px;
-    color: #007bff;
-    text-decoration: none;
-    transition: background-color 0.2s, color 0.2s;
+    padding: 0.5rem 1rem;
   }
-  
-  .back-button:hover {
-    background-color: #007bff;
-    color: white;
-  }
-  
-  /* Success and Error Messages */
-  .success-message {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-  }
-  
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-  }
-  
-  .info-message {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-  }
-  
-  /* Table Card */
-  .table-card {
-    background-color: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-  
-  .table-responsive {
-    overflow-x: auto;
-  }
-  
-  .requests-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .requests-table th {
-    background-color: #f8f9fa;
-    padding: 1rem 1.5rem;
-    text-align: left;
-    color: #495057;
-    font-weight: 600;
-    border-bottom: 1px solid #e9ecef;
-  }
-  
-  .requests-table td {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e9ecef;
-    color: #212529;
-  }
-  
-  .requests-table tr:last-child td {
-    border-bottom: none;
-  }
-  
-  .requests-table tr:hover {
-    background-color: #f8f9fa;
-  }
-  
-  .company-name {
-    font-weight: 600;
-  }
-  
-  .phone-number {
-    display: block;
-    color: #6c757d;
-    margin-top: 0.25rem;
-  }
-  
+}
+
+@media (max-width: 576px) {
   .actions-cell {
-    display: flex;
+    flex-direction: column;
     gap: 0.5rem;
   }
   
   .approve-button,
   .reject-button {
-    padding: 0.375rem 0.75rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: background-color 0.2s, opacity 0.2s;
+    width: 100%;
   }
   
-  .approve-button {
-    background-color: #28a745;
-    color: white;
+  .header-title h2 {
+    font-size: 1.5rem;
   }
-  
-  .approve-button:hover {
-    background-color: #218838;
-  }
-  
-  .reject-button {
-    background-color: #dc3545;
-    color: white;
-  }
-  
-  .reject-button:hover {
-    background-color: #c82333;
-  }
-  
-  .approve-button:disabled,
-  .reject-button:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-  }
-  
-  /* Loading Container */
-  .loading-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 300px;
-    font-size: 1.1rem;
-    color: #6c757d;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 992px) {
-    .pending-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .header-actions {
-      margin-top: 1rem;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .pending-section {
-      padding: 1rem;
-    }
-    
-    .requests-table th,
-    .requests-table td {
-      padding: 0.75rem;
-    }
-  }
-  
-  @media (max-width: 576px) {
-    .actions-cell {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    
-    .approve-button,
-    .reject-button {
-      width: 100%;
-    }
-  }
+}

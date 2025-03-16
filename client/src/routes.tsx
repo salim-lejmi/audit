@@ -5,6 +5,7 @@ import SuperAdminDashboard from './Components/Admin/SuperAdminDashboard';
 import PendingRequests from './Components/Admin/PendingRequests';
 import SubscriptionManagerDashboard from './Components/Company/SubscriptionManagerDashboard';
 import ProtectedRoute from './Components/Common/ProtectedRoute';
+import Navbar from './Components/Shared/navbar';
 
 const AppRoutes = () => {
   return (
