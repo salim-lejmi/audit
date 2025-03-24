@@ -918,7 +918,6 @@ C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\staticwebassets\msbuild.b
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.server.props
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.server.props
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\staticwebassets.pack.json
-C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.csproj.Up2Date
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.dll
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\refint\server.dll

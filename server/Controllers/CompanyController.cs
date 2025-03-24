@@ -88,5 +88,239 @@ namespace server.Controllers
 
             return Ok(users);
         }
+
+        [HttpPost("users")]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+        {
+            // Check if user is a SubscriptionManager
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SubscriptionManager")
+            {
+                return Forbid();
+            }
+
+            // Get companyId from session
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            if (!companyId.HasValue)
+            {
+                return BadRequest(new { message = "Invalid company ID" });
+            }
+
+            // Validate request
+            if (string.IsNullOrEmpty(request.Name) ||
+                string.IsNullOrEmpty(request.Email) ||
+                string.IsNullOrEmpty(request.Password) ||
+                string.IsNullOrEmpty(request.Role))
+            {
+                return BadRequest(new { message = "All fields are required" });
+            }
+
+            // Check if email is already registered
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            {
+                return BadRequest(new { message = "Email is already registered" });
+            }
+
+            // Check if role is valid
+            var validRoles = new[] { "User", "Auditor", "Manager" };
+            if (!validRoles.Contains(request.Role))
+            {
+                return BadRequest(new { message = "Invalid role" });
+            }
+
+            // Create user
+            var user = new User
+            {
+                CompanyId = companyId.Value,
+                Name = request.Name,
+                Email = request.Email,
+                PhoneNumber = request.PhoneNumber ?? "",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                Role = request.Role,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                userId = user.UserId,
+                name = user.Name,
+                email = user.Email,
+                phoneNumber = user.PhoneNumber,
+                role = user.Role,
+                createdAt = user.CreatedAt
+            });
+        }
+
+        [HttpPut("users/{userId}")]
+        public async Task<IActionResult> UpdateUser(int userId, [FromBody] UpdateUserRequest request)
+        {
+            // Check if user is a SubscriptionManager
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SubscriptionManager")
+            {
+                return Forbid();
+            }
+
+            // Get companyId from session
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            if (!companyId.HasValue)
+            {
+                return BadRequest(new { message = "Invalid company ID" });
+            }
+
+            // Find user
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.CompanyId == companyId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Check if trying to update the SubscriptionManager role
+            if (user.Role == "SubscriptionManager" && request.Role != "SubscriptionManager")
+            {
+                return BadRequest(new { message = "Cannot change the role of the Subscription Manager" });
+            }
+
+            // Check if role is valid
+            if (!string.IsNullOrEmpty(request.Role))
+            {
+                var validRoles = new[] { "User", "Auditor", "Manager", "SubscriptionManager" };
+                if (!validRoles.Contains(request.Role))
+                {
+                    return BadRequest(new { message = "Invalid role" });
+                }
+                user.Role = request.Role;
+            }
+
+            // Update user
+            if (!string.IsNullOrEmpty(request.Name))
+                user.Name = request.Name;
+
+            if (!string.IsNullOrEmpty(request.Email))
+                user.Email = request.Email;
+
+            if (!string.IsNullOrEmpty(request.PhoneNumber))
+                user.PhoneNumber = request.PhoneNumber;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                userId = user.UserId,
+                name = user.Name,
+                email = user.Email,
+                phoneNumber = user.PhoneNumber,
+                role = user.Role,
+                createdAt = user.CreatedAt
+            });
+        }
+
+        [HttpDelete("users/{userId}")]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            // Check if user is a SubscriptionManager
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SubscriptionManager")
+            {
+                return Forbid();
+            }
+
+            // Get companyId from session
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            if (!companyId.HasValue)
+            {
+                return BadRequest(new { message = "Invalid company ID" });
+            }
+
+            // Find user
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.CompanyId == companyId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Prevent deleting the SubscriptionManager
+            if (user.Role == "SubscriptionManager")
+            {
+                return BadRequest(new { message = "Cannot delete the Subscription Manager" });
+            }
+
+            // Delete user
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User deleted successfully" });
+        }
+
+        [HttpPut("users/{userId}/role")]
+        public async Task<IActionResult> UpdateUserRole(int userId, [FromBody] UpdateRoleRequest request)
+        {
+            // Check if user is a SubscriptionManager
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SubscriptionManager")
+            {
+                return Forbid();
+            }
+
+            // Get companyId from session
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            if (!companyId.HasValue)
+            {
+                return BadRequest(new { message = "Invalid company ID" });
+            }
+
+            // Find user
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.CompanyId == companyId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Prevent changing the role of the SubscriptionManager
+            if (user.Role == "SubscriptionManager")
+            {
+                return BadRequest(new { message = "Cannot change the role of the Subscription Manager" });
+            }
+
+            // Check if role is valid
+            var validRoles = new[] { "User", "Auditor", "Manager" };
+            if (!validRoles.Contains(request.Role))
+            {
+                return BadRequest(new { message = "Invalid role" });
+            }
+
+            // Update role
+            user.Role = request.Role;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User role updated successfully" });
+        }
+
+        public class CreateUserRequest
+        {
+            public string Name { get; set; }
+            public string Email { get; set; }
+            public string PhoneNumber { get; set; }
+            public string Password { get; set; }
+            public string Role { get; set; }
+        }
+
+        public class UpdateUserRequest
+        {
+            public string Name { get; set; }
+            public string Email { get; set; }
+            public string PhoneNumber { get; set; }
+            public string Role { get; set; }
+        }
+
+        public class UpdateRoleRequest
+        {
+            public string Role { get; set; }
+        }
+
     }
+
 }

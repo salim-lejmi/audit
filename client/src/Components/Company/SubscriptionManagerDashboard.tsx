@@ -97,6 +97,10 @@ const SubscriptionManagerDashboard: React.FC = () => {
                 <i className="fas fa-users"></i>
                 Manage Users
               </Link>
+              <Link to="/company/roles" className="action-button success">
+                <i className="fas fa-user-tag"></i>
+                Manage Roles
+              </Link>
               <Link to="/company/settings" className="action-button info">
                 <i className="fas fa-cog"></i>
                 Company Settings

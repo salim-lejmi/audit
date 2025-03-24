@@ -129,5 +129,182 @@ namespace server.Controllers
 
             return Ok(new { message = "Company rejected successfully" });
         }
+
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            // Check if user is a SuperAdmin
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            // Get all users with company information
+            var users = await _context.Users
+                .Join(_context.Companies,
+                    user => user.CompanyId,
+                    company => company.CompanyId,
+                    (user, company) => new
+                    {
+                        userId = user.UserId,
+                        name = user.Name,
+                        email = user.Email,
+                        phoneNumber = user.PhoneNumber,
+                        role = user.Role,
+                        companyId = company.CompanyId,
+                        companyName = company.CompanyName,
+                        createdAt = user.CreatedAt
+                    })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+        [HttpGet("companies")]
+        public async Task<IActionResult> GetAllCompanies()
+        {
+            // Check if user is a SuperAdmin
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            // Get all approved companies
+            var companies = await _context.Companies
+                .Where(c => c.Status == "Approved")
+                .Select(c => new
+                {
+                    companyId = c.CompanyId,
+                    companyName = c.CompanyName
+                })
+                .ToListAsync();
+
+            return Ok(companies);
+        }
+
+        [HttpPut("users/{userId}")]
+        public async Task<IActionResult> UpdateUser(int userId, [FromBody] UpdateUserRequest request)
+        {
+            // Check if user is a SuperAdmin
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            // Find user
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Update user fields
+            if (!string.IsNullOrEmpty(request.Name))
+                user.Name = request.Name;
+
+            if (!string.IsNullOrEmpty(request.Email))
+                user.Email = request.Email;
+
+            if (request.PhoneNumber != null)
+                user.PhoneNumber = request.PhoneNumber;
+
+            // Update role if the user is not a SubscriptionManager
+            if (!string.IsNullOrEmpty(request.Role) && user.Role != "SubscriptionManager")
+            {
+                var validRoles = new[] { "User", "Auditor", "Manager" };
+                if (!validRoles.Contains(request.Role))
+                {
+                    return BadRequest(new { message = "Invalid role" });
+                }
+                user.Role = request.Role;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User updated successfully" });
+        }
+
+        [HttpPut("users/{userId}/role")]
+        public async Task<IActionResult> UpdateUserRole(int userId, [FromBody] UpdateRoleRequest request)
+        {
+            // Check if user is a SuperAdmin
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            // Find user
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Prevent changing the role of a SubscriptionManager
+            if (user.Role == "SubscriptionManager")
+            {
+                return BadRequest(new { message = "Cannot change the role of a Subscription Manager" });
+            }
+
+            // Validate role
+            var validRoles = new[] { "User", "Auditor", "Manager" };
+            if (!validRoles.Contains(request.Role))
+            {
+                return BadRequest(new { message = "Invalid role" });
+            }
+
+            // Update role
+            user.Role = request.Role;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User role updated successfully" });
+        }
+
+        [HttpDelete("users/{userId}")]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            // Check if user is a SuperAdmin
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            // Find user
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Prevent deleting a SubscriptionManager
+            if (user.Role == "SubscriptionManager")
+            {
+                return BadRequest(new { message = "Cannot delete a Subscription Manager" });
+            }
+
+            // Delete user
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User deleted successfully" });
+        }
+
+        public class UpdateUserRequest
+        {
+            public string Name { get; set; }
+            public string Email { get; set; }
+            public string PhoneNumber { get; set; }
+            public string Role { get; set; }
+        }
+
+        public class UpdateRoleRequest
+        {
+            public string Role { get; set; }
+        }
     }
 }
