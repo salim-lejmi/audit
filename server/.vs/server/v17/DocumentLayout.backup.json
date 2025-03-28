@@ -3,18 +3,6 @@
   "WorkspaceRootPath": "C:\\Users\\salim\\Documents\\audit\\server\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\controllers\\companycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:controllers\\companycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\data\\auditdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:data\\auditdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -23,8 +11,28 @@
       "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\models\\text.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:models\\text.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\models\\company.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:models\\company.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\controllers\\valuescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:controllers\\valuescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\controllers\\companycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:controllers\\companycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -38,7 +46,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -54,7 +62,33 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 4,
+              "Title": "ValuesController.cs",
+              "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\ValuesController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ValuesController.cs",
+              "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\ValuesController.cs",
+              "RelativeToolTip": "Controllers\\ValuesController.cs",
+              "ViewState": "AgIAAFICAAAAAAAAAAAIwGICAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-25T22:58:50.65Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Text.cs",
+              "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\Text.cs",
+              "RelativeDocumentMoniker": "Models\\Text.cs",
+              "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\Text.cs",
+              "RelativeToolTip": "Models\\Text.cs",
+              "ViewState": "AgIAABoAAAAAAAAAAAAgwCEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-25T22:57:51.606Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
@@ -66,76 +100,81 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "AuditDbContext.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Data\\AuditDbContext.cs",
               "RelativeDocumentMoniker": "Data\\AuditDbContext.cs",
               "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Data\\AuditDbContext.cs",
               "RelativeToolTip": "Data\\AuditDbContext.cs",
-              "ViewState": "AgIAAAwAAAAAAAAAAAA5wBMAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAADIAAAAAAAAAAAAuwDgAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-19T16:32:35.759Z"
+              "WhenOpened": "2025-03-19T16:32:35.759Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 1,
               "Title": "User.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\User.cs",
               "RelativeDocumentMoniker": "Models\\User.cs",
               "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\User.cs",
               "RelativeToolTip": "Models\\User.cs",
-              "ViewState": "AgIAAAQAAAAAAAAAAAA4wBAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAowBAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-19T16:32:25.26Z"
+              "WhenOpened": "2025-03-19T16:32:25.26Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 3,
               "Title": "Company.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\Company.cs",
               "RelativeDocumentMoniker": "Models\\Company.cs",
               "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\Company.cs",
               "RelativeToolTip": "Models\\Company.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAQAAAAAAAAAAAA5wAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-19T16:32:16.602Z"
+              "WhenOpened": "2025-03-19T16:32:16.602Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 7,
               "Title": "CompanyController.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\CompanyController.cs",
               "RelativeDocumentMoniker": "Controllers\\CompanyController.cs",
               "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\CompanyController.cs",
               "RelativeToolTip": "Controllers\\CompanyController.cs",
-              "ViewState": "AgIAAAYBAAAAAAAAAAAwwBIBAAAYAAAAAAAAAA==",
+              "ViewState": "AgIAADgBAAAAAAAAAAAuwEUBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-17T16:47:00.53Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "Controllers\\AuthController.cs",
               "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\AuthController.cs",
               "RelativeToolTip": "Controllers\\AuthController.cs",
-              "ViewState": "AgIAAFcAAAAAAAAAAAAowLEAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAFcAAAAAAAAAAAAowGMAAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-17T16:41:06.143Z"
+              "WhenOpened": "2025-03-17T16:41:06.143Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 6,
               "Title": "AdminController.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\AdminController.cs",
               "RelativeDocumentMoniker": "Controllers\\AdminController.cs",
               "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\AdminController.cs",
               "RelativeToolTip": "Controllers\\AdminController.cs",
-              "ViewState": "AgIAAHIAAAAAAAAAAAAiwH0AAAAkAAAAAAAAAA==",
+              "ViewState": "AgIAACQBAAAAAAAAAAAcwDUBAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-11T00:06:42.956Z"
+              "WhenOpened": "2025-03-11T00:06:42.956Z",
+              "EditorCaption": ""
             }
           ]
         }

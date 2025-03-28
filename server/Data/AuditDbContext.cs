@@ -12,8 +12,10 @@ namespace server.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Company> Companies { get; set; }
+        public DbSet<Text> Texts { get; set; }
+        public DbSet<TextRequirement> TextRequirements { get; set; }
+
         private static readonly DateTime SeedCreatedAt = new DateTime(2025, 3, 10, 1, 2, 0, DateTimeKind.Utc);
-        // Pre-computed hash for "admin123"
         private const string AdminPasswordHash = "$2b$12$ovPPLXG.u1usgak7T7fnAeJEZjgdCOJ4GgIEpL1bM9QAbdUXNDib2";
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,6 +27,24 @@ namespace server.Data
                 .HasForeignKey(u => u.CompanyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure Text-User relationship
+            modelBuilder.Entity<Text>()
+                .HasOne(t => t.CreatedBy)
+                .WithMany()
+                .HasForeignKey(t => t.CreatedById)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure TextRequirement-Text relationship
+            modelBuilder.Entity<TextRequirement>()
+                .HasOne(tr => tr.Text)
+                .WithMany(t => t.Requirements)
+                .HasForeignKey(tr => tr.TextId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Explicitly configure RequirementId as the primary key for TextRequirement
+            modelBuilder.Entity<TextRequirement>()
+                .HasKey(tr => tr.RequirementId);
+
             // Seed Super Admin user
             modelBuilder.Entity<User>().HasData(
                 new User
@@ -32,7 +52,7 @@ namespace server.Data
                     UserId = 1,
                     Name = "Super Admin",
                     Email = "admin@gmail.com",
-                    PasswordHash = AdminPasswordHash,  // Use the pre-computed hash
+                    PasswordHash = AdminPasswordHash,
                     Role = "SuperAdmin",
                     PhoneNumber = "99999999",
                     CreatedAt = SeedCreatedAt

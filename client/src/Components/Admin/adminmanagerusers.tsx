@@ -9,7 +9,7 @@ interface User {
   email: string;
   phoneNumber: string;
   role: string;
-  companyName: string;  // Added company name for admin view
+  companyName: string; 
   companyId: number;
   createdAt: string;
 }
@@ -151,7 +151,6 @@ const AdminManageUsers: React.FC = () => {
     </>
   );
 
-  // Extract unique roles for filtering
   const uniqueRoles = ['All', ...new Set(users.map(user => user.role))];
 
   return (

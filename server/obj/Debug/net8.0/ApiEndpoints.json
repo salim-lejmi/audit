@@ -17,6 +17,16 @@
   },
   {
     "ContainingType": "server.Controllers.AdminController",
+    "Method": "GetAllCompanies",
+    "RelativePath": "api/admin/companies",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.AdminController",
     "Method": "GetDashboardStats",
     "RelativePath": "api/admin/dashboard-stats",
     "HttpMethod": "GET",
@@ -46,6 +56,74 @@
       {
         "Name": "companyId",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.AdminController",
+    "Method": "GetAllUsers",
+    "RelativePath": "api/admin/users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.AdminController",
+    "Method": "UpdateUser",
+    "RelativePath": "api/admin/users/{userId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "server.Controllers.AdminController\u002BUpdateUserRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.AdminController",
+    "Method": "DeleteUser",
+    "RelativePath": "api/admin/users/{userId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.AdminController",
+    "Method": "UpdateUserRole",
+    "RelativePath": "api/admin/users/{userId}/role",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "server.Controllers.AdminController\u002BUpdateRoleRequest",
         "IsRequired": true
       }
     ],
@@ -193,6 +271,382 @@
         "Name": "request",
         "Type": "server.Controllers.CompanyController\u002BUpdateRoleRequest",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "GetTexts",
+    "RelativePath": "api/texts",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "domain",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "theme",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "subTheme",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "nature",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "publicationYear",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "keyword",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "status",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "textType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "CreateText",
+    "RelativePath": "api/texts",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Domain",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Theme",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "SubTheme",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Reference",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Nature",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PublicationYear",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "Status",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Penalties",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "RelatedTexts",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "EffectiveDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Content",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "File",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "Requirements",
+        "Type": "System.Collections.Generic.List\u00601[[server.Controllers.TextController\u002BRequirementDto, server, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "GetText",
+    "RelativePath": "api/texts/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "UpdateText",
+    "RelativePath": "api/texts/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "Domain",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Theme",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "SubTheme",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Reference",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Nature",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "PublicationYear",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "Status",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Penalties",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "RelatedTexts",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "EffectiveDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Content",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "File",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "DeleteText",
+    "RelativePath": "api/texts/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "GetFile",
+    "RelativePath": "api/texts/{id}/file",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "AddRequirement",
+    "RelativePath": "api/texts/{id}/requirement",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "server.Controllers.TextController\u002BAddRequirementRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "UpdateRequirement",
+    "RelativePath": "api/texts/{id}/requirement/{requirementId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "requirementId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "server.Controllers.TextController\u002BUpdateRequirementRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "DeleteRequirement",
+    "RelativePath": "api/texts/{id}/requirement/{requirementId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "requirementId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "GetDomains",
+    "RelativePath": "api/texts/domains",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "GetSubThemes",
+    "RelativePath": "api/texts/subthemes",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "domain",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "theme",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "server.Controllers.TextController",
+    "Method": "GetThemes",
+    "RelativePath": "api/texts/themes",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "domain",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []

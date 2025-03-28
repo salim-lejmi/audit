@@ -70,6 +70,13 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
     return "2025-12-31"; // Example date
   };
 
+  // Get base path based on user role
+  const getBasePath = () => {
+    if (userRole === 'SuperAdmin') return '/admin';
+    if (userRole === 'SubscriptionManager') return '/company';
+    return '/user';
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -99,6 +106,22 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
         </div>
 
         <div className="navbar-right">
+          {/* Dashboard link */}
+          <div className="nav-item">
+            <Link to={`${getBasePath()}/dashboard`} className="nav-button">
+              <i className="fas fa-tachometer-alt"></i>
+              <span className="nav-label">Dashboard</span>
+            </Link>
+          </div>
+
+          {/* Text Management link */}
+          <div className="nav-item">
+            <Link to={`${getBasePath()}/texts`} className="nav-button">
+              <i className="fas fa-file-alt"></i>
+              <span className="nav-label">Texts</span>
+            </Link>
+          </div>
+
           {/* Manual dropdown */}
           <div className="nav-item" ref={manualRef}>
             <button 
@@ -125,7 +148,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
 
           {/* History button */}
           <div className="nav-item">
-            <Link to={`/${userRole === 'SuperAdmin' ? 'admin' : userRole === 'SubscriptionManager' ? 'company' : 'user'}/history`} className="nav-button">
+            <Link to={`${getBasePath()}/history`} className="nav-button">
               <i className="fas fa-history"></i>
               <span className="nav-label">History</span>
             </Link>

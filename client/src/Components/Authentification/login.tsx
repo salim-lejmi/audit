@@ -22,12 +22,17 @@
       setError('');
       
       try {
-        const response = await axios.post('/api/auth/login', {
+        interface LoginResponse {
+          data: {
+            role: 'SuperAdmin' | 'SubscriptionManager' | 'User';
+          };
+        }
+
+        const response: LoginResponse = await axios.post('/api/auth/login', {
           email,
           password
         });
         
-        // Handle successful login based on role
         const { role } = response.data;
         
         if (role === 'SuperAdmin') {
@@ -38,15 +43,21 @@
           navigate('/user/dashboard');
         }
         
-      } catch (err: unknown) {
+            } catch (err: unknown) {
         if (axios.isAxiosError(err) && err.response) {
-          setError(err.response.data.message || 'Login failed. Please check your credentials.');
+          interface ErrorResponse {
+            data: {
+              message?: string;
+            };
+          }
+          const errorResponse: ErrorResponse = err.response;
+          setError(errorResponse.data.message || 'Login failed. Please check your credentials.');
         } else {
           setError('Unable to connect to the server. Please try again later.');
         }
-      } finally {
+            } finally {
         setIsLoading(false);
-      }
+            }
     };
 
     return (

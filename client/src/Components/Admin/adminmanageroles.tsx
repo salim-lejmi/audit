@@ -68,7 +68,6 @@ const AdminManageRoles: React.FC = () => {
     return matchesSearch && matchesRole && matchesCompany;
   });
 
-  // Group users by role for the summary
   const userCountByRole = users.reduce((counts: Record<string, number>, user) => {
     counts[user.role] = (counts[user.role] || 0) + 1;
     return counts;
@@ -82,7 +81,6 @@ const AdminManageRoles: React.FC = () => {
     return <div className="error-message">{error}</div>;
   }
 
-  // Extract unique roles for filtering
   const uniqueRoles = ['All', ...new Set(users.map(user => user.role))];
 
   return (

@@ -5,6 +5,7 @@ import ManageRoles from './Components/Company/manageroles';
 import ManageUsers from './Components/Company/manageusers';
 import SuperAdminManageRoles from './Components/Admin/adminmanageroles';
 import SuperAdminManageUsers from './Components/Admin/adminmanagerusers';
+import TextManagement from './Components/Shared/TextManagement';
 
 import SuperAdminDashboard from './Components/Admin/SuperAdminDashboard';
 import PendingRequests from './Components/Admin/PendingRequests';
@@ -27,6 +28,7 @@ const AppRoutes = () => {
           <Route path="companies" element={<div>Company Management (To be implemented)</div>} />
           <Route path="users" element={<SuperAdminManageUsers/>} />
           <Route path="roles" element={<SuperAdminManageRoles/>} />
+          <Route path="texts" element={<TextManagement />} />
         </Route>
 
         {/* Subscription Manager Routes */}
@@ -34,7 +36,7 @@ const AppRoutes = () => {
           <Route path="dashboard" element={<SubscriptionManagerDashboard />} />
           <Route path="users" element={<ManageUsers/>} />
           <Route path="roles" element={<ManageRoles/>} />
-
+          <Route path="texts" element={<TextManagement />} />
           <Route path="settings" element={<div>Company Settings (To be implemented)</div>} />
         </Route>
 
