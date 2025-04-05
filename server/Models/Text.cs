@@ -3,9 +3,9 @@
     public class Text
     {
         public int TextId { get; set; }
-        public string Domain { get; set; }
-        public string Theme { get; set; }
-        public string SubTheme { get; set; }
+        public int DomainId { get; set; }
+        public int? ThemeId { get; set; }
+        public int? SubThemeId { get; set; }
         public string Reference { get; set; }
         public string Nature { get; set; }
         public int PublicationYear { get; set; }
@@ -19,6 +19,10 @@
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public int? CreatedById { get; set; }
         public virtual User CreatedBy { get; set; }
+        public virtual Domain DomainObject { get; set; }
+        public virtual Theme ThemeObject { get; set; }
+        public virtual SubTheme SubThemeObject { get; set; }
+
         public virtual ICollection<TextRequirement> Requirements { get; set; }
     }
 

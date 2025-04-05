@@ -1,0 +1,107 @@
+.taxonomy-manager {
+    padding: 20px;
+  }
+  
+  .taxonomy-container {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  
+  .taxonomy-section {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    background-color: #f9f9f9;
+  }
+  
+  .taxonomy-section h3 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .add-item-form {
+    display: flex;
+    margin-bottom: 15px;
+  }
+  
+  .add-item-form input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+  }
+  
+  .add-item-form button {
+    padding: 8px 12px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+  }
+  
+  .add-item-form button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .taxonomy-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+  }
+  
+  .taxonomy-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+  }
+  
+  .taxonomy-item:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .taxonomy-item.selected {
+    background-color: #e6f7ff;
+    border-left: 3px solid #1890ff;
+  }
+  
+  .delete-button {
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 8px;
+    cursor: pointer;
+  }
+  
+  .delete-button:hover {
+    background-color: #ff7875;
+  }
+  
+  .delete-button:disabled {
+    background-color: #ffccc7;
+    cursor: not-allowed;
+  }
+  
+  .no-items, .info-message, .loading {
+    padding: 15px;
+    text-align: center;
+    color: #999;
+  }
+  
+  .error-message {
+    background-color: #fff1f0;
+    border: 1px solid #ffccc7;
+    color: #ff4d4f;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+  }

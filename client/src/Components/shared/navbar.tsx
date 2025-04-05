@@ -122,6 +122,16 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             </Link>
           </div>
 
+          {/* Taxonomy Manager link - only for SuperAdmin */}
+          {userRole === 'SuperAdmin' && (
+            <div className="nav-item">
+              <Link to="/admin/taxonomy" className="nav-button">
+                <i className="fas fa-sitemap"></i>
+                <span className="nav-label">Taxonomy</span>
+              </Link>
+            </div>
+          )}
+
           {/* Manual dropdown */}
           <div className="nav-item" ref={manualRef}>
             <button 

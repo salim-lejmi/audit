@@ -26,9 +26,9 @@ namespace server.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetTexts(
-            [FromQuery] string domain = null,
-            [FromQuery] string theme = null,
-            [FromQuery] string subTheme = null,
+            [FromQuery] int? domainId = null,
+            [FromQuery] int? themeId = null,
+            [FromQuery] int? subThemeId = null,
             [FromQuery] string nature = null,
             [FromQuery] int? publicationYear = null,
             [FromQuery] string keyword = null,
@@ -46,16 +46,19 @@ namespace server.Controllers
 
             // Build query with filters
             IQueryable<Text> query = _context.Texts
-                .Include(t => t.CreatedBy);
+                .Include(t => t.CreatedBy)
+                .Include(t => t.DomainObject)
+                .Include(t => t.ThemeObject)
+                .Include(t => t.SubThemeObject);
 
-            if (!string.IsNullOrEmpty(domain))
-                query = query.Where(t => t.Domain.Contains(domain));
+            if (domainId.HasValue)
+                query = query.Where(t => t.DomainId == domainId.Value);
 
-            if (!string.IsNullOrEmpty(theme))
-                query = query.Where(t => t.Theme.Contains(theme));
+            if (themeId.HasValue)
+                query = query.Where(t => t.ThemeId == themeId.Value);
 
-            if (!string.IsNullOrEmpty(subTheme))
-                query = query.Where(t => t.SubTheme.Contains(subTheme));
+            if (subThemeId.HasValue)
+                query = query.Where(t => t.SubThemeId == subThemeId.Value);
 
             if (!string.IsNullOrEmpty(nature))
                 query = query.Where(t => t.Nature.Contains(nature));
@@ -84,9 +87,12 @@ namespace server.Controllers
                 .Select(t => new
                 {
                     textId = t.TextId,
-                    domain = t.Domain,
-                    theme = t.Theme,
-                    subTheme = t.SubTheme,
+                    domainId = t.DomainId,
+                    themeId = t.ThemeId,
+                    subThemeId = t.SubThemeId,
+                    domain = t.DomainObject != null ? t.DomainObject.Name : "",
+                    theme = t.ThemeObject != null ? t.ThemeObject.Name : "",
+                    subTheme = t.SubThemeObject != null ? t.SubThemeObject.Name : "",
                     reference = t.Reference,
                     nature = t.Nature,
                     publicationYear = t.PublicationYear,
@@ -109,27 +115,40 @@ namespace server.Controllers
         [HttpGet("domains")]
         public async Task<IActionResult> GetDomains()
         {
-            var domains = await _context.Texts
-                .Select(t => t.Domain)
-                .Distinct()
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return Unauthorized(new { message = "Not authenticated" });
+            }
+
+            var domains = await _context.Domains
+                .Select(d => d.Name)
                 .ToListAsync();
 
             return Ok(domains);
         }
 
         [HttpGet("themes")]
-        public async Task<IActionResult> GetThemes([FromQuery] string domain = null)
+        public async Task<IActionResult> GetThemes([FromQuery] int? domainId = null)
         {
-            IQueryable<string> query = _context.Texts
-                .Select(t => t.Theme)
-                .Distinct();
-
-            if (!string.IsNullOrEmpty(domain))
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
             {
-                query = _context.Texts
-                    .Where(t => t.Domain == domain)
-                    .Select(t => t.Theme)
-                    .Distinct();
+                return Unauthorized(new { message = "Not authenticated" });
+            }
+
+            IQueryable<string> query;
+
+            if (domainId.HasValue)
+            {
+                query = _context.Themes
+                    .Where(t => t.DomainId == domainId.Value)
+                    .Select(t => t.Name);
+            }
+            else
+            {
+                query = _context.Themes
+                    .Select(t => t.Name);
             }
 
             var themes = await query.ToListAsync();
@@ -138,33 +157,39 @@ namespace server.Controllers
 
         [HttpGet("subthemes")]
         public async Task<IActionResult> GetSubThemes(
-            [FromQuery] string domain = null,
-            [FromQuery] string theme = null)
+            [FromQuery] int? domainId = null,
+            [FromQuery] int? themeId = null)
         {
-            IQueryable<string> query = _context.Texts
-                .Select(t => t.SubTheme)
-                .Distinct();
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return Unauthorized(new { message = "Not authenticated" });
+            }
 
-            if (!string.IsNullOrEmpty(domain) && !string.IsNullOrEmpty(theme))
+            IQueryable<string> query;
+
+            if (domainId.HasValue && themeId.HasValue)
             {
-                query = _context.Texts
-                    .Where(t => t.Domain == domain && t.Theme == theme)
-                    .Select(t => t.SubTheme)
-                    .Distinct();
+                query = _context.SubThemes
+                    .Where(s => s.Theme.DomainId == domainId.Value && s.ThemeId == themeId.Value)
+                    .Select(s => s.Name);
             }
-            else if (!string.IsNullOrEmpty(domain))
+            else if (domainId.HasValue)
             {
-                query = _context.Texts
-                    .Where(t => t.Domain == domain)
-                    .Select(t => t.SubTheme)
-                    .Distinct();
+                query = _context.SubThemes
+                    .Where(s => s.Theme.DomainId == domainId.Value)
+                    .Select(s => s.Name);
             }
-            else if (!string.IsNullOrEmpty(theme))
+            else if (themeId.HasValue)
             {
-                query = _context.Texts
-                    .Where(t => t.Theme == theme)
-                    .Select(t => t.SubTheme)
-                    .Distinct();
+                query = _context.SubThemes
+                    .Where(s => s.ThemeId == themeId.Value)
+                    .Select(s => s.Name);
+            }
+            else
+            {
+                query = _context.SubThemes
+                    .Select(s => s.Name);
             }
 
             var subThemes = await query.ToListAsync();
@@ -183,6 +208,9 @@ namespace server.Controllers
             var text = await _context.Texts
                 .Include(t => t.CreatedBy)
                 .Include(t => t.Requirements)
+                .Include(t => t.DomainObject)
+                .Include(t => t.ThemeObject)
+                .Include(t => t.SubThemeObject)
                 .FirstOrDefaultAsync(t => t.TextId == id);
 
             if (text == null)
@@ -200,9 +228,12 @@ namespace server.Controllers
             return Ok(new
             {
                 textId = text.TextId,
-                domain = text.Domain,
-                theme = text.Theme,
-                subTheme = text.SubTheme,
+                domainId = text.DomainId,
+                themeId = text.ThemeId,
+                subThemeId = text.SubThemeId,
+                domain = text.DomainObject != null ? text.DomainObject.Name : "",
+                theme = text.ThemeObject != null ? text.ThemeObject.Name : "",
+                subTheme = text.SubThemeObject != null ? text.SubThemeObject.Name : "",
                 reference = text.Reference,
                 nature = text.Nature,
                 publicationYear = text.PublicationYear,
@@ -261,12 +292,44 @@ namespace server.Controllers
                 return Forbid();
             }
 
-            if (string.IsNullOrEmpty(request.Domain) ||
-                string.IsNullOrEmpty(request.Theme) ||
+            if (request.DomainId <= 0 ||
                 string.IsNullOrEmpty(request.Reference) ||
                 request.PublicationYear <= 0)
             {
                 return BadRequest(new { message = "Required fields are missing" });
+            }
+
+            // Validate domain exists
+            var domain = await _context.Domains.FindAsync(request.DomainId);
+            if (domain == null)
+            {
+                return BadRequest(new { message = "Selected domain does not exist" });
+            }
+
+            // Validate theme exists if provided
+            if (request.ThemeId.HasValue)
+            {
+                var theme = await _context.Themes.FirstOrDefaultAsync(t =>
+                    t.ThemeId == request.ThemeId.Value &&
+                    t.DomainId == request.DomainId);
+
+                if (theme == null)
+                {
+                    return BadRequest(new { message = "Selected theme does not exist or does not belong to the selected domain" });
+                }
+            }
+
+            // Validate subtheme exists if provided
+            if (request.SubThemeId.HasValue && request.ThemeId.HasValue)
+            {
+                var subTheme = await _context.SubThemes.FirstOrDefaultAsync(s =>
+                    s.SubThemeId == request.SubThemeId.Value &&
+                    s.ThemeId == request.ThemeId.Value);
+
+                if (subTheme == null)
+                {
+                    return BadRequest(new { message = "Selected subtheme does not exist or does not belong to the selected theme" });
+                }
             }
 
             // Save file if provided
@@ -291,9 +354,9 @@ namespace server.Controllers
 
             var text = new Text
             {
-                Domain = request.Domain,
-                Theme = request.Theme,
-                SubTheme = request.SubTheme ?? "",
+                DomainId = request.DomainId,
+                ThemeId = request.ThemeId,
+                SubThemeId = request.SubThemeId,
                 Reference = request.Reference,
                 Nature = request.Nature ?? "",
                 PublicationYear = request.PublicationYear,
@@ -351,16 +414,76 @@ namespace server.Controllers
                 return NotFound(new { message = "Text not found" });
             }
 
-            // Update fields if provided
-            if (!string.IsNullOrEmpty(request.Domain))
-                text.Domain = request.Domain;
+            // Validate domain exists if provided
+            if (request.DomainId.HasValue && request.DomainId.Value > 0)
+            {
+                var domain = await _context.Domains.FindAsync(request.DomainId.Value);
+                if (domain == null)
+                {
+                    return BadRequest(new { message = "Selected domain does not exist" });
+                }
 
-            if (!string.IsNullOrEmpty(request.Theme))
-                text.Theme = request.Theme;
+                text.DomainId = request.DomainId.Value;
+            }
 
-            if (request.SubTheme != null)
-                text.SubTheme = request.SubTheme;
+            // Validate theme exists if provided
+            if (request.ThemeId.HasValue)
+            {
+                // If theme is null or 0, clear the theme
+                if (request.ThemeId.Value <= 0)
+                {
+                    text.ThemeId = null;
+                    text.SubThemeId = null;  // Clear subtheme when theme is cleared
+                }
+                else
+                {
+                    // Verify theme exists and belongs to the domain
+                    var domainId = request.DomainId ?? text.DomainId;
+                    var theme = await _context.Themes.FirstOrDefaultAsync(t =>
+                        t.ThemeId == request.ThemeId.Value &&
+                        t.DomainId == domainId);
 
+                    if (theme == null)
+                    {
+                        return BadRequest(new { message = "Selected theme does not exist or does not belong to the selected domain" });
+                    }
+
+                    text.ThemeId = request.ThemeId.Value;
+                }
+            }
+
+            // Validate subtheme exists if provided
+            if (request.SubThemeId.HasValue)
+            {
+                // If subtheme is null or 0, clear the subtheme
+                if (request.SubThemeId.Value <= 0)
+                {
+                    text.SubThemeId = null;
+                }
+                else
+                {
+                    // Verify theme is set
+                    var themeId = request.ThemeId ?? text.ThemeId;
+                    if (!themeId.HasValue)
+                    {
+                        return BadRequest(new { message = "Cannot set a subtheme without a theme" });
+                    }
+
+                    // Verify subtheme exists and belongs to the theme
+                    var subTheme = await _context.SubThemes.FirstOrDefaultAsync(s =>
+                        s.SubThemeId == request.SubThemeId.Value &&
+                        s.ThemeId == themeId.Value);
+
+                    if (subTheme == null)
+                    {
+                        return BadRequest(new { message = "Selected subtheme does not exist or does not belong to the selected theme" });
+                    }
+
+                    text.SubThemeId = request.SubThemeId.Value;
+                }
+            }
+
+            // Update other fields if provided
             if (!string.IsNullOrEmpty(request.Reference))
                 text.Reference = request.Reference;
 
@@ -555,9 +678,9 @@ namespace server.Controllers
 
         public class CreateTextRequest
         {
-            public string Domain { get; set; }
-            public string Theme { get; set; }
-            public string SubTheme { get; set; }
+            public int DomainId { get; set; }
+            public int? ThemeId { get; set; }
+            public int? SubThemeId { get; set; }
             public string Reference { get; set; }
             public string Nature { get; set; }
             public int PublicationYear { get; set; }
@@ -572,9 +695,9 @@ namespace server.Controllers
 
         public class UpdateTextRequest
         {
-            public string Domain { get; set; }
-            public string Theme { get; set; }
-            public string SubTheme { get; set; }
+            public int? DomainId { get; set; }
+            public int? ThemeId { get; set; }
+            public int? SubThemeId { get; set; }
             public string Reference { get; set; }
             public string Nature { get; set; }
             public int PublicationYear { get; set; }

@@ -13,10 +13,29 @@ interface Requirement {
   status: string;
 }
 
+interface Domain {
+  domainId: number;
+  name: string;
+}
+
+interface Theme {
+  themeId: number;
+  name: string;
+  domainId: number;
+}
+
+interface SubTheme {
+  subThemeId: number;
+  name: string;
+  themeId: number;
+}
+
 const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => {
-  const [domains, setDomains] = useState<string[]>([]);
-  const [themes, setThemes] = useState<string[]>([]);
-  const [subThemes, setSubThemes] = useState<string[]>([]);
+  // Domain, theme, and subtheme data with IDs
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [themes, setThemes] = useState<Theme[]>([]);
+  const [subThemes, setSubThemes] = useState<SubTheme[]>([]);
+  
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
@@ -26,11 +45,11 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
     status: 'À vérifier'
   });
   
-  // Form state
+  // Form state - updated to use IDs instead of string values
   const [formData, setFormData] = useState({
-    domain: '',
-    theme: '',
-    subTheme: '',
+    domainId: 0,
+    themeId: 0,
+    subThemeId: 0,
     reference: '',
     nature: '',
     publicationYear: new Date().getFullYear(),
@@ -46,7 +65,8 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
     // Load domains when component mounts
     const loadDomains = async () => {
       try {
-        const response = await axios.get('/api/texts/domains');
+        // Updated to fetch from taxonomy endpoint to get IDs
+        const response = await axios.get('/api/taxonomy/domains');
         setDomains(response.data);
       } catch (err) {
         console.error('Error loading domains:', err);
@@ -57,17 +77,18 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
   }, []);
 
   // Handle domain change - load themes
-  const handleDomainChange = async (domain: string) => {
+  const handleDomainChange = async (domainId: number) => {
     setFormData({
       ...formData,
-      domain,
-      theme: '',
-      subTheme: ''
+      domainId,
+      themeId: 0,
+      subThemeId: 0
     });
 
-    if (domain) {
+    if (domainId) {
       try {
-        const response = await axios.get(`/api/texts/themes?domain=${domain}`);
+        // Updated to fetch from taxonomy endpoint with domainId
+        const response = await axios.get(`/api/taxonomy/themes?domainId=${domainId}`);
         setThemes(response.data);
       } catch (err) {
         console.error('Error loading themes:', err);
@@ -79,16 +100,17 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
   };
 
   // Handle theme change - load subthemes
-  const handleThemeChange = async (theme: string) => {
+  const handleThemeChange = async (themeId: number) => {
     setFormData({
       ...formData,
-      theme,
-      subTheme: ''
+      themeId,
+      subThemeId: 0
     });
 
-    if (theme && formData.domain) {
+    if (themeId) {
       try {
-        const response = await axios.get(`/api/texts/subthemes?domain=${formData.domain}&theme=${theme}`);
+        // Updated to fetch from taxonomy endpoint with themeId
+        const response = await axios.get(`/api/taxonomy/subthemes?themeId=${themeId}`);
         setSubThemes(response.data);
       } catch (err) {
         console.error('Error loading subthemes:', err);
@@ -148,63 +170,129 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
   };
 
   // Submit the form
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ // Submit the form
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  console.log("Form submission started with data:", formData);
+  
+  if (!formData.domainId || !formData.reference || !formData.publicationYear) {
+    setError('Please fill in all required fields (Domain, Reference, Publication Year)');
+    console.log("Missing required fields:", { 
+      domainId: formData.domainId, 
+      reference: formData.reference, 
+      publicationYear: formData.publicationYear 
+    });
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
+
+  try {
+    // Create FormData object for file upload
+    const submitData = new FormData();
     
-    if (!formData.domain || !formData.theme || !formData.reference || !formData.publicationYear) {
-      setError('Please fill in all required fields (Domain, Theme, Reference, Publication Year)');
-      return;
+    // Log each field as it's being added to the FormData
+    console.log("Adding domainId:", formData.domainId);
+    submitData.append('domainId', formData.domainId.toString());
+    
+    if (formData.themeId > 0) {
+      console.log("Adding themeId:", formData.themeId);
+      submitData.append('themeId', formData.themeId.toString());
+    } else {
+      console.log("themeId not added, value:", formData.themeId);
+    }
+    
+    if (formData.subThemeId > 0) {
+      console.log("Adding subThemeId:", formData.subThemeId);
+      submitData.append('subThemeId', formData.subThemeId.toString());
+    } else {
+      console.log("subThemeId not added, value:", formData.subThemeId);
+    }
+    
+    console.log("Adding reference:", formData.reference);
+    submitData.append('reference', formData.reference);
+    
+    console.log("Adding nature:", formData.nature);
+    submitData.append('nature', formData.nature);
+    
+    console.log("Adding publicationYear:", formData.publicationYear);
+    submitData.append('publicationYear', formData.publicationYear.toString());
+    
+    console.log("Adding status:", formData.status);
+    submitData.append('status', formData.status);
+    
+    console.log("Adding penalties:", formData.penalties);
+    submitData.append('penalties', formData.penalties);
+    
+    console.log("Adding relatedTexts:", formData.relatedTexts);
+    submitData.append('relatedTexts', formData.relatedTexts);
+    
+    if (formData.effectiveDate) {
+      console.log("Adding effectiveDate:", formData.effectiveDate);
+      submitData.append('effectiveDate', formData.effectiveDate);
+    } else {
+      console.log("effectiveDate not added, value:", formData.effectiveDate);
+    }
+    
+    console.log("Adding content:", formData.content);
+    submitData.append('content', formData.content);
+    
+    if (formData.file) {
+      console.log("Adding file:", formData.file.name);
+      submitData.append('file', formData.file);
+    } else {
+      console.log("No file attached");
     }
 
-    setLoading(true);
-    setError(null);
+    // Add requirements if any
+    if (requirements.length > 0) {
+      console.log("Adding requirements:", requirements);
+      submitData.append('requirements', JSON.stringify(requirements));
+    } else {
+      console.log("No requirements to add");
+    }
 
-    try {
-      // Create FormData object for file upload
-      const submitData = new FormData();
-      submitData.append('domain', formData.domain);
-      submitData.append('theme', formData.theme);
-      submitData.append('subTheme', formData.subTheme);
-      submitData.append('reference', formData.reference);
-      submitData.append('nature', formData.nature);
-      submitData.append('publicationYear', formData.publicationYear.toString());
-      submitData.append('status', formData.status);
-      submitData.append('penalties', formData.penalties);
-      submitData.append('relatedTexts', formData.relatedTexts);
-      
-      if (formData.effectiveDate) {
-        submitData.append('effectiveDate', formData.effectiveDate);
+    // Log the complete FormData (need to iterate since FormData can't be directly logged)
+    console.log("Final FormData keys:");
+    for (const pair of submitData.entries()) {
+      console.log(pair[0], ': ', pair[1]);
+    }
+
+    console.log("Sending POST request to /api/texts");
+    // Send request to create text
+    const response = await axios.post('/api/texts', submitData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
-      
-      submitData.append('content', formData.content);
-      
-      if (formData.file) {
-        submitData.append('file', formData.file);
+    });
+    
+    console.log("Request successful:", response.data);
+
+    // Notify parent and close modal
+    onTextAdded();
+    onClose();
+    
+  } catch (err) {
+    console.error('Error creating text:', err);
+    
+    if (axios.isAxiosError(err) && err.response) {
+      // Log detailed error response from server
+      console.error('Server error response:', err.response.data);
+      if (typeof err.response.data === 'object') {
+        console.error('Error message:', err.response.data.message || 'No specific error message');
+        console.error('Full error object:', JSON.stringify(err.response.data, null, 2));
+      } else {
+        console.error('Raw error response:', err.response.data);
       }
-
-      // Add requirements if any
-      if (requirements.length > 0) {
-        submitData.append('requirements', JSON.stringify(requirements));
-      }
-
-      // Send request to create text
-      await axios.post('/api/texts', submitData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      // Notify parent and close modal
-      onTextAdded();
-      onClose();
-      
-    } catch (err) {
-      console.error('Error creating text:', err);
+      setError(`Failed to create text: ${typeof err.response.data === 'object' ? JSON.stringify(err.response.data.message || err.response.data) : err.response.data}`);
+    } else {
       setError('Failed to create text. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    }  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="modal-overlay">
@@ -222,50 +310,53 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
             
             <div className="info-row">
               <div className="form-group">
-                <label htmlFor="domain">Domain *</label>
+                <label htmlFor="domainId">Domain *</label>
                 <select 
-                  id="domain"
-                  name="domain"
-                  value={formData.domain}
-                  onChange={(e) => handleDomainChange(e.target.value)}
+                  id="domainId"
+                  name="domainId"
+                  value={formData.domainId}
+                  onChange={(e) => handleDomainChange(Number(e.target.value))}
                   required
                 >
-                  <option value="">Select Domain</option>
-                  {domains.map((domain, index) => (
-                    <option key={index} value={domain}>{domain}</option>
+                  <option value="0">Select Domain</option>
+                  {domains.map((domain) => (
+                    <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
                   ))}
                 </select>
               </div>
               
               <div className="form-group">
-                <label htmlFor="theme">Theme *</label>
+                <label htmlFor="themeId">Theme *</label>
                 <select 
-                  id="theme"
-                  name="theme"
-                  value={formData.theme}
-                  onChange={(e) => handleThemeChange(e.target.value)}
+                  id="themeId"
+                  name="themeId"
+                  value={formData.themeId}
+                  onChange={(e) => handleThemeChange(Number(e.target.value))}
                   required
-                  disabled={!formData.domain}
+                  disabled={formData.domainId === 0}
                 >
-                  <option value="">Select Theme</option>
-                  {themes.map((theme, index) => (
-                    <option key={index} value={theme}>{theme}</option>
+                  <option value="0">Select Theme</option>
+                  {themes.map((theme) => (
+                    <option key={theme.themeId} value={theme.themeId}>{theme.name}</option>
                   ))}
                 </select>
               </div>
               
               <div className="form-group">
-                <label htmlFor="subTheme">Sub-Theme</label>
+                <label htmlFor="subThemeId">Sub-Theme</label>
                 <select 
-                  id="subTheme"
-                  name="subTheme"
-                  value={formData.subTheme}
-                  onChange={handleInputChange}
-                  disabled={!formData.theme}
+                  id="subThemeId"
+                  name="subThemeId"
+                  value={formData.subThemeId}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    subThemeId: Number(e.target.value)
+                  })}
+                  disabled={formData.themeId === 0}
                 >
-                  <option value="">Select Sub-Theme</option>
-                  {subThemes.map((subTheme, index) => (
-                    <option key={index} value={subTheme}>{subTheme}</option>
+                  <option value="0">Select Sub-Theme</option>
+                  {subThemes.map((subTheme) => (
+                    <option key={subTheme.subThemeId} value={subTheme.subThemeId}>{subTheme.name}</option>
                   ))}
                 </select>
               </div>

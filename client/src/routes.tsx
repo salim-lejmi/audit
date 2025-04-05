@@ -5,8 +5,8 @@ import ManageRoles from './Components/Company/manageroles';
 import ManageUsers from './Components/Company/manageusers';
 import SuperAdminManageRoles from './Components/Admin/adminmanageroles';
 import SuperAdminManageUsers from './Components/Admin/adminmanagerusers';
-import TextManagement from './Components/Shared/TextManagement';
-
+import TaxonomyManager from './Components/Admin/TaxonomyManager';
+import TextManagement from './Components/Text/TextManagement';
 import SuperAdminDashboard from './Components/Admin/SuperAdminDashboard';
 import PendingRequests from './Components/Admin/PendingRequests';
 import SubscriptionManagerDashboard from './Components/Company/SubscriptionManagerDashboard';
@@ -29,6 +29,7 @@ const AppRoutes = () => {
           <Route path="users" element={<SuperAdminManageUsers/>} />
           <Route path="roles" element={<SuperAdminManageRoles/>} />
           <Route path="texts" element={<TextManagement />} />
+         <Route path="taxonomy" element={<TaxonomyManager />} />
         </Route>
 
         {/* Subscription Manager Routes */}
