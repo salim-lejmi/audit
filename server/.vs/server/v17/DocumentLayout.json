@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\salim\\Documents\\audit\\server\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\controllers\\textcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:controllers\\textcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -33,10 +37,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\weatherforecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -74,7 +74,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 10,
+          "SelectedChildIndex": 12,
           "Children": [
             {
               "$type": "Bookmark",
@@ -90,7 +90,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "TaxonomyController.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\TaxonomyController.cs",
               "RelativeDocumentMoniker": "Controllers\\TaxonomyController.cs",
@@ -98,12 +98,11 @@
               "RelativeToolTip": "Controllers\\TaxonomyController.cs",
               "ViewState": "AgIAAFMAAAAAAAAAAAAWwF4AAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-28T22:12:02.139Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-28T22:12:02.139Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "SubTheme.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\SubTheme.cs",
               "RelativeDocumentMoniker": "Models\\SubTheme.cs",
@@ -111,12 +110,11 @@
               "RelativeToolTip": "Models\\SubTheme.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAzAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-28T22:07:47.701Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-28T22:07:47.701Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "Theme.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\Theme.cs",
               "RelativeDocumentMoniker": "Models\\Theme.cs",
@@ -124,12 +122,11 @@
               "RelativeToolTip": "Models\\Theme.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-28T22:07:22.001Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-28T22:07:22.001Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "Domain.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\Domain.cs",
               "RelativeDocumentMoniker": "Models\\Domain.cs",
@@ -137,8 +134,7 @@
               "RelativeToolTip": "Models\\Domain.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-28T22:07:14.587Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-28T22:07:14.587Z"
             },
             {
               "$type": "Document",
@@ -154,7 +150,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",
@@ -162,8 +158,7 @@
               "RelativeToolTip": "appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-03-26T11:38:21.432Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-26T11:38:21.432Z"
             },
             {
               "$type": "Document",
@@ -179,7 +174,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "TextController.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Controllers\\TextController.cs",
               "RelativeDocumentMoniker": "Controllers\\TextController.cs",
@@ -192,7 +187,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Text.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Models\\Text.cs",
               "RelativeDocumentMoniker": "Models\\Text.cs",
@@ -200,24 +195,24 @@
               "RelativeToolTip": "Models\\Text.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAzAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-25T22:57:51.606Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-25T22:57:51.606Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAADgAAAARAAAAAAAAAA==",
+              "ViewState": "AgIAADcAAAAAAAAAAAAuwEEAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-19T16:33:11.5Z"
+              "WhenOpened": "2025-03-19T16:33:11.5Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "AuditDbContext.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Data\\AuditDbContext.cs",
               "RelativeDocumentMoniker": "Data\\AuditDbContext.cs",
@@ -225,8 +220,7 @@
               "RelativeToolTip": "Data\\AuditDbContext.cs",
               "ViewState": "AgIAAEcAAAAAAAAAAAAvwEAAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-19T16:32:35.759Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-19T16:32:35.759Z"
             },
             {
               "$type": "Document",

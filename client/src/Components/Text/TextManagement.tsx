@@ -20,14 +20,30 @@ interface Text {
 }
 
 interface TextFilters {
-  domain: string;
-  theme: string;
-  subTheme: string;
+  domainId: number | null;
+  themeId: number | null;
+  subThemeId: number | null;
   nature: string;
   publicationYear: number | null;
   keyword: string;
   status: string;
   textType: string;
+}
+
+// Type definitions for dropdown options
+interface DomainOption {
+  domainId: number;
+  name: string;
+}
+
+interface ThemeOption {
+  themeId: number;
+  name: string;
+}
+
+interface SubThemeOption {
+  subThemeId: number;
+  name: string;
 }
 
 const TextManagement: React.FC = () => {
@@ -45,9 +61,9 @@ const TextManagement: React.FC = () => {
   
   // Filter states
   const [filters, setFilters] = useState<TextFilters>({
-    domain: '',
-    theme: '',
-    subTheme: '',
+    domainId: null,
+    themeId: null,
+    subThemeId: null,
     nature: '',
     publicationYear: null,
     keyword: '',
@@ -56,9 +72,9 @@ const TextManagement: React.FC = () => {
   });
 
   // Domain, theme, subtheme options for dropdown
-  const [domains, setDomains] = useState<string[]>([]);
-  const [themes, setThemes] = useState<string[]>([]);
-  const [subThemes, setSubThemes] = useState<string[]>([]);
+  const [domains, setDomains] = useState<DomainOption[]>([]);
+  const [themes, setThemes] = useState<ThemeOption[]>([]);
+  const [subThemes, setSubThemes] = useState<SubThemeOption[]>([]);
 
   useEffect(() => {
     // Check user authentication and get role
@@ -79,7 +95,7 @@ const TextManagement: React.FC = () => {
   // Load domain options
   const loadDomains = async () => {
     try {
-      const response = await axios.get('/api/texts/domains');
+      const response = await axios.get('/api/taxonomy/domains');
       setDomains(response.data);
     } catch (err) {
       console.error('Error loading domains:', err);
@@ -87,19 +103,19 @@ const TextManagement: React.FC = () => {
   };
 
   // Load theme options based on selected domain
-  const loadThemes = async (domain: string) => {
+  const loadThemes = async (domainId: number) => {
     try {
-      const response = await axios.get(`/api/texts/themes?domain=${domain}`);
+      const response = await axios.get(`/api/taxonomy/themes?domainId=${domainId}`);
       setThemes(response.data);
     } catch (err) {
       console.error('Error loading themes:', err);
     }
   };
 
-  // Load subtheme options based on selected domain and theme
-  const loadSubThemes = async (domain: string, theme: string) => {
+  // Load subtheme options based on selected theme
+  const loadSubThemes = async (themeId: number) => {
     try {
-      const response = await axios.get(`/api/texts/subthemes?domain=${domain}&theme=${theme}`);
+      const response = await axios.get(`/api/taxonomy/subthemes?themeId=${themeId}`);
       setSubThemes(response.data);
     } catch (err) {
       console.error('Error loading subthemes:', err);
@@ -114,9 +130,9 @@ const TextManagement: React.FC = () => {
     try {
       // Build query parameters
       const params = new URLSearchParams();
-      if (filters.domain) params.append('domain', filters.domain);
-      if (filters.theme) params.append('theme', filters.theme);
-      if (filters.subTheme) params.append('subTheme', filters.subTheme);
+      if (filters.domainId) params.append('domainId', filters.domainId.toString());
+      if (filters.themeId) params.append('themeId', filters.themeId.toString());
+      if (filters.subThemeId) params.append('subThemeId', filters.subThemeId.toString());
       if (filters.nature) params.append('nature', filters.nature);
       if (filters.publicationYear) params.append('publicationYear', filters.publicationYear.toString());
       if (filters.keyword) params.append('keyword', filters.keyword);
@@ -141,29 +157,29 @@ const TextManagement: React.FC = () => {
   // Handle filter changes
   const handleFilterChange = (name: keyof TextFilters, value: string | number | null) => {
     // Special handling for domain change
-    if (name === 'domain') {
+    if (name === 'domainId') {
         setFilters({
           ...filters,
-          [name]: value as string,
-          theme: '',
-          subTheme: ''
+          [name]: value as number,
+          themeId: null,
+          subThemeId: null
         });
         if (value) {
-          loadThemes(value as string);
+          loadThemes(value as number);
         } else {
           setThemes([]);
           setSubThemes([]);
         }
       } 
     // Special handling for theme change
-    else if (name === 'theme') {
+    else if (name === 'themeId') {
         setFilters({
           ...filters,
-          [name]: value as string,
-          subTheme: ''
+          [name]: value as number,
+          subThemeId: null
         });
-        if (value && filters.domain) {
-          loadSubThemes(filters.domain, value as string);
+        if (value) {
+          loadSubThemes(value as number);
         } else {
           setSubThemes([]);
         }
@@ -186,9 +202,9 @@ const TextManagement: React.FC = () => {
   // Reset filters
   const resetFilters = () => {
     setFilters({
-      domain: '',
-      theme: '',
-      subTheme: '',
+      domainId: null,
+      themeId: null,
+      subThemeId: null,
       nature: '',
       publicationYear: null,
       keyword: '',
@@ -248,12 +264,12 @@ const TextManagement: React.FC = () => {
           <div className="filter-item">
             <label>Domain</label>
             <select 
-              value={filters.domain} 
-              onChange={(e) => handleFilterChange('domain', e.target.value)}
+              value={filters.domainId || ''}
+              onChange={(e) => handleFilterChange('domainId', e.target.value ? Number(e.target.value) : null)}
             >
               <option value="">All Domains</option>
-              {domains.map((domain, index) => (
-                <option key={index} value={domain}>{domain}</option>
+              {domains.map((domain) => (
+                <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
               ))}
             </select>
           </div>
@@ -261,13 +277,13 @@ const TextManagement: React.FC = () => {
           <div className="filter-item">
             <label>Theme</label>
             <select 
-              value={filters.theme} 
-              onChange={(e) => handleFilterChange('theme', e.target.value)}
-              disabled={!filters.domain}
+              value={filters.themeId || ''}
+              onChange={(e) => handleFilterChange('themeId', e.target.value ? Number(e.target.value) : null)}
+              disabled={!filters.domainId}
             >
               <option value="">All Themes</option>
-              {themes.map((theme, index) => (
-                <option key={index} value={theme}>{theme}</option>
+              {themes.map((theme) => (
+                <option key={theme.themeId} value={theme.themeId}>{theme.name}</option>
               ))}
             </select>
           </div>
@@ -275,13 +291,13 @@ const TextManagement: React.FC = () => {
           <div className="filter-item">
             <label>Sub-Theme</label>
             <select 
-              value={filters.subTheme} 
-              onChange={(e) => handleFilterChange('subTheme', e.target.value)}
-              disabled={!filters.theme}
+              value={filters.subThemeId || ''}
+              onChange={(e) => handleFilterChange('subThemeId', e.target.value ? Number(e.target.value) : null)}
+              disabled={!filters.themeId}
             >
               <option value="">All Sub-Themes</option>
-              {subThemes.map((subTheme, index) => (
-                <option key={index} value={subTheme}>{subTheme}</option>
+              {subThemes.map((subTheme) => (
+                <option key={subTheme.subThemeId} value={subTheme.subThemeId}>{subTheme.name}</option>
               ))}
             </select>
           </div>

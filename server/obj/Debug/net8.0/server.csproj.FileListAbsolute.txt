@@ -924,3 +924,7 @@ C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\refint\server.dll
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.pdb
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.genruntimeconfig.cache
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\ref\server.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.OpenApi.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
