@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../../styles/navbar.css';
 
 interface NavbarProps {
@@ -13,6 +14,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const accountDropdownRef = useRef<HTMLDivElement>(null);
   const manualRef = useRef<HTMLDivElement>(null);
@@ -63,6 +65,15 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await axios.post('/api/auth/logout');
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
+  };
+
   const isDashboard = location.pathname.includes('dashboard');
   
   // Example function to determine account expiration date - replace with actual implementation
@@ -75,6 +86,13 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
     if (userRole === 'SuperAdmin') return '/admin';
     if (userRole === 'SubscriptionManager') return '/company';
     return '/user';
+  };
+
+  // Get profile path based on user role
+  const getProfilePath = () => {
+    if (userRole === 'SuperAdmin') return '/admin/profile';
+    if (userRole === 'SubscriptionManager') return '/company/profile';
+    return '/user/profile';
   };
 
   return (
@@ -129,6 +147,61 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
                 <i className="fas fa-sitemap"></i>
                 <span className="nav-label">Taxonomy</span>
               </Link>
+            </div>
+          )}
+
+          {/* Users and Roles Management - based on role */}
+          {userRole === 'SuperAdmin' && (
+            <div className="nav-item" ref={dropdownRef}>
+              <button 
+                className="nav-button" 
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-label="Management"
+              >
+                <i className="fas fa-users-cog"></i>
+                <span className="nav-label">Management</span>
+              </button>
+              {dropdownOpen && (
+                <div className="dropdown-menu">
+                  <Link to="/admin/users" className="dropdown-item">
+                    <i className="fas fa-users"></i>
+                    <span>Manage Users</span>
+                  </Link>
+                  <Link to="/admin/roles" className="dropdown-item">
+                    <i className="fas fa-user-tag"></i>
+                    <span>Manage Roles</span>
+                  </Link>
+                  <Link to="/admin/pending-requests" className="dropdown-item">
+                    <i className="fas fa-clock"></i>
+                    <span>Pending Requests</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {userRole === 'SubscriptionManager' && (
+            <div className="nav-item" ref={dropdownRef}>
+              <button 
+                className="nav-button" 
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-label="Management"
+              >
+                <i className="fas fa-users-cog"></i>
+                <span className="nav-label">Management</span>
+              </button>
+              {dropdownOpen && (
+                <div className="dropdown-menu">
+                  <Link to="/company/users" className="dropdown-item">
+                    <i className="fas fa-users"></i>
+                    <span>Manage Users</span>
+                  </Link>
+                  <Link to="/company/roles" className="dropdown-item">
+                    <i className="fas fa-user-tag"></i>
+                    <span>Manage Roles</span>
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
@@ -212,19 +285,19 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
                   <p><strong>Expiration:</strong> {getAccountExpirationDate()}</p>
                 </div>
                 <div className="dropdown-divider"></div>
-                <Link to="/profile" className="dropdown-item">
+                <Link to={getProfilePath()} className="dropdown-item">
                   <i className="fas fa-user-cog"></i>
                   <span>My Profile</span>
                 </Link>
-                <Link to="/settings" className="dropdown-item">
+                <Link to={`${getBasePath()}/settings`} className="dropdown-item">
                   <i className="fas fa-cog"></i>
                   <span>Settings</span>
                 </Link>
                 <div className="dropdown-divider"></div>
-                <Link to="/logout" className="dropdown-item">
+                <div className="dropdown-item" onClick={handleLogout}>
                   <i className="fas fa-sign-out-alt"></i>
                   <span>Logout</span>
-                </Link>
+                </div>
               </div>
             )}
           </div>
