@@ -1,4 +1,7 @@
-﻿namespace server.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+
+namespace server.Models
 {
     public class Text
     {
@@ -28,11 +31,14 @@
 
     public class TextRequirement
     {
+        [Key]
         public int RequirementId { get; set; }
         public int TextId { get; set; }
         public string Number { get; set; }
         public string Title { get; set; }
-        public string Status { get; set; } // "Applicable", "Non applicable", "À vérifier", "Pour information"
-        public virtual Text Text { get; set; }
+        public string Status { get; set; } // "applicable", "non-applicable", "à vérifier", "pour information"
+
+        [ForeignKey("TextId")]
+        public Text Text { get; set; }
     }
 }

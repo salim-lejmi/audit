@@ -101,6 +101,10 @@ const SubscriptionManagerDashboard: React.FC = () => {
                 <i className="fas fa-user-tag"></i>
                 Manage Roles
               </Link>
+              <Link to="/company/compliance" className="action-button warning">
+                <i className="fas fa-check-square"></i>
+                Compliance Evaluation
+              </Link>
               <Link to="/company/settings" className="action-button info">
                 <i className="fas fa-cog"></i>
                 Company Settings
@@ -115,6 +119,37 @@ const SubscriptionManagerDashboard: React.FC = () => {
                 <i className="fas fa-sign-out-alt"></i>
                 Logout
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Overview */}
+        <div className="overview-card">
+          <div className="card-header">
+            <h5>Available Features</h5>
+          </div>
+          <div className="card-body">
+            <div className="features-grid">
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <i className="fas fa-check-square"></i>
+                </div>
+                <div className="feature-content">
+                  <h6>Compliance Evaluation</h6>
+                  <p>Evaluate the compliance of texts and requirements, add observations, and attach documents.</p>
+                  <Link to="/company/compliance" className="feature-link">Go to Compliance Evaluation</Link>
+                </div>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <i className="fas fa-file-alt"></i>
+                </div>
+                <div className="feature-content">
+                  <h6>Text Management</h6>
+                  <p>Manage regulatory texts, organize by domain, theme, and sub-theme.</p>
+                  <Link to="/company/texts" className="feature-link">Manage Texts</Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -1,0 +1,322 @@
+/* Compliance Evaluation Styles - Modern Edition */
+:root {
+    --primary-color: #3f51b5;
+    --primary-dark: #303f9f;
+    --success-color: #2e7d32;
+    --success-light: rgba(76, 175, 80, 0.1);
+    --error-color: #d32f2f;
+    --error-light: rgba(244, 67, 54, 0.1);
+    --warning-color: #ef6c00;
+    --warning-light: rgba(255, 152, 0, 0.1);
+    --info-color: #1976d2;
+    --info-light: rgba(33, 150, 243, 0.1);
+    --light-gray: #f5f5f5;
+    --border-color: #e0e0e0;
+    --text-secondary: #6c757d;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --transition-speed: 0.2s;
+  }
+  
+  /* Global styles */
+  .compliance-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1366px) {
+    .MuiContainer-root {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    
+    .MuiTableCell-root {
+      padding: 8px 12px;
+    }
+  }
+  
+  /* Cards and Papers */
+  .MuiPaper-root {
+    box-shadow: var(--card-shadow) !important;
+    border-radius: 8px !important;
+    transition: box-shadow var(--transition-speed) ease;
+  }
+  
+  .MuiPaper-root:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  }
+  
+  /* Tables */
+  .MuiTableContainer-root {
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    margin-bottom: 24px;
+  }
+  
+  .MuiTableHead-root .MuiTableCell-root {
+    background-color: var(--light-gray);
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .MuiTableRow-root:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  /* Status chips */
+  .status-chip {
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    margin-right: 6px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+  }
+  
+  /* Accordions */
+  .MuiAccordion-root {
+    border-radius: 8px !important;
+    overflow: hidden;
+    margin-bottom: 16px !important;
+    box-shadow: var(--card-shadow) !important;
+    border: none !important;
+  }
+  
+  .MuiAccordion-root.Mui-expanded {
+    margin: 0 0 16px 0 !important;
+  }
+  
+  .MuiAccordionSummary-root {
+    min-height: 56px !important;
+    transition: background-color var(--transition-speed) ease;
+  }
+  
+  .MuiAccordionSummary-content {
+    margin: 12px 0 !important;
+  }
+  
+  .MuiAccordionDetails-root {
+    padding: 16px 24px 24px !important;
+  }
+  
+  /* Buttons */
+  .MuiButton-root {
+    text-transform: none !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    padding: 6px 16px !important;
+    transition: all var(--transition-speed) !important;
+  }
+  
+  .MuiButton-outlined {
+    border-width: 1.5px !important;
+  }
+  
+  .MuiButton-contained {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  .MuiButton-contained:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
+  }
+  
+  /* Form controls */
+  .MuiFormControl-root {
+    width: 100%;
+    margin-bottom: 16px !important;
+  }
+  
+  .MuiOutlinedInput-root {
+    border-radius: 6px !important;
+  }
+  
+  .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  /* Dialogs */
+  .MuiDialog-paper {
+    border-radius: 12px !important;
+    overflow: hidden;
+  }
+  
+  .MuiDialogTitle-root {
+    padding: 20px 24px 16px !important;
+    background-color: #fff !important;
+  }
+  
+  .MuiDialogContent-root {
+    padding: 0 24px 20px !important;
+  }
+  
+  .MuiDialogActions-root {
+    padding: 12px 24px 16px !important;
+  }
+  
+  /* Lists */
+  .MuiList-root {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  .MuiListItem-root {
+    padding: 12px 0 !important;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .MuiListItem-root:last-child {
+    border-bottom: none;
+  }
+  
+  .MuiListItemText-primary {
+    font-weight: 500 !important;
+    margin-bottom: 4px;
+  }
+  
+  .MuiListItemText-secondary {
+    color: var(--text-secondary) !important;
+    font-size: 12px !important;
+  }
+  
+  /* Tabs */
+  .MuiTabs-root {
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .MuiTab-root {
+    text-transform: none !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    min-width: 100px !important;
+    padding: 12px 16px !important;
+  }
+  
+  /* Icons */
+  .MuiIconButton-root {
+    border-radius: 8px !important;
+    padding: 8px !important;
+    color: #555 !important;
+    transition: background-color var(--transition-speed) ease-in-out;
+  }
+  
+  .MuiIconButton-root:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+  }
+  
+  /* Dividers */
+  .MuiDivider-root {
+    margin: 24px 0 !important;
+    background-color: rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  /* Chips */
+  .MuiChip-root {
+    height: 28px !important;
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+  }
+  
+  /* Progress */
+  .MuiCircularProgress-root {
+    color: var(--primary-color) !important;
+  }
+  
+  /* Status colors */
+  .status-applicable, .applicable {
+    background-color: var(--success-light);
+    color: var(--success-color);
+    border-color: var(--success-color);
+  }
+  
+  .status-non-applicable, .non-applicable {
+    background-color: var(--error-light);
+    color: var(--error-color);
+    border-color: var(--error-color);
+  }
+  
+  .status-verify, .verify {
+    background-color: var(--warning-light);
+    color: var(--warning-color);
+    border-color: var(--warning-color);
+  }
+  
+  .status-information, .information {
+    background-color: var(--info-light);
+    color: var(--info-color);
+    border-color: var(--info-color);
+  }
+  
+  /* Media print styles */
+  @media print {
+    .MuiButton-root,
+    .print-hide {
+      display: none !important;
+    }
+    
+    .MuiAccordion-root {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      margin-bottom: 10mm !important;
+    }
+    
+    .MuiPaper-root {
+      box-shadow: none !important;
+      border: 1px solid #ddd !important;
+    }
+  }
+  
+  /* Status button active states */
+  .status-button.applicable.active {
+    background-color: var(--success-color) !important;
+    color: white !important;
+  }
+  
+  .status-button.non-applicable.active {
+    background-color: var(--error-color) !important;
+    color: white !important;
+  }
+  
+  .status-button.verify.active {
+    background-color: var(--warning-color) !important;
+    color: white !important;
+  }
+  
+  .status-button.information.active {
+    background-color: var(--info-color) !important;
+    color: white !important;
+  }
+  
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .MuiContainer-root {
+      padding: 0 8px;
+    }
+    
+    .MuiAccordionSummary-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .MuiAccordionSummary-content .MuiGrid-item {
+      width: 100%;
+      padding: 4px 0;
+    }
+    
+    .MuiAccordionDetails-root {
+      padding: 12px 16px 16px !important;
+    }
+    
+    .navigation-buttons {
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .MuiTableCell-root {
+      padding: 8px;
+    }
+  }

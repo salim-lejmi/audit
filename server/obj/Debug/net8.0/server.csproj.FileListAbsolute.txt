@@ -796,9 +796,13 @@ C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.IdentityModel.L
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.OpenApi.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Mono.TextTemplating.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.ClientModel.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.CodeDom.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Composition.AttributedModel.dll
@@ -924,7 +928,3 @@ C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\refint\server.dll
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.pdb
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.genruntimeconfig.cache
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\ref\server.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.OpenApi.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll

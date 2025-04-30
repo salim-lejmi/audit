@@ -17,6 +17,11 @@ namespace server.Data
         public DbSet<Domain> Domains { get; set; }
         public DbSet<Theme> Themes { get; set; }
         public DbSet<SubTheme> SubThemes { get; set; }
+        public DbSet<ComplianceEvaluation> ComplianceEvaluations { get; set; }
+        public DbSet<Observation> Observations { get; set; }
+        public DbSet<MonitoringParameter> MonitoringParameters { get; set; }
+        public DbSet<EvaluationAttachment> EvaluationAttachments { get; set; }
+        public DbSet<EvaluationHistory> EvaluationHistory { get; set; }
 
 
         private static readonly DateTime SeedCreatedAt = new DateTime(2025, 3, 10, 1, 2, 0, DateTimeKind.Utc);
@@ -58,6 +63,47 @@ namespace server.Data
                 .HasMany(t => t.SubThemes)
                 .WithOne(s => s.Theme)
                 .HasForeignKey(s => s.ThemeId);
+
+            // Configure ComplianceEvaluation relationships
+            modelBuilder.Entity<ComplianceEvaluation>()
+                .HasOne(ce => ce.Text)
+                .WithMany()
+                .HasForeignKey(ce => ce.TextId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ComplianceEvaluation>()
+                .HasOne(ce => ce.Requirement)
+                .WithMany()
+                .HasForeignKey(ce => ce.RequirementId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ComplianceEvaluation>()
+                .HasOne(ce => ce.EvaluatedBy)
+                .WithMany()
+                .HasForeignKey(ce => ce.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Observation relationships
+            modelBuilder.Entity<Observation>()
+                .HasOne(o => o.Evaluation)
+                .WithMany(ce => ce.Observations)
+                .HasForeignKey(o => o.EvaluationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure MonitoringParameter relationships
+            modelBuilder.Entity<MonitoringParameter>()
+                .HasOne(mp => mp.Evaluation)
+                .WithMany(ce => ce.MonitoringParameters)
+                .HasForeignKey(mp => mp.EvaluationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure EvaluationAttachment relationships
+            modelBuilder.Entity<EvaluationAttachment>()
+                .HasOne(ea => ea.Evaluation)
+                .WithMany(ce => ce.Attachments)
+                .HasForeignKey(ea => ea.EvaluationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Seed Super Admin user
             modelBuilder.Entity<User>().HasData(
                 new User
@@ -75,8 +121,7 @@ namespace server.Data
                 new Domain { DomainId = 1, Name = "Santé et sécurité au travail", CreatedAt = SeedCreatedAt },
                 new Domain { DomainId = 2, Name = "Environnement", CreatedAt = SeedCreatedAt },
                 new Domain { DomainId = 3, Name = "Qualité", CreatedAt = SeedCreatedAt }
-);
-
+            );
         }
     }
 }
