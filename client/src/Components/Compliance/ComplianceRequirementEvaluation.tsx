@@ -17,6 +17,7 @@ import {
   TextWithRequirements, ObservationDialogState, 
   MonitoringDialogState, FileDialogState
 } from './types';
+import { useNavigate } from 'react-router-dom';
 
 interface ComplianceRequirementEvaluationProps {
   textId: number;
@@ -26,7 +27,8 @@ interface ComplianceRequirementEvaluationProps {
 const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationProps> = ({ textId, onBack }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<TextWithRequirements | null>(null);
-  
+    const navigate = useNavigate();
+
   // Dialogs state
   const [observationDialog, setObservationDialog] = useState<ObservationDialogState>({
     open: false,
@@ -555,13 +557,17 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       )}
       
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, mb: 5 }}>
-        <Button startIcon={<ArrowBack />} onClick={onBack}>
-          Textes applicables
-        </Button>
-        <Button endIcon={<ArrowForward />} color="primary">
-          Plan d'action
-        </Button>
-      </Box>
+    <Button startIcon={<ArrowBack />} onClick={onBack}>
+      Textes applicables
+    </Button>
+    <Button 
+      endIcon={<ArrowForward />} 
+      color="primary"
+      onClick={() => navigate(`/company/action-plan?textId=${textId}`)}
+    >
+      Plan d'action
+    </Button>
+  </Box>
 
       {/* Observation Dialog */}
       <Dialog open={observationDialog.open} onClose={() => setObservationDialog({ ...observationDialog, open: false })}>

@@ -13,8 +13,7 @@ import PendingRequests from './Components/Admin/PendingRequests';
 import SubscriptionManagerDashboard from './Components/Company/SubscriptionManagerDashboard';
 import ComplianceEvaluation from './Components/Compliance/ComplianceEvaluation';
 import ProtectedRoute from './Components/Common/ProtectedRoute';
-import Navbar from './Components/Shared/navbar';
-
+import ActionPlan from './Components/Compliance/ActionPlan';
 const AppRoutes = () => {
   return (
     <Router>
@@ -37,6 +36,7 @@ const AppRoutes = () => {
 
         {/* Subscription Manager Routes */}
         <Route path="/company" element={<ProtectedRoute role="SubscriptionManager" />}>
+        <Route path="action-plan" element={<ActionPlan />} />
           <Route path="dashboard" element={<SubscriptionManagerDashboard />} />
           <Route path="users" element={<ManageUsers/>} />
           <Route path="roles" element={<ManageRoles/>} />
@@ -50,6 +50,8 @@ const AppRoutes = () => {
         <Route path="/user" element={<ProtectedRoute role="User" />}>
           <Route path="compliance" element={<ComplianceEvaluation />} />
           <Route path="profile" element={<ProfilePage />} />
+            <Route path="action-plan" element={<ActionPlan />} />
+
         </Route>
 
         {/* Fallback */}

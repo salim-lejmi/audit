@@ -112,3 +112,46 @@ export interface FileDialogState {
   evaluationId: number | null;
   file: File | null;
 }
+export interface Action {
+  actionId: number;
+  textId: number;
+  textReference: string;
+  requirementId?: number;
+  requirementTitle?: string;
+  description: string;
+  responsibleId: number;
+  responsibleName: string;
+  deadline: string;
+  progress: number;
+  effectiveness?: string;
+  status: string;
+  createdAt: string;
+  updatedAt?: string;
+  createdById: number;
+  domain?: string;
+  theme?: string;
+  subTheme?: string;
+}
+
+export interface ActionDialogState {
+  open: boolean;
+  mode: 'create' | 'edit';
+  textId?: number;
+  requirementId?: number;
+  actionId?: number;
+  data: {
+    description: string;
+    responsibleId: number;
+    deadline: string;
+    progress: number;
+    effectiveness: string;
+    status: string;
+  };
+}
+
+export interface User {
+  userId: number;
+  name: string;
+  email: string;
+  role: string;
+}

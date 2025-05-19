@@ -22,6 +22,7 @@ namespace server.Data
         public DbSet<MonitoringParameter> MonitoringParameters { get; set; }
         public DbSet<EvaluationAttachment> EvaluationAttachments { get; set; }
         public DbSet<EvaluationHistory> EvaluationHistory { get; set; }
+        public DbSet<Models.Action> Actions { get; set; }
 
 
         private static readonly DateTime SeedCreatedAt = new DateTime(2025, 3, 10, 1, 2, 0, DateTimeKind.Utc);
@@ -103,7 +104,29 @@ namespace server.Data
                 .WithMany(ce => ce.Attachments)
                 .HasForeignKey(ea => ea.EvaluationId)
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Models.Action>()
+    .HasOne(a => a.Text)
+    .WithMany()
+    .HasForeignKey(a => a.TextId)
+    .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Models.Action>()
+                .HasOne(a => a.Requirement)
+                .WithMany()
+                .HasForeignKey(a => a.RequirementId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Models.Action>()
+                .HasOne(a => a.Responsible)
+                .WithMany()
+                .HasForeignKey(a => a.ResponsibleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Models.Action>()
+                .HasOne(a => a.CreatedBy)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
             // Seed Super Admin user
             modelBuilder.Entity<User>().HasData(
                 new User
