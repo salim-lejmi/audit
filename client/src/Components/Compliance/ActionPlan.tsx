@@ -493,11 +493,13 @@ const ActionPlan: React.FC = () => {
                       onChange={handleFilterChange}
                     >
                       <MenuItem value="">Tous</MenuItem>
-                      {users.map(user => (
-                        <MenuItem key={user.userId} value={user.userId}>
-                          {user.name}
-                        </MenuItem>
-                      ))}
+                   {users.map(user => (
+  <MenuItem key={user.userId} value={user.userId}>
+    {user.name}
+  </MenuItem>
+))}
+<MenuItem value="null">Non assigné</MenuItem>
+
                     </Select>
                   </FormControl>
                 </Grid>
@@ -584,7 +586,7 @@ const ActionPlan: React.FC = () => {
                         <td>{action.textReference}</td>
                         <td>{action.requirementTitle || '-'}</td>
                         <td>{action.description}</td>
-                        <td>{action.responsibleName}</td>
+<td>{action.responsibleName || 'Non assigné'}</td>
                         <td>
                           <Tooltip title={`Créée le ${new Date(action.createdAt).toLocaleDateString()}`}>
                             <span>{new Date(action.deadline).toLocaleDateString()}</span>
@@ -696,25 +698,23 @@ const ActionPlan: React.FC = () => {
             </Grid>
             
             <Grid item sx={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel id="responsible-dialog-label">Responsable</InputLabel>
-                <Select
-                  labelId="responsible-dialog-label"
-                  id="responsible-dialog-select"
-                  value={actionDialog.data.responsibleId}
-                  label="Responsable"
-                  onChange={(e) => handleActionDialogChange('responsibleId', e.target.value)}
-                  required
-                >
-                  <MenuItem value={0} disabled>Sélectionner un responsable</MenuItem>
-                  {users.map(user => (
-                    <MenuItem key={user.userId} value={user.userId}>
-                      {user.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+<FormControl fullWidth>
+  <InputLabel id="responsible-dialog-label">Responsable</InputLabel>
+  <Select
+    labelId="responsible-dialog-label"
+    id="responsible-dialog-select"
+    value={actionDialog.data.responsibleId || ''}
+    label="Responsable"
+    onChange={(e) => handleActionDialogChange('responsibleId', e.target.value === '' ? null : e.target.value)}
+  >
+    <MenuItem value="">Sélectionner un responsable</MenuItem>
+    {users.map(user => (
+      <MenuItem key={user.userId} value={user.userId}>
+        {user.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>            </Grid>
             
             <Grid item sx={{ xs: 12, sm: 6 }}>
               <TextField

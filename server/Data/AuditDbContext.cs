@@ -118,9 +118,9 @@ namespace server.Data
 
             modelBuilder.Entity<Models.Action>()
                 .HasOne(a => a.Responsible)
-                .WithMany()
+                .WithMany() 
                 .HasForeignKey(a => a.ResponsibleId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull); 
 
             modelBuilder.Entity<Models.Action>()
                 .HasOne(a => a.CreatedBy)

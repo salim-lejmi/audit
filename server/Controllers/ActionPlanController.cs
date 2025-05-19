@@ -114,7 +114,7 @@ namespace server.Controllers
                         requirementTitle = a.Requirement != null ? a.Requirement.Title : null,
                         description = a.Description,
                         responsibleId = a.ResponsibleId,
-                        responsibleName = a.Responsible.Name,
+                        responsibleName = a.Responsible != null ? a.Responsible.Name : null,
                         deadline = a.Deadline,
                         progress = a.Progress,
                         effectiveness = a.Effectiveness,
@@ -182,7 +182,7 @@ namespace server.Controllers
                 requirementTitle = action.Requirement?.Title,
                 description = action.Description,
                 responsibleId = action.ResponsibleId,
-                responsibleName = action.Responsible.Name,
+                responsibleName = action.Responsible?.Name,
                 deadline = action.Deadline,
                 progress = action.Progress,
                 effectiveness = action.Effectiveness,
@@ -208,9 +208,9 @@ namespace server.Controllers
 
             // Validate request
             if (request.TextId <= 0 || string.IsNullOrEmpty(request.Description) ||
-                request.ResponsibleId <= 0 || request.Deadline == default)
+                request.Deadline == default)
             {
-                return BadRequest(new { message = "TextId, description, responsibleId, and deadline are required" });
+                return BadRequest(new { message = "TextId, description, and deadline are required" });
             }
 
             // Verify text exists
@@ -234,26 +234,30 @@ namespace server.Controllers
                 }
             }
 
-            // Verify responsible user exists
-            var responsible = await _context.Users.FindAsync(request.ResponsibleId);
-            if (responsible == null)
-            {
-                return NotFound(new { message = "Responsible user not found" });
-            }
-
             // Get current user
             var currentUser = await _context.Users.FindAsync(userId.Value);
 
-            // Check permission: Only SubscriptionManager can assign actions to other users
-            if (currentUser.Role != "SubscriptionManager" && request.ResponsibleId != userId)
+            // Verify responsible user exists if provided
+            if (request.ResponsibleId.HasValue && request.ResponsibleId.Value > 0)
             {
-                return StatusCode(403, new { message = "You can only create actions for yourself" });
-            }
+                // Verify responsible user exists
+                var responsible = await _context.Users.FindAsync(request.ResponsibleId.Value);
+                if (responsible == null)
+                {
+                    return NotFound(new { message = "Responsible user not found" });
+                }
 
-            // If SubscriptionManager, ensure responsible user is in the same company
-            if (currentUser.Role == "SubscriptionManager" && responsible.CompanyId != currentUser.CompanyId)
-            {
-                return StatusCode(403, new { message = "You can only assign actions to users in your company" });
+                // Check permission: Only SubscriptionManager can assign actions to other users
+                if (currentUser.Role != "SubscriptionManager" && request.ResponsibleId != userId)
+                {
+                    return StatusCode(403, new { message = "You can only create actions for yourself" });
+                }
+
+                // If SubscriptionManager, ensure responsible user is in the same company
+                if (currentUser.Role == "SubscriptionManager" && responsible.CompanyId != currentUser.CompanyId)
+                {
+                    return StatusCode(403, new { message = "You can only assign actions to users in your company" });
+                }
             }
 
             // Create action
@@ -325,17 +329,20 @@ namespace server.Controllers
 
                 if (request.ResponsibleId.HasValue)
                 {
-                    // Verify responsible user exists and is in the same company
-                    var responsible = await _context.Users.FindAsync(request.ResponsibleId.Value);
-                    if (responsible == null)
+                    // If ResponsibleId is provided and not zero, verify responsible user exists and is in the same company
+                    if (request.ResponsibleId.Value > 0)
                     {
-                        return NotFound(new { message = "Responsible user not found" });
+                        var responsible = await _context.Users.FindAsync(request.ResponsibleId.Value);
+                        if (responsible == null)
+                        {
+                            return NotFound(new { message = "Responsible user not found" });
+                        }
+                        if (responsible.CompanyId != currentUser.CompanyId)
+                        {
+                            return StatusCode(403, new { message = "You can only assign actions to users in your company" });
+                        }
                     }
-                    if (responsible.CompanyId != currentUser.CompanyId)
-                    {
-                        return StatusCode(403, new { message = "You can only assign actions to users in your company" });
-                    }
-                    action.ResponsibleId = request.ResponsibleId.Value;
+                    action.ResponsibleId = request.ResponsibleId;
                 }
 
                 if (request.Deadline.HasValue)
@@ -447,7 +454,7 @@ namespace server.Controllers
                     textReference = a.Text.Reference,
                     requirementTitle = a.Requirement != null ? a.Requirement.Title : null,
                     description = a.Description,
-                    responsibleName = a.Responsible.Name,
+                    responsibleName = a.Responsible != null ? a.Responsible.Name : null,
                     deadline = a.Deadline,
                     progress = a.Progress,
                     effectiveness = a.Effectiveness,
@@ -481,7 +488,7 @@ namespace server.Controllers
             public int TextId { get; set; }
             public int? RequirementId { get; set; }
             public string Description { get; set; }
-            public int ResponsibleId { get; set; }
+            public int? ResponsibleId { get; set; }
             public DateTime Deadline { get; set; }
             public int Progress { get; set; } = 0;
             public string Effectiveness { get; set; }

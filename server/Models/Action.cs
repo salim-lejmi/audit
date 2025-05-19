@@ -18,8 +18,7 @@ namespace server.Models
         [StringLength(500)]
         public string Description { get; set; }
 
-        [Required]
-        public int ResponsibleId { get; set; }
+        public int? ResponsibleId { get; set; }
 
         [Required]
         public DateTime Deadline { get; set; }
@@ -41,7 +40,6 @@ namespace server.Models
         [Required]
         public int CreatedById { get; set; }
 
-        // Navigation properties
         [ForeignKey("TextId")]
         public virtual Text Text { get; set; }
 

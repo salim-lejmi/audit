@@ -218,43 +218,51 @@ namespace server.Controllers
             });
         }
 
-        [HttpDelete("users/{userId}")]
-        public async Task<IActionResult> DeleteUser(int userId)
+[HttpDelete("users/{userId}")]
+public async Task<IActionResult> DeleteUser(int userId)
+{
+    try
+    {
+        // Check if user is a SubscriptionManager
+        var userRole = HttpContext.Session.GetString("UserRole");
+        if (userRole != "SubscriptionManager")
         {
-            // Check if user is a SubscriptionManager
-            var userRole = HttpContext.Session.GetString("UserRole");
-            if (userRole != "SubscriptionManager")
-            {
-                return Forbid();
-            }
-
-            // Get companyId from session
-            var companyId = HttpContext.Session.GetInt32("CompanyId");
-            if (!companyId.HasValue)
-            {
-                return BadRequest(new { message = "Invalid company ID" });
-            }
-
-            // Find user
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.CompanyId == companyId);
-            if (user == null)
-            {
-                return NotFound(new { message = "User not found" });
-            }
-
-            // Prevent deleting the SubscriptionManager
-            if (user.Role == "SubscriptionManager")
-            {
-                return BadRequest(new { message = "Cannot delete the Subscription Manager" });
-            }
-
-            // Delete user
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "User deleted successfully" });
+            return Forbid();
         }
 
+        // Get companyId from session
+        var companyId = HttpContext.Session.GetInt32("CompanyId");
+        if (!companyId.HasValue)
+        {
+            return BadRequest(new { message = "Invalid company ID" });
+        }
+
+        // Find user
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.CompanyId == companyId);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        // Prevent deleting the SubscriptionManager
+        if (user.Role == "SubscriptionManager")
+        {
+            return BadRequest(new { message = "Cannot delete the Subscription Manager" });
+        }
+
+        // Delete user
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "User deleted successfully" });
+    }
+    catch (Exception ex)
+    {
+        // Log the exception (in a real app, you'd use a proper logging mechanism)
+        Console.WriteLine($"Error deleting user: {ex.Message}");
+        return StatusCode(500, new { message = "An error occurred while deleting the user", details = ex.Message });
+    }
+}
         [HttpPut("users/{userId}/role")]
         public async Task<IActionResult> UpdateUserRole(int userId, [FromBody] UpdateRoleRequest request)
         {
