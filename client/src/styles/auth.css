@@ -1,0 +1,305 @@
+/* Basic Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+body, html {
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f7f6;
+  color: #333;
+  font-size: 16px; /* Base font size for easier rem calculations */
+}
+
+.auth-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem; /* Use rem for scalable padding */
+}
+
+.auth-container {
+  display: flex;
+  width: 100%;
+  max-width: 1000px; /* Slightly reduced max-width */
+  min-height: 580px; /* Slightly reduced min-height */
+  background-color: #ffffff;
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.1); /* 10px 30px */
+  overflow: hidden;
+}
+
+.auth-image-side {
+  flex: 0 0 45%; /* Give image a fixed proportion of width */
+  display: none; 
+}
+
+.auth-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.auth-form-side {
+  flex: 1; /* Form side takes remaining space */
+  padding: 2rem; /* 32px */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto; /* Allow vertical scrolling if content overflows */
+  max-height: 100vh; /* Ensure it doesn't exceed viewport height */
+}
+
+.auth-form-container {
+  width: 100%;
+  max-width: 380px; /* Max width for the form itself */
+  margin: auto; /* Center the form an_form_container */
+}
+
+.auth-title {
+  font-size: 2.25rem; /* 36px */
+  font-weight: bold;
+  background: linear-gradient(to right, #ff7e5f, #feb47b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+  margin-bottom: 1.25rem; /* 20px */
+}
+
+.auth-toggle-buttons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.875rem; /* 30px */
+  background-color: #e9ecef;
+  border-radius: 1.5rem; /* 24px - Pill shape */
+  padding: 0.3125rem; /* 5px */
+}
+
+.toggle-button {
+  flex: 1;
+  padding: 0.625rem 1.25rem; /* 10px 20px */
+  font-size: 0.875rem; /* 14px */
+  font-weight: 600;
+  text-align: center;
+  background-color: transparent;
+  color: #6c757d;
+  border: none;
+  border-radius: 1.25rem; /* 20px - Rounded inner buttons */
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-button.active {
+  background: linear-gradient(to right, #ff7e5f, #feb47b);
+  color: white;
+  box-shadow: 0 0.125rem 0.625rem rgba(0,0,0,0.1); /* 2px 10px */
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* This class can be added to the signup form if it needs specific adjustments for many fields */
+.signup-form-fields .form-group {
+  margin-bottom: 0.875rem; /* 14px - Slightly less margin for signup form */
+}
+
+
+.form-group {
+  margin-bottom: 1.125rem; /* 18px */
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.8125rem; /* 13px */
+  color: #555;
+  margin-bottom: 0.5rem; /* 8px */
+  font-weight: 600;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 0.9375rem; /* 12px 15px */
+  font-size: 0.9375rem; /* 15px */
+  border: 1px solid #ced4da;
+  border-radius: 0.5rem; /* 8px */
+  background-color: #f8f9fa;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #ff7e5f;
+  box-shadow: 0 0 0 0.2rem rgba(255, 126, 95, 0.25);
+}
+
+select.form-input {
+  padding-right: 1.875rem; /* 30px */
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem 0.75rem; /* 16px 12px */
+}
+
+.auth-button {
+  padding: 0.75rem 1.25rem; /* 12px 20px */
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(to right, #ff7e5f, #ff6b6b);
+  border: none;
+  border-radius: 1.5rem; /* 24px - Pill shape button */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0.25rem 0.9375rem rgba(255, 107, 107, 0.3); /* 4px 15px */
+  margin-top: 0.625rem; /* 10px */
+}
+
+.auth-button:hover {
+  opacity: 0.9;
+  box-shadow: 0 0.375rem 1.25rem rgba(255, 107, 107, 0.4); /* 6px 20px */
+}
+
+.auth-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.forgot-password-link {
+  text-align: center;
+  margin-top: 0.9375rem; /* 15px */
+  font-size: 0.8125rem; /* 13px */
+}
+
+.forgot-password-link a {
+  color: #ff7e5f;
+  text-decoration: none;
+}
+
+.forgot-password-link a:hover {
+  text-decoration: underline;
+}
+
+.error-message, .success-message {
+  padding: 0.625rem; /* 10px */
+  margin-bottom: 0.9375rem; /* 15px */
+  border-radius: 0.3125rem; /* 5px */
+  font-size: 0.8125rem; /* 13px */
+  text-align: center;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) { /* Start showing image side from tablet size */
+  .auth-image-side {
+    display: block;
+  }
+   .auth-form-side {
+    flex: 0 0 55%; /* Give form side a fixed proportion */
+  }
+}
+
+@media (min-width: 992px) { /* Adjustments for typical laptop screens like 1366x768 and larger */
+  .auth-container {
+     min-height: 600px; 
+     max-width: 1050px;
+  }
+  .auth-form-side {
+    padding: 2.5rem; /* 40px */
+  }
+   .auth-image-side {
+    flex: 0 0 48%; 
+  }
+  .auth-form-side {
+    flex: 0 0 52%; 
+  }
+}
+
+
+@media (max-width: 767.98px) { /* Single column for smaller tablets and mobile */
+  .auth-section {
+    padding: 0.5rem;
+  }
+  .auth-container {
+    flex-direction: column;
+    max-width: 480px; 
+    min-height: auto;
+    margin: 1rem auto; /* Add some margin for small screens */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Softer shadow for mobile */
+  }
+  .auth-image-side {
+    display: none; 
+  }
+  .auth-form-side {
+    padding: 1.5rem; /* 24px */
+    max-height: none; /* Remove max-height if not scrolling within form side itself */
+    overflow-y: visible; /* Let the whole page scroll if needed */
+  }
+   .auth-title {
+    font-size: 2rem; /* 32px */
+  }
+  .form-group {
+    margin-bottom: 1rem; /* 16px */
+  }
+  .signup-form-fields .form-group {
+    margin-bottom: 0.75rem; /* 12px */
+  }
+}
+
+@media (max-width: 480px) { /* Fine-tuning for small mobile screens */
+  body {
+    font-size: 15px; /* Slightly smaller base font for small screens */
+  }
+  .auth-form-side {
+    padding: 1.25rem; /* 20px */
+  }
+  .auth-title {
+    font-size: 1.75rem; /* 28px */
+  }
+  .toggle-button {
+    padding: 0.5rem 1rem; /* 8px 16px */
+    font-size: 0.8125rem; /* 13px */
+  }
+  .form-input {
+    padding: 0.625rem 0.75rem; /* 10px 12px */
+    font-size: 0.875rem; /* 14px */
+  }
+  .auth-button {
+    padding: 0.625rem 1rem; /* 10px 16px */
+    font-size: 0.875rem; /* 14px */
+  }
+}
+
+/* Add this if you want the form container itself to scroll on very small heights, 
+   otherwise .auth-form-side handles scrolling */
+@media (max-height: 600px) and (min-width: 768px) {
+  .auth-form-side {
+    overflow-y: auto;
+    padding-right: 0.5rem; /* Add some padding for scrollbar if it appears */
+  }
+}

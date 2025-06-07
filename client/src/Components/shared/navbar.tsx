@@ -247,37 +247,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             </Link>
           </div>
 
-          {/* Full Screen toggle */}
-          <div className="nav-item">
-            <button 
-              className="nav-button" 
-              onClick={toggleFullScreen}
-              aria-label="Toggle Fullscreen"
-            >
-              {isFullScreen ? (
-                <i className="fas fa-compress"></i>
-              ) : (
-                <i className="fas fa-expand"></i>
-              )}
-              <span className="nav-label">Fullscreen</span>
-            </button>
-          </div>
 
-          {/* Google Search */}
-          <div className="nav-item search-container">
-            <form onSubmit={handleSearch}>
-              <input
-                type="text"
-                placeholder="Google Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-              />
-              <button type="submit" className="search-button">
-                <i className="fas fa-search"></i>
-              </button>
-            </form>
-          </div>
 
           {/* Account dropdown */}
           <div className="nav-item account-dropdown" ref={accountDropdownRef}>

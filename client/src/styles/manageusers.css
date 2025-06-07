@@ -1,186 +1,199 @@
 .manage-users-section {
-    padding: 2rem 0;
-  }
-  
-  .section-header {
-    margin-bottom: 2rem;
-  }
-  
-  .section-header h2 {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 0.5rem;
-  }
-  
-  .controls-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-  
-  .search-container {
-    flex: 1;
-    max-width: 400px;
-  }
-  
-  .search-input {
-    width: 100%;
-    padding: 0.65rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    transition: border-color 0.2s;
-  }
-  
-  .search-input:focus {
-    border-color: #007bff;
-    outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  }
-  
-  .btn-create {
-    background-color: #28a745;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.65rem 1.2rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    display: flex;
-    align-items: center;
-  }
-  
-  .btn-create i {
-    margin-right: 0.5rem;
-  }
-  
-  .btn-create:hover {
-    background-color: #218838;
-  }
-  
-  .users-table-container {
-    overflow-x: auto;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-  }
-  
-  .users-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
-  
-  .users-table thead th {
-    background-color: #f8f9fa;
-    color: #495057;
-    font-weight: 600;
-    text-align: left;
-    padding: 1rem;
-    border-bottom: 2px solid #dee2e6;
-  }
-  
-  .users-table tbody tr {
-    border-bottom: 1px solid #dee2e6;
-    transition: background-color 0.2s;
-  }
-  
-  .users-table tbody tr:hover {
-    background-color: #f8f9fa;
-  }
-  
-  .users-table td {
-    padding: 1rem;
-    vertical-align: middle;
-  }
-  
-  .role-badge {
-    display: inline-block;
-    padding: 0.35rem 0.7rem;
-    border-radius: 30px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-  
-  .role-badge.user {
-    background-color: #e9ecef;
-    color: #495057;
-  }
-  
-  .role-badge.auditor {
-    background-color: #cce5ff;
-    color: #004085;
-  }
-  
-  .role-badge.manager {
-    background-color: #d4edda;
-    color: #155724;
-  }
-  
-  .role-badge.subscriptionmanager {
-    background-color: #d1ecf1;
-    color: #0c5460;
-  }
-  
-  .actions-cell {
-    white-space: nowrap;
-  }
-  
-  .action-btn {
-    background: none;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    margin-right: 5px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .action-btn.edit {
-    color: #007bff;
-  }
-  
-  .action-btn.delete {
-    color: #dc3545;
-  }
-  
-  .action-btn:hover.edit {
-    background-color: rgba(0, 123, 255, 0.1);
-  }
-  
-  .action-btn:hover.delete {
-    background-color: rgba(220, 53, 69, 0.1);
-  }
-  
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
-  
-  .no-users-message {
-    padding: 3rem;
-    text-align: center;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    color: #6c757d;
-  }
-  
-  .loading-container, .error-message {
-    padding: 3rem;
-    text-align: center;
-    color: #6c757d;
-  }
-  
-  .error-message {
-    color: #dc3545;
-  }
+  padding: 2rem 0; /* Keeps your existing vertical padding */
+}
+
+/*
+  Added styles for the .container div within your section.
+  This centers the content, gives it a maximum width, and adds horizontal padding.
+*/
+.manage-users-section .container {
+  max-width: 1140px; /* Common width for large containers, adjust as you see fit (e.g., 960px, 1320px) */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem; /* Adds space on the left side (15px is also common) */
+  padding-right: 1rem; /* Adds space on the right side (15px is also common) */
+  width: 100%; /* Ensures it's responsive within the max-width */
+}
+
+.section-header {
+  margin-bottom: 2rem;
+}
+
+.section-header h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-create {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.65rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.btn-create i {
+  margin-right: 0.5rem;
+}
+
+.btn-create:hover {
+  background-color: #218838;
+}
+
+.users-table-container {
+  overflow-x: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.users-table thead th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.users-table tbody tr {
+  border-bottom: 1px solid #dee2e6;
+  transition: background-color 0.2s;
+}
+
+.users-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.users-table td {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.35rem 0.7rem;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.role-badge.user {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.role-badge.auditor {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.role-badge.manager {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.role-badge.subscriptionmanager {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn.edit {
+  color: #007bff;
+}
+
+.action-btn.delete {
+  color: #dc3545;
+}
+
+.action-btn:hover.edit {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.action-btn:hover.delete {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.no-users-message {
+  padding: 3rem;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  color: #6c757d;
+}
+
+.loading-container, .error-message {
+  padding: 3rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.error-message {
+  color: #dc3545;
+}

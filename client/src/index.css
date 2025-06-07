@@ -13,6 +13,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+#root {
+  width: 100%;
+  margin: 0 auto; /* You can use margin: 0 auto if you want to center a fixed-width layout, or just margin: 0; */
+  padding: 0;
+  /* Ensure #root can take up the full height if needed, or let its content define height */
+}
+
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -24,10 +32,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  /* REMOVE display: flex; and place-items: center; */
+  /* min-width: 320px; /* This is usually fine */
+  /* min-height: 100vh; /* This ensures body takes at least full viewport height, which is fine */
+  /* The body will now behave like a standard block element, allowing content to flow from the top */
 }
 
 h1 {

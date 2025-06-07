@@ -1,200 +1,315 @@
+/* Base section styling */
 .manage-roles-section {
   padding: 2rem 0;
+  background-color: #f9fbfd; /* Optional: a very light background for the whole section */
 }
 
+/* Container to center content and limit width */
+.manage-roles-section .container {
+  max-width: 1200px; /* Slightly wider for better use of space on larger screens */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  width: 100%;
+}
+
+/* Section header styling */
 .section-header {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem; /* Increased bottom margin */
 }
 
 .section-header h2 {
-  font-size: 1.8rem;
+  font-size: 2rem; /* Slightly larger for main title */
   font-weight: 600;
-  color: #333;
-  margin-bottom: 0.5rem;
+  color: #2c3e50; /* Darker, more professional color */
+  margin-bottom: 0.75rem;
 }
 
+.text-muted { /* Added definition as it's used in TSX */
+  color: #7f8c8d; /* Softer muted color */
+  font-size: 0.95rem;
+}
+
+/* Hypothetical Role Distribution Summary (based on screenshot) */
+.role-distribution-summary {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.role-distribution-summary h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #34495e;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.role-distribution-summary div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #34495e;
+}
+
+.role-distribution-summary .role-indicator {
+  margin-right: 0.75rem;
+  font-size: 0.7rem; /* Smaller badges in this summary context */
+}
+
+/* Controls container for search and filter */
+.controls-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem; /* Increased margin */
+  flex-wrap: wrap;
+  gap: 1.5rem; /* Increased gap */
+}
+
+.search-container {
+  position: relative;
+  flex: 1 1 300px; /* Allow flex grow and shrink, base width 300px */
+  max-width: 450px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem; /* Increased padding-left for icon */
+  border: 1px solid #bdc3c7; /* Slightly softer border */
+  border-radius: 6px; /* Slightly more rounded */
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  border-color: #3498db; /* Updated focus color */
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem; /* Adjusted for increased padding */
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7f8c8d;
+  font-size: 0.9rem; /* Ensure icon isn't too large */
+}
+
+.filter-control {
+  flex-shrink: 0;
+  display: flex; /* For multiple filters if needed */
+  gap: 1rem;
+}
+
+.filter-select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: #fff;
+  min-width: 200px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-select:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Users table styling */
 .users-table-container {
   background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07); /* Softer shadow */
+  overflow-x: auto;
+  margin-bottom: 3rem; /* Increased margin */
 }
 
 .users-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.9rem;
 }
 
 .users-table th {
-  background-color: #f8f9fa;
-  color: #495057;
+  background-color: #f4f6f8; /* Lighter header */
+  color: #4a5568; /* Softer text color for header */
   font-weight: 600;
   text-align: left;
-  padding: 1rem;
-  border-bottom: 2px solid #dee2e6;
+  padding: 1rem 1.25rem; /* Slightly more padding */
+  border-bottom: 1px solid #e2e8f0; /* Lighter border */
+  white-space: nowrap;
 }
 
 .users-table td {
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid #eee;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
+  color: #2d3748; /* Main text color in table */
 }
 
-.users-table tr:last-child td {
+.users-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.users-table tr:hover {
-  background-color: #f8f9fa;
+.users-table tbody tr:hover {
+  background-color: #f8fafc; /* Very subtle hover */
 }
 
-/* User info styling */
-.user-name {
+.user-info .user-name {
   font-weight: 500;
-  color: #333;
-  margin-bottom: 0.25rem;
+  color: #2d3748;
+  margin-bottom: 0.2rem;
 }
 
-.user-email {
+.user-info .user-email {
   font-size: 0.85rem;
-  color: #6c757d;
+  color: #718096; /* Softer email color */
 }
 
-/* Role styling */
+/* Role Indicators (Badges) - Consistent with ManageUsers.css */
 .role-indicator {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.4rem 0.75rem;
+  display: inline-block;
+  padding: 0.35em 0.75em; /* Using em for padding relative to font-size */
   border-radius: 30px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1.4; /* Adjusted line-height */
+  letter-spacing: 0.5px; /* Added letter spacing */
 }
 
-.role-user {
-  background-color: #e9ecef;
-  color: #6c757d;
+.role-indicator.role-user {
+  background-color: #e9ecef; /* from ManageUsers */
+  color: #495057;       /* from ManageUsers */
 }
 
-.role-auditor {
-  background-color: #d1ecf1;
-  color: #0c5460;
+.role-indicator.role-auditor {
+  background-color: #cce5ff; /* from ManageUsers */
+  color: #004085;       /* from ManageUsers */
 }
 
-.role-manager {
-  background-color: #d4edda;
-  color: #155724;
+.role-indicator.role-manager {
+  background-color: #d4edda; /* from ManageUsers */
+  color: #155724;       /* from ManageUsers */
 }
 
-.role-subscriptionmanager {
-  background-color: #cce5ff;
-  color: #004085;
+.role-indicator.role-subscriptionmanager {
+  background-color: #d1ecf1; /* from ManageUsers */
+  color: #0c5460;       /* from ManageUsers */
+  /* If "PRIMARY ACCOUNT" text specifically needs to be yellow as in screenshot,
+     you'd need a different class or more specific target in your TSX/HTML.
+     Example: .primary-account-badge { background-color: #fff3cd; color: #856404; }
+  */
 }
 
-/* Role select styling */
 .role-select {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
   background-color: #fff;
-  font-size: 0.85rem;
-  width: 100%;
-}
-
-/* Search and filter controls */
-.controls-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.search-container {
-  position: relative;
-  flex: 1;
-  max-width: 300px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.5rem 1rem 0.5rem 2.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
   font-size: 0.9rem;
+  min-width: 160px;
+  max-width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-}
-
-.filter-select {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
+.role-select:focus {
+  border-color: #3498db;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
 }
 
 /* Role descriptions section */
 .role-descriptions {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 1.5rem;
+  background-color: transparent; /* Removing background for a cleaner look, relying on cards */
+  padding: 0; /* Removing padding here, will be on cards */
+  margin-top: 2.5rem; /* Spacing above this section */
 }
 
 .role-descriptions h4 {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  color: #333;
+  font-size: 1.5rem; /* Larger title for this section */
+  font-weight: 600;
+  margin-bottom: 1.5rem; /* Space below title */
+  color: #2c3e50;
+  padding-left: 0.5rem; /* Slight indent if not using a full-width background */
 }
 
 .descriptions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); /* Min card width */
   gap: 1.5rem;
 }
 
+.description-item {
+  background-color: #fff;
+  padding: 1.5rem; /* More padding inside cards */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.description-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
 .description-item h5 {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #495057;
+  margin-top:0;
+  margin-bottom: 0.75rem;
+  color: #34495e;
 }
 
 .description-item p {
-  color: #6c757d;
+  color: #7f8c8d;
   font-size: 0.9rem;
+  line-height: 1.6;
   margin: 0;
 }
 
+/* Loading and error messages */
 .loading-container, .error-message {
   padding: 3rem;
   text-align: center;
-  color: #6c757d;
+  color: #7f8c8d;
+  font-size: 1rem;
+  margin: 2rem 0;
 }
 
 .error-message {
-  color: #dc3545;
+  color: #c0392b; /* Stronger error color */
+  background-color: #fbeae5; /* Lighter error background */
+  border: 1px solid #e74c3c;
+  border-radius: 6px;
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .users-table {
-    display: block;
-    overflow-x: auto;
+  .section-header h2 {
+    font-size: 1.75rem;
   }
-  
   .controls-container {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
-  
-  .search-container {
-    max-width: 100%;
+  .search-container, .filter-control, .filter-select {
     width: 100%;
+    max-width: none;
+  }
+  .filter-control {
+    flex-direction: column; /* Stack multiple filters vertically */
+  }
+  .role-descriptions h4 {
+    font-size: 1.3rem;
+  }
+  .descriptions-grid {
+    grid-template-columns: 1fr; /* Single column on small screens */
   }
 }

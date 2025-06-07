@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Login from './Components/Authentification/login';
+import Auth from './Components/Authentification/auth';
 import Signup from './Components/Authentification/signup';
 import ManageRoles from './Components/Company/manageroles';
 import ManageUsers from './Components/Company/manageusers';
@@ -19,7 +19,7 @@ const AppRoutes = () => {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Auth />} />
         <Route path="/signup" element={<Signup />} />
 
         {/* Super Admin Routes */}
