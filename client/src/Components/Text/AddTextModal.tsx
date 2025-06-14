@@ -170,136 +170,139 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
   };
 
   // Submit the form
- // Submit the form
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  console.log("Form submission started with data:", formData);
-  
-  if (!formData.domainId || !formData.reference || !formData.publicationYear) {
-    setError('Please fill in all required fields (Domain, Reference, Publication Year)');
-    console.log("Missing required fields:", { 
-      domainId: formData.domainId, 
-      reference: formData.reference, 
-      publicationYear: formData.publicationYear 
-    });
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    // Create FormData object for file upload
-    const submitData = new FormData();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Log each field as it's being added to the FormData
-    console.log("Adding domainId:", formData.domainId);
-    submitData.append('domainId', formData.domainId.toString());
+    console.log("Form submission started with data:", formData);
     
-    if (formData.themeId > 0) {
-      console.log("Adding themeId:", formData.themeId);
-      submitData.append('themeId', formData.themeId.toString());
-    } else {
-      console.log("themeId not added, value:", formData.themeId);
-    }
-    
-    if (formData.subThemeId > 0) {
-      console.log("Adding subThemeId:", formData.subThemeId);
-      submitData.append('subThemeId', formData.subThemeId.toString());
-    } else {
-      console.log("subThemeId not added, value:", formData.subThemeId);
-    }
-    
-    console.log("Adding reference:", formData.reference);
-    submitData.append('reference', formData.reference);
-    
-    console.log("Adding nature:", formData.nature);
-    submitData.append('nature', formData.nature);
-    
-    console.log("Adding publicationYear:", formData.publicationYear);
-    submitData.append('publicationYear', formData.publicationYear.toString());
-    
-    console.log("Adding status:", formData.status);
-    submitData.append('status', formData.status);
-    
-    console.log("Adding penalties:", formData.penalties);
-    submitData.append('penalties', formData.penalties);
-    
-    console.log("Adding relatedTexts:", formData.relatedTexts);
-    submitData.append('relatedTexts', formData.relatedTexts);
-    
-    if (formData.effectiveDate) {
-      console.log("Adding effectiveDate:", formData.effectiveDate);
-      submitData.append('effectiveDate', formData.effectiveDate);
-    } else {
-      console.log("effectiveDate not added, value:", formData.effectiveDate);
-    }
-    
-    console.log("Adding content:", formData.content);
-    submitData.append('content', formData.content);
-    
-    if (formData.file) {
-      console.log("Adding file:", formData.file.name);
-      submitData.append('file', formData.file);
-    } else {
-      console.log("No file attached");
+    if (!formData.domainId || !formData.reference || !formData.publicationYear) {
+      setError('Please fill in all required fields (Domain, Reference, Publication Year)');
+      console.log("Missing required fields:", { 
+        domainId: formData.domainId, 
+        reference: formData.reference, 
+        publicationYear: formData.publicationYear 
+      });
+      return;
     }
 
-    // Add requirements if any
-    if (requirements.length > 0) {
-      console.log("Adding requirements:", requirements);
-      submitData.append('requirements', JSON.stringify(requirements));
-    } else {
-      console.log("No requirements to add");
-    }
+    setLoading(true);
+    setError(null);
 
-    // Log the complete FormData (need to iterate since FormData can't be directly logged)
-    console.log("Final FormData keys:");
-    for (const pair of submitData.entries()) {
-      console.log(pair[0], ': ', pair[1]);
-    }
-
-    console.log("Sending POST request to /api/texts");
-    // Send request to create text
-    const response = await axios.post('/api/texts', submitData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-    
-    console.log("Request successful:", response.data);
-
-    // Notify parent and close modal
-    onTextAdded();
-    onClose();
-    
-  } catch (err) {
-    console.error('Error creating text:', err);
-    
-    if (axios.isAxiosError(err) && err.response) {
-      // Log detailed error response from server
-      console.error('Server error response:', err.response.data);
-      if (typeof err.response.data === 'object') {
-        console.error('Error message:', err.response.data.message || 'No specific error message');
-        console.error('Full error object:', JSON.stringify(err.response.data, null, 2));
+    try {
+      // Create FormData object for file upload
+      const submitData = new FormData();
+      
+      // Log each field as it's being added to the FormData
+      console.log("Adding domainId:", formData.domainId);
+      submitData.append('DomainId', formData.domainId.toString());
+      
+      if (formData.themeId > 0) {
+        console.log("Adding themeId:", formData.themeId);
+        submitData.append('ThemeId', formData.themeId.toString());
       } else {
-        console.error('Raw error response:', err.response.data);
+        console.log("themeId not added, value:", formData.themeId);
       }
-      setError(`Failed to create text: ${typeof err.response.data === 'object' ? JSON.stringify(err.response.data.message || err.response.data) : err.response.data}`);
-    } else {
-      setError('Failed to create text. Please try again.');
-    }  } finally {
-    setLoading(false);
-  }
-};
+      
+      if (formData.subThemeId > 0) {
+        console.log("Adding subThemeId:", formData.subThemeId);
+        submitData.append('SubThemeId', formData.subThemeId.toString());
+      } else {
+        console.log("subThemeId not added, value:", formData.subThemeId);
+      }
+      
+      console.log("Adding reference:", formData.reference);
+      submitData.append('Reference', formData.reference);
+      
+      console.log("Adding nature:", formData.nature);
+      submitData.append('Nature', formData.nature);
+      
+      console.log("Adding publicationYear:", formData.publicationYear);
+      submitData.append('PublicationYear', formData.publicationYear.toString());
+      
+      console.log("Adding status:", formData.status);
+      submitData.append('Status', formData.status);
+      
+      console.log("Adding penalties:", formData.penalties);
+      submitData.append('Penalties', formData.penalties);
+      
+      console.log("Adding relatedTexts:", formData.relatedTexts);
+      submitData.append('RelatedTexts', formData.relatedTexts);
+      
+      if (formData.effectiveDate) {
+        console.log("Adding effectiveDate:", formData.effectiveDate);
+        submitData.append('EffectiveDate', formData.effectiveDate);
+      } else {
+        console.log("effectiveDate not added, value:", formData.effectiveDate);
+      }
+      
+      console.log("Adding content:", formData.content);
+      submitData.append('Content', formData.content);
+      
+      if (formData.file) {
+        console.log("Adding file:", formData.file.name);
+        submitData.append('File', formData.file);
+      } else {
+        console.log("No file attached");
+      }
+
+      // Add requirements if any
+      if (requirements.length > 0) {
+        console.log("Adding requirements:", requirements);
+        requirements.forEach((req, index) => {
+          submitData.append(`Requirements[${index}].Number`, req.number);
+          submitData.append(`Requirements[${index}].Title`, req.title);
+          submitData.append(`Requirements[${index}].Status`, req.status);
+        });
+      } else {
+        console.log("No requirements to add");
+      }
+
+      // Log the complete FormData
+      console.log("Final FormData keys:");
+      for (const pair of submitData.entries()) {
+        console.log(pair[0], ': ', pair[1]);
+      }
+
+      console.log("Sending POST request to /api/texts");
+      // Send request to create text
+      const response = await axios.post('/api/texts', submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      console.log("Request successful:", response.data);
+
+      // Notify parent and close modal
+      onTextAdded();
+      onClose();
+      
+    } catch (err) {
+      console.error('Error creating text:', err);
+      
+      if (axios.isAxiosError(err) && err.response) {
+        console.error('Server error response:', err.response.data);
+        if (typeof err.response.data === 'object') {
+          console.error('Error message:', err.response.data.message || 'No specific error message');
+          console.error('Full error object:', JSON.stringify(err.response.data, null, 2));
+        } else {
+          console.error('Raw error response:', err.response.data);
+        }
+        setError(`Failed to create text: ${typeof err.response.data === 'object' ? JSON.stringify(err.response.data.message || err.response.data) : err.response.data}`);
+      } else {
+        setError('Failed to create text. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="modal-overlay">
       <div className="modal-content text-detail-modal">
         <div className="modal-header">
           <h2>Add New Text</h2>
-          <button className="close-button" onClick={onClose}>&times;</button>
+          <button className="close-button" onClick={onClose}>×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="text-detail-content">
