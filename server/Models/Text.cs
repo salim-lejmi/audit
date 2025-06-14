@@ -9,6 +9,7 @@ namespace server.Models
         public int DomainId { get; set; }
         public int? ThemeId { get; set; }
         public int? SubThemeId { get; set; }
+        public int CompanyId { get; set; } // Add this line to associate text with a company
         public string Reference { get; set; }
         public string Nature { get; set; }
         public int PublicationYear { get; set; }
@@ -21,6 +22,9 @@ namespace server.Models
         public bool IsConsulted { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public int? CreatedById { get; set; }
+        
+        [ForeignKey("CompanyId")]
+        public virtual Company Company { get; set; }
         public virtual User CreatedBy { get; set; }
         public virtual Domain DomainObject { get; set; }
         public virtual Theme ThemeObject { get; set; }

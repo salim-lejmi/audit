@@ -40,7 +40,9 @@ namespace server.Controllers
             {
                 // Check authentication
                 var userId = HttpContext.Session.GetInt32("UserId");
-                if (!userId.HasValue)
+                var companyId = HttpContext.Session.GetInt32("CompanyId");
+                
+                if (!userId.HasValue || !companyId.HasValue)
                 {
                     return Unauthorized(new { message = "Not authenticated" });
                 }
@@ -61,7 +63,8 @@ namespace server.Controllers
                     .Include(a => a.Text)
                     .ThenInclude(t => t.SubThemeObject)
                     .Include(a => a.Requirement)
-                    .Include(a => a.Responsible);
+                    .Include(a => a.Responsible)
+                    .Where(a => a.CompanyId == companyId.Value); // Filter by company
 
                 // If user is not SubscriptionManager, only show actions assigned to them
                 if (user.Role != "SubscriptionManager")
@@ -71,6 +74,13 @@ namespace server.Controllers
                 // If user is SubscriptionManager, filter by company users if responsibleId is provided
                 else if (responsibleId.HasValue)
                 {
+                    // Verify responsible user is in the same company
+                    var responsible = await _context.Users.FindAsync(responsibleId.Value);
+                    if (responsible == null || responsible.CompanyId != companyId)
+                    {
+                        return BadRequest(new { message = "Invalid responsible user" });
+                    }
+                    
                     query = query.Where(a => a.ResponsibleId == responsibleId);
                 }
 
@@ -101,17 +111,17 @@ namespace server.Controllers
                 var totalCount = await query.CountAsync();
 
                 // Get actions for current page
-var actions = await query
-    .OrderByDescending(a => a.CreatedAt)
-    .Skip((page - 1) * pageSize)
-    .Take(pageSize)
-    .Select(a => new
-    {
-        actionId = a.ActionId,
-        textId = a.TextId,
-        textReference = a.Text.Reference,
-        requirementId = a.RequirementId,
-        requirementTitle = a.Requirement != null ? a.Requirement.Title : null,
+                var actions = await query
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(a => new
+                    {
+                        actionId = a.ActionId,
+                        textId = a.TextId,
+                        textReference = a.Text.Reference,
+                        requirementId = a.RequirementId,
+                        requirementTitle = a.Requirement != null ? a.Requirement.Title : null,
                         description = a.Description,
                         responsibleId = a.ResponsibleId,
                         responsibleName = a.Responsible != null ? a.Responsible.Name : null,
@@ -147,7 +157,9 @@ var actions = await query
         {
             // Check authentication
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            
+            if (!userId.HasValue || !companyId.HasValue)
             {
                 return Unauthorized(new { message = "Not authenticated" });
             }
@@ -157,7 +169,7 @@ var actions = await query
                 .Include(a => a.Requirement)
                 .Include(a => a.Responsible)
                 .Include(a => a.CreatedBy)
-                .FirstOrDefaultAsync(a => a.ActionId == actionId);
+                .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value); // Filter by company
 
             if (action == null)
             {
@@ -201,7 +213,9 @@ var actions = await query
         {
             // Check authentication
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            
+            if (!userId.HasValue || !companyId.HasValue)
             {
                 return Unauthorized(new { message = "Not authenticated" });
             }
@@ -213,8 +227,10 @@ var actions = await query
                 return BadRequest(new { message = "TextId, description, and deadline are required" });
             }
 
-            // Verify text exists
-            var text = await _context.Texts.FindAsync(request.TextId);
+            // Verify text exists and belongs to the same company
+            var text = await _context.Texts
+                .FirstOrDefaultAsync(t => t.TextId == request.TextId && t.CompanyId == companyId.Value);
+                
             if (text == null)
             {
                 return NotFound(new { message = "Text not found" });
@@ -271,6 +287,7 @@ var actions = await query
                 Progress = request.Progress,
                 Effectiveness = request.Effectiveness,
                 Status = request.Status ?? "active",
+                CompanyId = companyId.Value, // Set company ID
                 CreatedAt = DateTime.Now,
                 CreatedById = userId.Value
             };
@@ -287,13 +304,17 @@ var actions = await query
         {
             // Check authentication
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            
+            if (!userId.HasValue || !companyId.HasValue)
             {
                 return Unauthorized(new { message = "Not authenticated" });
             }
 
-            // Find action
-            var action = await _context.Actions.FindAsync(actionId);
+            // Find action and ensure it belongs to the user's company
+            var action = await _context.Actions
+                .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
+                
             if (action == null)
             {
                 return NotFound(new { message = "Action not found" });
@@ -370,13 +391,17 @@ var actions = await query
         {
             // Check authentication
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            
+            if (!userId.HasValue || !companyId.HasValue)
             {
                 return Unauthorized(new { message = "Not authenticated" });
             }
 
-            // Find action
-            var action = await _context.Actions.FindAsync(actionId);
+            // Find action and ensure it belongs to the user's company
+            var action = await _context.Actions
+                .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
+                
             if (action == null)
             {
                 return NotFound(new { message = "Action not found" });
@@ -404,7 +429,9 @@ var actions = await query
         {
             // Check authentication
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            
+            if (!userId.HasValue || !companyId.HasValue)
             {
                 return Unauthorized(new { message = "Not authenticated" });
             }
@@ -421,7 +448,8 @@ var actions = await query
                 .Include(a => a.Text)
                 .Include(a => a.Requirement)
                 .Include(a => a.Responsible)
-                .Include(a => a.CreatedBy);
+                .Include(a => a.CreatedBy)
+                .Where(a => a.CompanyId == companyId.Value); // Filter by company
 
             // If user is not SubscriptionManager, only show actions assigned to them
             if (user.Role != "SubscriptionManager")
@@ -443,6 +471,15 @@ var actions = await query
             // Filter by textId if provided
             if (textId.HasValue)
             {
+                // Verify text belongs to the user's company
+                var text = await _context.Texts
+                    .FirstOrDefaultAsync(t => t.TextId == textId && t.CompanyId == companyId.Value);
+                    
+                if (text == null)
+                {
+                    return BadRequest(new { message = "Invalid text" });
+                }
+                
                 query = query.Where(a => a.TextId == textId);
             }
 
@@ -472,10 +509,10 @@ var actions = await query
                 generatedBy = user.Name,
                 textId = textId,
                 textReference = textId.HasValue
-                    ? await _context.Texts.Where(t => t.TextId == textId).Select(t => t.Reference).FirstOrDefaultAsync()
+                    ? await _context.Texts.Where(t => t.TextId == textId && t.CompanyId == companyId).Select(t => t.Reference).FirstOrDefaultAsync()
                     : null,
                 responsibleName = responsibleId.HasValue
-                    ? await _context.Users.Where(u => u.UserId == responsibleId).Select(u => u.Name).FirstOrDefaultAsync()
+                    ? await _context.Users.Where(u => u.UserId == responsibleId && u.CompanyId == companyId).Select(u => u.Name).FirstOrDefaultAsync()
                     : null,
                 actions
             };

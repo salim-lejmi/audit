@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,8 +9,8 @@ namespace server.Models
         [Key]
         public int ActionId { get; set; }
 
-        [Required]
-        public int TextId { get; set; }
+        // REMOVE [Required] here
+        public int? TextId { get; set; } // This is correctly nullable now
 
         public int? RequirementId { get; set; }
 
@@ -33,6 +33,9 @@ namespace server.Models
         [StringLength(50)]
         public string Status { get; set; } = "active"; // active, completed, canceled
 
+        [Required]
+        public int CompanyId { get; set; } // Add this line to associate action with a company
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public DateTime? UpdatedAt { get; set; }
@@ -51,5 +54,8 @@ namespace server.Models
 
         [ForeignKey("CreatedById")]
         public virtual User CreatedBy { get; set; }
+        
+        [ForeignKey("CompanyId")]
+        public virtual Company Company { get; set; }
     }
 }

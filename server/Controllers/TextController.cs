@@ -24,93 +24,96 @@
                 _environment = environment;
             }
 
-            [HttpGet]
-            public async Task<IActionResult> GetTexts(
-                [FromQuery] int? domainId = null,
-                [FromQuery] int? themeId = null,
-                [FromQuery] int? subThemeId = null,
-                [FromQuery] string nature = null,
-                [FromQuery] int? publicationYear = null,
-                [FromQuery] string keyword = null,
-                [FromQuery] string status = null,
-                [FromQuery] string textType = null, // "À vérifier" or "Pour information"
-                [FromQuery] int page = 1,
-                [FromQuery] int pageSize = 10)
-            {
-                // Check authentication
-                var userId = HttpContext.Session.GetInt32("UserId");
-                if (!userId.HasValue)
-                {
-                    return Unauthorized(new { message = "Not authenticated" });
-                }
+[HttpGet]
+public async Task<IActionResult> GetTexts(
+    [FromQuery] int? domainId = null,
+    [FromQuery] int? themeId = null,
+    [FromQuery] int? subThemeId = null,
+    [FromQuery] string nature = null,
+    [FromQuery] int? publicationYear = null,
+    [FromQuery] string keyword = null,
+    [FromQuery] string status = null,
+    [FromQuery] string textType = null, // "À vérifier" or "Pour information"
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+{
+    // Check authentication
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
 
-                // Build query with filters
-                IQueryable<Text> query = _context.Texts
-                    .Include(t => t.CreatedBy)
-                    .Include(t => t.DomainObject)
-                    .Include(t => t.ThemeObject)
-                    .Include(t => t.SubThemeObject);
+    // Build query with filters
+    IQueryable<Text> query = _context.Texts
+        .Include(t => t.CreatedBy)
+        .Include(t => t.DomainObject)
+        .Include(t => t.ThemeObject)
+        .Include(t => t.SubThemeObject)
+        .Where(t => t.CompanyId == companyId.Value); // Filter by company
 
-                if (domainId.HasValue)
-                    query = query.Where(t => t.DomainId == domainId.Value);
+    if (domainId.HasValue)
+        query = query.Where(t => t.DomainId == domainId.Value);
 
-                if (themeId.HasValue)
-                    query = query.Where(t => t.ThemeId == themeId.Value);
+    if (themeId.HasValue)
+        query = query.Where(t => t.ThemeId == themeId.Value);
 
-                if (subThemeId.HasValue)
-                    query = query.Where(t => t.SubThemeId == subThemeId.Value);
+    if (subThemeId.HasValue)
+        query = query.Where(t => t.SubThemeId == subThemeId.Value);
 
-                if (!string.IsNullOrEmpty(nature))
-                    query = query.Where(t => t.Nature.Contains(nature));
+    if (!string.IsNullOrEmpty(nature))
+        query = query.Where(t => t.Nature.Contains(nature));
 
-                if (publicationYear.HasValue)
-                    query = query.Where(t => t.PublicationYear == publicationYear.Value);
+    if (publicationYear.HasValue)
+        query = query.Where(t => t.PublicationYear == publicationYear.Value);
 
-                if (!string.IsNullOrEmpty(keyword))
-                    query = query.Where(t => t.Reference.Contains(keyword) ||
-                                            t.Content.Contains(keyword));
+    if (!string.IsNullOrEmpty(keyword))
+        query = query.Where(t => t.Reference.Contains(keyword) ||
+                                t.Content.Contains(keyword));
 
-                if (!string.IsNullOrEmpty(status))
-                    query = query.Where(t => t.Status == status);
+    if (!string.IsNullOrEmpty(status))
+        query = query.Where(t => t.Status == status);
 
-                if (!string.IsNullOrEmpty(textType))
-                    query = query.Where(t => t.Status == textType);
+    if (!string.IsNullOrEmpty(textType))
+        query = query.Where(t => t.Status == textType);
 
-                // Get total count for pagination
-                var totalCount = await query.CountAsync();
+    // Get total count for pagination
+    var totalCount = await query.CountAsync();
 
-                // Apply pagination
-                var texts = await query
-                    .OrderByDescending(t => t.CreatedAt)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(t => new
-                    {
-                        textId = t.TextId,
-                        domainId = t.DomainId,
-                        themeId = t.ThemeId,
-                        subThemeId = t.SubThemeId,
-                        domain = t.DomainObject != null ? t.DomainObject.Name : "",
-                        theme = t.ThemeObject != null ? t.ThemeObject.Name : "",
-                        subTheme = t.SubThemeObject != null ? t.SubThemeObject.Name : "",
-                        reference = t.Reference,
-                        nature = t.Nature,
-                        publicationYear = t.PublicationYear,
-                        status = t.Status,
-                        isConsulted = t.IsConsulted,
-                        createdAt = t.CreatedAt,
-                        createdBy = t.CreatedBy != null ? t.CreatedBy.Name : null
-                    })
-                    .ToListAsync();
+    // Apply pagination
+    var texts = await query
+        .OrderByDescending(t => t.CreatedAt)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .Select(t => new
+        {
+            textId = t.TextId,
+            domainId = t.DomainId,
+            themeId = t.ThemeId,
+            subThemeId = t.SubThemeId,
+            domain = t.DomainObject != null ? t.DomainObject.Name : "",
+            theme = t.ThemeObject != null ? t.ThemeObject.Name : "",
+            subTheme = t.SubThemeObject != null ? t.SubThemeObject.Name : "",
+            reference = t.Reference,
+            nature = t.Nature,
+            publicationYear = t.PublicationYear,
+            status = t.Status,
+            isConsulted = t.IsConsulted,
+            createdAt = t.CreatedAt,
+            createdBy = t.CreatedBy != null ? t.CreatedBy.Name : null
+        })
+        .ToListAsync();
 
-                return Ok(new
-                {
-                    texts,
-                    totalCount,
-                    totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
-                    currentPage = page
-                });
-            }
+    return Ok(new
+    {
+        texts,
+        totalCount,
+        totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+        currentPage = page
+    });
+}
 
             [HttpGet("domains")]
             public async Task<IActionResult> GetDomains()
@@ -197,484 +200,523 @@
             }
 
             [HttpGet("{id}")]
-            public async Task<IActionResult> GetText(int id)
+public async Task<IActionResult> GetText(int id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
+
+    var text = await _context.Texts
+        .Include(t => t.CreatedBy)
+        .Include(t => t.Requirements)
+        .Include(t => t.DomainObject)
+        .Include(t => t.ThemeObject)
+        .Include(t => t.SubThemeObject)
+        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value); // Filter by company
+
+    if (text == null)
+    {
+        return NotFound(new { message = "Text not found" });
+    }
+
+    // Mark as consulted if not already
+    if (!text.IsConsulted)
+    {
+        text.IsConsulted = true;
+        await _context.SaveChangesAsync();
+    }
+
+    return Ok(new
+    {
+        textId = text.TextId,
+        domainId = text.DomainId,
+        themeId = text.ThemeId,
+        subThemeId = text.SubThemeId,
+        domain = text.DomainObject?.Name,
+        theme = text.ThemeObject?.Name,
+        subTheme = text.SubThemeObject?.Name,
+        reference = text.Reference,
+        nature = text.Nature,
+        publicationYear = text.PublicationYear,
+        status = text.Status,
+        penalties = text.Penalties,
+        relatedTexts = text.RelatedTexts,
+        effectiveDate = text.EffectiveDate,
+        content = text.Content,
+        filePath = text.FilePath,
+        isConsulted = text.IsConsulted,
+        createdAt = text.CreatedAt,
+        createdBy = text.CreatedBy != null ? text.CreatedBy.Name : null,
+        requirements = text.Requirements.Select(r => new
+        {
+            requirementId = r.RequirementId,
+            number = r.Number,
+            title = r.Title,
+            status = r.Status
+        }).ToList()
+    });
+}
+
+          [HttpGet("{id}/file")]
+public async Task<IActionResult> GetFile(int id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
+
+    var text = await _context.Texts
+        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value); // Filter by company
+        
+    if (text == null || string.IsNullOrEmpty(text.FilePath))
+    {
+        return NotFound(new { message = "File not found" });
+    }
+
+    var filePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
+    if (!System.IO.File.Exists(filePath))
+    {
+        return NotFound(new { message = "File not found" });
+    }
+
+    var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+    return File(fileBytes, "application/pdf", Path.GetFileName(filePath));
+}
+
+
+          [HttpPost]
+public async Task<IActionResult> CreateText([FromForm] CreateTextRequest request)
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+
+    if (!userId.HasValue || !companyId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
+    {
+        return Forbid();
+    }
+
+    if (request.DomainId <= 0 ||
+        string.IsNullOrEmpty(request.Reference) ||
+        request.PublicationYear <= 0)
+    {
+        return BadRequest(new { message = "Required fields are missing" });
+    }
+
+    // Validate domain exists
+    var domain = await _context.Domains.FindAsync(request.DomainId);
+    if (domain == null)
+    {
+        return BadRequest(new { message = "Selected domain does not exist" });
+    }
+
+    // Validate theme exists if provided
+    if (request.ThemeId.HasValue)
+    {
+        var theme = await _context.Themes.FirstOrDefaultAsync(t =>
+            t.ThemeId == request.ThemeId.Value &&
+            t.DomainId == request.DomainId);
+
+        if (theme == null)
+        {
+            return BadRequest(new { message = "Selected theme does not exist or does not belong to the selected domain" });
+        }
+    }
+
+    // Validate subtheme exists if provided
+    if (request.SubThemeId.HasValue && request.ThemeId.HasValue)
+    {
+        var subTheme = await _context.SubThemes.FirstOrDefaultAsync(s =>
+            s.SubThemeId == request.SubThemeId.Value &&
+            s.ThemeId == request.ThemeId.Value);
+
+        if (subTheme == null)
+        {
+            return BadRequest(new { message = "Selected subtheme does not exist or does not belong to the selected theme" });
+        }
+    }
+
+    // Save file if provided
+    string filePath = null;
+    if (request.File != null && request.File.Length > 0)
+    {
+        var uploadDir = Path.Combine(_environment.ContentRootPath, "Uploads", "Texts");
+        if (!Directory.Exists(uploadDir))
+        {
+            Directory.CreateDirectory(uploadDir);
+        }
+
+        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(request.File.FileName);
+        filePath = Path.Combine("Uploads", "Texts", fileName);
+        var fullPath = Path.Combine(_environment.ContentRootPath, filePath);
+
+        using (var stream = new FileStream(fullPath, FileMode.Create))
+        {
+            await request.File.CopyToAsync(stream);
+        }
+    }
+
+    var text = new Text
+    {
+        CompanyId = companyId.Value, // Associate text with the current company
+        DomainId = request.DomainId,
+        ThemeId = request.ThemeId,
+        SubThemeId = request.SubThemeId,
+        Reference = request.Reference,
+        Nature = request.Nature ?? "",
+        PublicationYear = request.PublicationYear,
+        Status = request.Status ?? "À vérifier",
+        Penalties = request.Penalties ?? "",
+        RelatedTexts = request.RelatedTexts ?? "",
+        EffectiveDate = request.EffectiveDate,
+        Content = request.Content ?? "",
+        FilePath = filePath,
+        CreatedById = userId.Value,
+        CreatedAt = DateTime.Now
+    };
+
+    _context.Texts.Add(text);
+    await _context.SaveChangesAsync();
+
+    // Add requirements if provided
+    if (request.Requirements != null && request.Requirements.Count > 0)
+    {
+        foreach (var req in request.Requirements)
+        {
+            var requirement = new TextRequirement
             {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                if (!userId.HasValue)
-                {
-                    return Unauthorized(new { message = "Not authenticated" });
-                }
+                TextId = text.TextId,
+                Number = req.Number,
+                Title = req.Title,
+                Status = req.Status ?? "À vérifier"
+            };
+            _context.TextRequirements.Add(requirement);
+        }
+        await _context.SaveChangesAsync();
+    }
 
-                var text = await _context.Texts
-                    .Include(t => t.CreatedBy)
-                    .Include(t => t.Requirements)
-                    .Include(t => t.DomainObject)
-                    .Include(t => t.ThemeObject)
-                    .Include(t => t.SubThemeObject)
-                    .FirstOrDefaultAsync(t => t.TextId == id);
+    return Ok(new
+    {
+        textId = text.TextId,
+        message = "Text created successfully"
+    });
+}
 
-                if (text == null)
-                {
-                    return NotFound(new { message = "Text not found" });
-                }
 
-                // Mark as consulted if not already
-                if (!text.IsConsulted)
-                {
-                    text.IsConsulted = true;
-                    await _context.SaveChangesAsync();
-                }
+[HttpPut("{id}")]
+public async Task<IActionResult> UpdateText(int id, [FromForm] UpdateTextRequest request)
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
 
-                return Ok(new
-                {
-                    textId = text.TextId,
-                    domainId = text.DomainId,
-                    themeId = text.ThemeId,
-                    subThemeId = text.SubThemeId,
-                    domain = text.DomainObject != null ? text.DomainObject.Name : "",
-                    theme = text.ThemeObject != null ? text.ThemeObject.Name : "",
-                    subTheme = text.SubThemeObject != null ? text.SubThemeObject.Name : "",
-                    reference = text.Reference,
-                    nature = text.Nature,
-                    publicationYear = text.PublicationYear,
-                    status = text.Status,
-                    penalties = text.Penalties,
-                    relatedTexts = text.RelatedTexts,
-                    effectiveDate = text.EffectiveDate,
-                    content = text.Content,
-                    filePath = text.FilePath,
-                    isConsulted = text.IsConsulted,
-                    createdAt = text.CreatedAt,
-                    createdBy = text.CreatedBy != null ? text.CreatedBy.Name : null,
-                    requirements = text.Requirements.Select(r => new
-                    {
-                        requirementId = r.RequirementId,
-                        number = r.Number,
-                        title = r.Title,
-                        status = r.Status
-                    }).ToList()
-                });
+    if (!userId.HasValue || !companyId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
+    {
+        return Forbid();
+    }
+
+    var text = await _context.Texts
+        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value); // Filter by company
+        
+    if (text == null)
+    {
+        return NotFound(new { message = "Text not found" });
+    }
+
+    // Validate domain exists if provided
+    if (request.DomainId.HasValue && request.DomainId.Value > 0)
+    {
+        var domain = await _context.Domains.FindAsync(request.DomainId.Value);
+        if (domain == null)
+        {
+            return BadRequest(new { message = "Selected domain does not exist" });
+        }
+
+        text.DomainId = request.DomainId.Value;
+    }
+
+    // Rest of the update code remains the same...
+    // Validate theme exists if provided
+    if (request.ThemeId.HasValue)
+    {
+        // If theme is null or 0, clear the theme
+        if (request.ThemeId.Value <= 0)
+        {
+            text.ThemeId = null;
+            text.SubThemeId = null;  // Clear subtheme when theme is cleared
+        }
+        else
+        {
+            // Verify theme exists and belongs to the domain
+            var domainId = request.DomainId ?? text.DomainId;
+            var theme = await _context.Themes.FirstOrDefaultAsync(t =>
+                t.ThemeId == request.ThemeId.Value &&
+                t.DomainId == domainId);
+
+            if (theme == null)
+            {
+                return BadRequest(new { message = "Selected theme does not exist or does not belong to the selected domain" });
             }
 
-            [HttpGet("{id}/file")]
-            public async Task<IActionResult> GetFile(int id)
+            text.ThemeId = request.ThemeId.Value;
+        }
+    }
+
+    // Validate subtheme exists if provided
+    if (request.SubThemeId.HasValue)
+    {
+        // If subtheme is null or 0, clear the subtheme
+        if (request.SubThemeId.Value <= 0)
+        {
+            text.SubThemeId = null;
+        }
+        else
+        {
+            // Verify theme is set
+            var themeId = request.ThemeId ?? text.ThemeId;
+            if (!themeId.HasValue)
             {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                if (!userId.HasValue)
-                {
-                    return Unauthorized(new { message = "Not authenticated" });
-                }
-
-                var text = await _context.Texts.FindAsync(id);
-                if (text == null || string.IsNullOrEmpty(text.FilePath))
-                {
-                    return NotFound(new { message = "File not found" });
-                }
-
-                var filePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
-                if (!System.IO.File.Exists(filePath))
-                {
-                    return NotFound(new { message = "File not found" });
-                }
-
-                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-                return File(fileBytes, "application/pdf", Path.GetFileName(filePath));
+                return BadRequest(new { message = "Cannot set a subtheme without a theme" });
             }
 
-            [HttpPost]
-            public async Task<IActionResult> CreateText([FromForm] CreateTextRequest request)
+            // Verify subtheme exists and belongs to the theme
+            var subTheme = await _context.SubThemes.FirstOrDefaultAsync(s =>
+                s.SubThemeId == request.SubThemeId.Value &&
+                s.ThemeId == themeId.Value);
+
+            if (subTheme == null)
             {
-                var userRole = HttpContext.Session.GetString("UserRole");
-                var userId = HttpContext.Session.GetInt32("UserId");
-
-                if (!userId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
-                {
-                    return Forbid();
-                }
-
-                if (request.DomainId <= 0 ||
-                    string.IsNullOrEmpty(request.Reference) ||
-                    request.PublicationYear <= 0)
-                {
-                    return BadRequest(new { message = "Required fields are missing" });
-                }
-
-                // Validate domain exists
-                var domain = await _context.Domains.FindAsync(request.DomainId);
-                if (domain == null)
-                {
-                    return BadRequest(new { message = "Selected domain does not exist" });
-                }
-
-                // Validate theme exists if provided
-                if (request.ThemeId.HasValue)
-                {
-                    var theme = await _context.Themes.FirstOrDefaultAsync(t =>
-                        t.ThemeId == request.ThemeId.Value &&
-                        t.DomainId == request.DomainId);
-
-                    if (theme == null)
-                    {
-                        return BadRequest(new { message = "Selected theme does not exist or does not belong to the selected domain" });
-                    }
-                }
-
-                // Validate subtheme exists if provided
-                if (request.SubThemeId.HasValue && request.ThemeId.HasValue)
-                {
-                    var subTheme = await _context.SubThemes.FirstOrDefaultAsync(s =>
-                        s.SubThemeId == request.SubThemeId.Value &&
-                        s.ThemeId == request.ThemeId.Value);
-
-                    if (subTheme == null)
-                    {
-                        return BadRequest(new { message = "Selected subtheme does not exist or does not belong to the selected theme" });
-                    }
-                }
-
-                // Save file if provided
-                string filePath = null;
-                if (request.File != null && request.File.Length > 0)
-                {
-                    var uploadDir = Path.Combine(_environment.ContentRootPath, "Uploads", "Texts");
-                    if (!Directory.Exists(uploadDir))
-                    {
-                        Directory.CreateDirectory(uploadDir);
-                    }
-
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(request.File.FileName);
-                    filePath = Path.Combine("Uploads", "Texts", fileName);
-                    var fullPath = Path.Combine(_environment.ContentRootPath, filePath);
-
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
-                    {
-                        await request.File.CopyToAsync(stream);
-                    }
-                }
-
-                var text = new Text
-                {
-                    DomainId = request.DomainId,
-                    ThemeId = request.ThemeId,
-                    SubThemeId = request.SubThemeId,
-                    Reference = request.Reference,
-                    Nature = request.Nature ?? "",
-                    PublicationYear = request.PublicationYear,
-                    Status = request.Status ?? "À vérifier",
-                    Penalties = request.Penalties ?? "",
-                    RelatedTexts = request.RelatedTexts ?? "",
-                    EffectiveDate = request.EffectiveDate,
-                    Content = request.Content ?? "",
-                    FilePath = filePath,
-                    CreatedById = userId.Value,
-                    CreatedAt = DateTime.Now
-                };
-
-                _context.Texts.Add(text);
-                await _context.SaveChangesAsync();
-
-                // Add requirements if provided
-                if (request.Requirements != null && request.Requirements.Count > 0)
-                {
-                    foreach (var req in request.Requirements)
-                    {
-                        var requirement = new TextRequirement
-                        {
-                            TextId = text.TextId,
-                            Number = req.Number,
-                            Title = req.Title,
-                            Status = req.Status ?? "À vérifier"
-                        };
-                        _context.TextRequirements.Add(requirement);
-                    }
-                    await _context.SaveChangesAsync();
-                }
-
-                return Ok(new
-                {
-                    textId = text.TextId,
-                    message = "Text created successfully"
-                });
+                return BadRequest(new { message = "Selected subtheme does not exist or does not belong to the selected theme" });
             }
 
-            [HttpPut("{id}")]
-            public async Task<IActionResult> UpdateText(int id, [FromForm] UpdateTextRequest request)
+            text.SubThemeId = request.SubThemeId.Value;
+        }
+    }
+
+    // Update other fields if provided
+    if (!string.IsNullOrEmpty(request.Reference))
+        text.Reference = request.Reference;
+
+    if (request.Nature != null)
+        text.Nature = request.Nature;
+
+    if (request.PublicationYear > 0)
+        text.PublicationYear = request.PublicationYear;
+
+    if (!string.IsNullOrEmpty(request.Status))
+        text.Status = request.Status;
+
+    if (request.Penalties != null)
+        text.Penalties = request.Penalties;
+
+    if (request.RelatedTexts != null)
+        text.RelatedTexts = request.RelatedTexts;
+
+    if (request.EffectiveDate.HasValue)
+        text.EffectiveDate = request.EffectiveDate;
+
+    if (request.Content != null)
+        text.Content = request.Content;
+
+    // Update file if provided
+    if (request.File != null && request.File.Length > 0)
+    {
+        // Delete old file if exists
+        if (!string.IsNullOrEmpty(text.FilePath))
+        {
+            var oldFilePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
+            if (System.IO.File.Exists(oldFilePath))
             {
-                var userRole = HttpContext.Session.GetString("UserRole");
-                var userId = HttpContext.Session.GetInt32("UserId");
-
-                if (!userId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
-                {
-                    return Forbid();
-                }
-
-                var text = await _context.Texts.FindAsync(id);
-                if (text == null)
-                {
-                    return NotFound(new { message = "Text not found" });
-                }
-
-                // Validate domain exists if provided
-                if (request.DomainId.HasValue && request.DomainId.Value > 0)
-                {
-                    var domain = await _context.Domains.FindAsync(request.DomainId.Value);
-                    if (domain == null)
-                    {
-                        return BadRequest(new { message = "Selected domain does not exist" });
-                    }
-
-                    text.DomainId = request.DomainId.Value;
-                }
-
-                // Validate theme exists if provided
-                if (request.ThemeId.HasValue)
-                {
-                    // If theme is null or 0, clear the theme
-                    if (request.ThemeId.Value <= 0)
-                    {
-                        text.ThemeId = null;
-                        text.SubThemeId = null;  // Clear subtheme when theme is cleared
-                    }
-                    else
-                    {
-                        // Verify theme exists and belongs to the domain
-                        var domainId = request.DomainId ?? text.DomainId;
-                        var theme = await _context.Themes.FirstOrDefaultAsync(t =>
-                            t.ThemeId == request.ThemeId.Value &&
-                            t.DomainId == domainId);
-
-                        if (theme == null)
-                        {
-                            return BadRequest(new { message = "Selected theme does not exist or does not belong to the selected domain" });
-                        }
-
-                        text.ThemeId = request.ThemeId.Value;
-                    }
-                }
-
-                // Validate subtheme exists if provided
-                if (request.SubThemeId.HasValue)
-                {
-                    // If subtheme is null or 0, clear the subtheme
-                    if (request.SubThemeId.Value <= 0)
-                    {
-                        text.SubThemeId = null;
-                    }
-                    else
-                    {
-                        // Verify theme is set
-                        var themeId = request.ThemeId ?? text.ThemeId;
-                        if (!themeId.HasValue)
-                        {
-                            return BadRequest(new { message = "Cannot set a subtheme without a theme" });
-                        }
-
-                        // Verify subtheme exists and belongs to the theme
-                        var subTheme = await _context.SubThemes.FirstOrDefaultAsync(s =>
-                            s.SubThemeId == request.SubThemeId.Value &&
-                            s.ThemeId == themeId.Value);
-
-                        if (subTheme == null)
-                        {
-                            return BadRequest(new { message = "Selected subtheme does not exist or does not belong to the selected theme" });
-                        }
-
-                        text.SubThemeId = request.SubThemeId.Value;
-                    }
-                }
-
-                // Update other fields if provided
-                if (!string.IsNullOrEmpty(request.Reference))
-                    text.Reference = request.Reference;
-
-                if (request.Nature != null)
-                    text.Nature = request.Nature;
-
-                if (request.PublicationYear > 0)
-                    text.PublicationYear = request.PublicationYear;
-
-                if (!string.IsNullOrEmpty(request.Status))
-                    text.Status = request.Status;
-
-                if (request.Penalties != null)
-                    text.Penalties = request.Penalties;
-
-                if (request.RelatedTexts != null)
-                    text.RelatedTexts = request.RelatedTexts;
-
-                if (request.EffectiveDate.HasValue)
-                    text.EffectiveDate = request.EffectiveDate;
-
-                if (request.Content != null)
-                    text.Content = request.Content;
-
-                // Update file if provided
-                if (request.File != null && request.File.Length > 0)
-                {
-                    // Delete old file if exists
-                    if (!string.IsNullOrEmpty(text.FilePath))
-                    {
-                        var oldFilePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            System.IO.File.Delete(oldFilePath);
-                        }
-                    }
-
-                    // Save new file
-                    var uploadDir = Path.Combine(_environment.ContentRootPath, "Uploads", "Texts");
-                    if (!Directory.Exists(uploadDir))
-                    {
-                        Directory.CreateDirectory(uploadDir);
-                    }
-
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(request.File.FileName);
-                    var filePath = Path.Combine("Uploads", "Texts", fileName);
-                    var fullPath = Path.Combine(_environment.ContentRootPath, filePath);
-
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
-                    {
-                        await request.File.CopyToAsync(stream);
-                    }
-
-                    text.FilePath = filePath;
-                }
-
-                await _context.SaveChangesAsync();
-
-                return Ok(new { message = "Text updated successfully" });
+                System.IO.File.Delete(oldFilePath);
             }
+        }
 
-            [HttpPut("{id}/requirement/{requirementId}")]
-            public async Task<IActionResult> UpdateRequirement(int id, int requirementId, [FromBody] UpdateRequirementRequest request)
-            {
-                var userRole = HttpContext.Session.GetString("UserRole");
-                var userId = HttpContext.Session.GetInt32("UserId");
+        // Save new file
+        var uploadDir = Path.Combine(_environment.ContentRootPath, "Uploads", "Texts");
+        if (!Directory.Exists(uploadDir))
+        {
+            Directory.CreateDirectory(uploadDir);
+        }
 
-                if (!userId.HasValue)
-                {
-                    return Unauthorized(new { message = "Not authenticated" });
-                }
+        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(request.File.FileName);
+        var filePath = Path.Combine("Uploads", "Texts", fileName);
+        var fullPath = Path.Combine(_environment.ContentRootPath, filePath);
 
-                var requirement = await _context.TextRequirements
-                    .FirstOrDefaultAsync(r => r.RequirementId == requirementId && r.TextId == id);
+        using (var stream = new FileStream(fullPath, FileMode.Create))
+        {
+            await request.File.CopyToAsync(stream);
+        }
 
-                if (requirement == null)
-                {
-                    return NotFound(new { message = "Requirement not found" });
-                }
+        text.FilePath = filePath;
+    }
 
-                if (!string.IsNullOrEmpty(request.Status))
-                    requirement.Status = request.Status;
+    await _context.SaveChangesAsync();
 
-                if (!string.IsNullOrEmpty(request.Number))
-                    requirement.Number = request.Number;
+    return Ok(new { message = "Text updated successfully" });
+}
 
-                if (!string.IsNullOrEmpty(request.Title))
-                    requirement.Title = request.Title;
+[HttpPut("{id}/requirement/{requirementId}")]
+public async Task<IActionResult> UpdateRequirement(int id, int requirementId, [FromBody] UpdateRequirementRequest request)
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
 
-                await _context.SaveChangesAsync();
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
 
-                return Ok(new { message = "Requirement updated successfully" });
-            }
+    // First verify the text belongs to the user's company
+    var text = await _context.Texts
+        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value);
+    
+    if (text == null)
+    {
+        return NotFound(new { message = "Text not found" });
+    }
 
-            [HttpPost("{id}/requirement")]
-            public async Task<IActionResult> AddRequirement(int id, [FromBody] AddRequirementRequest request)
-            {
-                var userRole = HttpContext.Session.GetString("UserRole");
-                var userId = HttpContext.Session.GetInt32("UserId");
+    var requirement = await _context.TextRequirements
+        .FirstOrDefaultAsync(r => r.RequirementId == requirementId && r.TextId == id);
 
-                if (!userId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
-                {
-                    return Forbid();
-                }
+    if (requirement == null)
+    {
+        return NotFound(new { message = "Requirement not found" });
+    }
 
-                var text = await _context.Texts.FindAsync(id);
-                if (text == null)
-                {
-                    return NotFound(new { message = "Text not found" });
-                }
+    if (!string.IsNullOrEmpty(request.Status))
+        requirement.Status = request.Status;
 
-                if (string.IsNullOrEmpty(request.Number) || string.IsNullOrEmpty(request.Title))
-                {
-                    return BadRequest(new { message = "Number and title are required" });
-                }
+    if (!string.IsNullOrEmpty(request.Number))
+        requirement.Number = request.Number;
 
-                var requirement = new TextRequirement
-                {
-                    TextId = id,
-                    Number = request.Number,
-                    Title = request.Title,
-                    Status = request.Status ?? "À vérifier"
-                };
+    if (!string.IsNullOrEmpty(request.Title))
+        requirement.Title = request.Title;
 
-                _context.TextRequirements.Add(requirement);
-                await _context.SaveChangesAsync();
+    await _context.SaveChangesAsync();
 
-                return Ok(new
-                {
-                    requirementId = requirement.RequirementId,
-                    message = "Requirement added successfully"
-                });
-            }
+    return Ok(new { message = "Requirement updated successfully" });
+}
 
-            [HttpDelete("{id}/requirement/{requirementId}")]
-            public async Task<IActionResult> DeleteRequirement(int id, int requirementId)
-            {
-                var userRole = HttpContext.Session.GetString("UserRole");
-                var userId = HttpContext.Session.GetInt32("UserId");
+[HttpPost("{id}/requirement")]
+public async Task<IActionResult> AddRequirement(int id, [FromBody] AddRequirementRequest request)
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
 
-                if (!userId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
-                {
-                    return Forbid();
-                }
+    if (!userId.HasValue || !companyId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
+    {
+        return Forbid();
+    }
 
-                var requirement = await _context.TextRequirements
-                    .FirstOrDefaultAsync(r => r.RequirementId == requirementId && r.TextId == id);
+    var text = await _context.Texts
+        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value);
+        
+    if (text == null)
+    {
+        return NotFound(new { message = "Text not found" });
+    }
 
-                if (requirement == null)
-                {
-                    return NotFound(new { message = "Requirement not found" });
-                }
+    if (string.IsNullOrEmpty(request.Number) || string.IsNullOrEmpty(request.Title))
+    {
+        return BadRequest(new { message = "Number and title are required" });
+    }
 
-                _context.TextRequirements.Remove(requirement);
-                await _context.SaveChangesAsync();
+    var requirement = new TextRequirement
+    {
+        TextId = id,
+        Number = request.Number,
+        Title = request.Title,
+        Status = request.Status ?? "À vérifier"
+    };
 
-                return Ok(new { message = "Requirement deleted successfully" });
-            }
+    _context.TextRequirements.Add(requirement);
+    await _context.SaveChangesAsync();
 
-            [HttpDelete("{id}")]
-            public async Task<IActionResult> DeleteText(int id)
-            {
-                var userRole = HttpContext.Session.GetString("UserRole");
-                var userId = HttpContext.Session.GetInt32("UserId");
+    return Ok(new
+    {
+        requirementId = requirement.RequirementId,
+        message = "Requirement added successfully"
+    });
+}
+          [HttpDelete("{id}/requirement/{requirementId}")]
+public async Task<IActionResult> DeleteRequirement(int id, int requirementId)
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
 
-                if (!userId.HasValue || userRole != "SuperAdmin")
-                {
-                    return Forbid();
-                }
+    if (!userId.HasValue || !companyId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
+    {
+        return Forbid();
+    }
 
-                var text = await _context.Texts.FindAsync(id);
-                if (text == null)
-                {
-                    return NotFound(new { message = "Text not found" });
-                }
+    // First verify the text belongs to the user's company
+    var text = await _context.Texts
+        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value);
+    
+    if (text == null)
+    {
+        return NotFound(new { message = "Text not found" });
+    }
 
-                // Delete file if exists
-                if (!string.IsNullOrEmpty(text.FilePath))
-                {
-                    var filePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        System.IO.File.Delete(filePath);
-                    }
-                }
+    var requirement = await _context.TextRequirements
+        .FirstOrDefaultAsync(r => r.RequirementId == requirementId && r.TextId == id);
 
-                _context.Texts.Remove(text);
-                await _context.SaveChangesAsync();
+    if (requirement == null)
+    {
+        return NotFound(new { message = "Requirement not found" });
+    }
 
-                return Ok(new { message = "Text deleted successfully" });
-            }
+    _context.TextRequirements.Remove(requirement);
+    await _context.SaveChangesAsync();
+
+    return Ok(new { message = "Requirement deleted successfully" });
+}
+
+[HttpDelete("{id}")]
+public async Task<IActionResult> DeleteText(int id)
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+
+    if (!userId.HasValue || !companyId.HasValue || userRole != "SuperAdmin")
+    {
+        return Forbid();
+    }
+
+    var text = await _context.Texts
+        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value);
+        
+    if (text == null)
+    {
+        return NotFound(new { message = "Text not found" });
+    }
+
+    // Delete file if exists
+    if (!string.IsNullOrEmpty(text.FilePath))
+    {
+        var filePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
+        if (System.IO.File.Exists(filePath))
+        {
+            System.IO.File.Delete(filePath);
+        }
+    }
+
+    _context.Texts.Remove(text);
+    await _context.SaveChangesAsync();
+
+    return Ok(new { message = "Text deleted successfully" });
+}
 
             public class CreateTextRequest
             {
