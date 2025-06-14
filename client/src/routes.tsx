@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Auth from './Components/Authentification/auth';
-import Signup from './Components/Authentification/signup';
 import ManageRoles from './Components/Company/manageroles';
 import ManageUsers from './Components/Company/manageusers';
 import ProfilePage from './Components/Profile/ProfilePage';
@@ -14,13 +13,14 @@ import SubscriptionManagerDashboard from './Components/Company/SubscriptionManag
 import ComplianceEvaluation from './Components/Compliance/ComplianceEvaluation';
 import ProtectedRoute from './Components/Common/ProtectedRoute';
 import ActionPlan from './Components/Compliance/ActionPlan';
+import UserDashboard from "./Components/Company/UserDashboard"; // Import UserDashboard
+
 const AppRoutes = () => {
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Auth />} />
-        <Route path="/signup" element={<Signup />} />
 
         {/* Super Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute role="SuperAdmin" />}>
@@ -32,27 +32,30 @@ const AppRoutes = () => {
           <Route path="texts" element={<TextManagement />} />
           <Route path="taxonomy" element={<TaxonomyManager />} />
           <Route path="profile" element={<ProfilePage />} />
+          {/* Add /admin/history and /admin/settings if needed */}
         </Route>
 
         {/* Subscription Manager Routes */}
         <Route path="/company" element={<ProtectedRoute role="SubscriptionManager" />}>
-        <Route path="action-plan" element={<ActionPlan />} />
           <Route path="dashboard" element={<SubscriptionManagerDashboard />} />
           <Route path="users" element={<ManageUsers/>} />
           <Route path="roles" element={<ManageRoles/>} />
           <Route path="texts" element={<TextManagement />} />
           <Route path="compliance" element={<ComplianceEvaluation />} />
+          <Route path="action-plan" element={<ActionPlan />} />
           <Route path="settings" element={<div>Company Settings (To be implemented)</div>} />
           <Route path="profile" element={<ProfilePage />} />
+          {/* Add /company/history if needed */}
         </Route>
 
-        {/* User Routes */}
-        <Route path="/user" element={<ProtectedRoute role="User" />}>
-          <Route path="compliance" element={<ComplianceEvaluation />} />
-          <Route path="profile" element={<ProfilePage />} />
-            <Route path="action-plan" element={<ActionPlan />} />
+        {/* User Routes (for roles like 'User', 'Auditor', 'Manager') */}
+   <Route path="/user" element={<ProtectedRoute role="User" />}>
+  <Route path="dashboard" element={<UserDashboard />} />
+  <Route path="compliance" element={<ComplianceEvaluation />} />
+  <Route path="action-plan" element={<ActionPlan />} />
+  <Route path="profile" element={<ProfilePage />} />
+</Route>
 
-        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

@@ -498,7 +498,7 @@ namespace server.Controllers
             {
                 await request.File.CopyToAsync(stream);
             }
-
+    
             // Create attachment record
             var attachment = new EvaluationAttachment
             {

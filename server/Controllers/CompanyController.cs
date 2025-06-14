@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using server.Data;
 using server.Models;
 using System.Threading.Tasks;
+using System;
+using System.Linq;
 
 namespace server.Controllers
 {
@@ -55,6 +57,54 @@ namespace server.Controllers
             });
         }
 
+        [HttpGet("user-dashboard-info")]
+        public async Task<IActionResult> GetUserDashboardInfo()
+        {
+            // Check authentication
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            
+            if (!userId.HasValue || !companyId.HasValue)
+            {
+                return Unauthorized(new { message = "Not authenticated" });
+            }
+
+            // Get user information
+            var user = await _context.Users.FindAsync(userId.Value);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Get company information
+            var company = await _context.Companies.FindAsync(companyId.Value);
+            if (company == null)
+            {
+                return NotFound(new { message = "Company not found" });
+            }
+
+            var assignedActionsCount = await _context.Actions
+                .CountAsync(a => a.ResponsibleId == userId.Value);
+
+            var completedActionsCount = await _context.Actions
+                .CountAsync(a => a.ResponsibleId == userId.Value && a.Progress == 100);
+
+            var pendingEvaluationsCount = await _context.ComplianceEvaluations
+                .CountAsync(ce => ce.UserId == userId.Value && ce.Status == "à vérifier");
+
+            return Ok(new
+            {
+                userName = user.Name,
+                role = user.Role,
+                companyName = company.CompanyName,
+                industry = company.Industry,
+                status = company.Status,
+                assignedActions = assignedActionsCount,
+                completedActions = completedActionsCount,
+                pendingEvaluations = pendingEvaluationsCount,
+                createdAt = company.CreatedAt
+            });
+        }
         [HttpGet("users")]
         public async Task<IActionResult> GetCompanyUsers()
         {

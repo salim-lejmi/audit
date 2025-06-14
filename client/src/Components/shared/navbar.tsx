@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/navbar.css';
+import UserDashboard from './company/UserDashboard'; // Import UserDashboard
 
 interface NavbarProps {
-  userRole?: string;
+  userRole?: string; // e.g., 'SuperAdmin', 'SubscriptionManager', 'Auditor', 'User'
 }
 
 const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
@@ -76,22 +77,21 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
 
   const isDashboard = location.pathname.includes('dashboard');
   
-  // Example function to determine account expiration date - replace with actual implementation
   const getAccountExpirationDate = () => {
     return "2025-12-31"; // Example date
   };
 
-  // Get base path based on user role
   const getBasePath = () => {
     if (userRole === 'SuperAdmin') return '/admin';
     if (userRole === 'SubscriptionManager') return '/company';
-    return '/user';
+    // Default for 'User', 'Auditor', 'Manager', etc.
+    return '/user'; 
   };
 
-  // Get profile path based on user role
   const getProfilePath = () => {
     if (userRole === 'SuperAdmin') return '/admin/profile';
     if (userRole === 'SubscriptionManager') return '/company/profile';
+    // Default for 'User', 'Auditor', 'Manager', etc.
     return '/user/profile';
   };
 
@@ -104,12 +104,13 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
           ) : userRole === 'SubscriptionManager' ? (
             <Link to="/company/dashboard" className="navbar-brand">Prevention Plus</Link>
           ) : (
+            // For 'User', 'Auditor', 'Manager', etc.
             <Link to="/user/dashboard" className="navbar-brand">Prevention Plus</Link>
           )}
         </div>
 
         <div className="navbar-center">
-          {isDashboard && (
+          {isDashboard && ( // This section might need role-specific logic for domains if they differ
             <div className="dashboard-tabs">
               <div className="domain-selector">
                 <span>Domains:</span>
@@ -124,7 +125,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
         </div>
 
         <div className="navbar-right">
-          {/* Dashboard link */}
+          {/* Dashboard link - always visible, path adapts to role */}
           <div className="nav-item">
             <Link to={`${getBasePath()}/dashboard`} className="nav-button">
               <i className="fas fa-tachometer-alt"></i>
@@ -132,23 +133,43 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             </Link>
           </div>
 
-          {/* Text Management link */}
-          <div className="nav-item">
-            <Link to={`${getBasePath()}/texts`} className="nav-button">
-              <i className="fas fa-file-alt"></i>
-              <span className="nav-label">Texts</span>
-            </Link>
-          </div>
+          {/* Text Management link - only for SuperAdmin and SubscriptionManager */}
+          {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
+            <div className="nav-item">
+              <Link to={`${getBasePath()}/texts`} className="nav-button">
+                <i className="fas fa-file-alt"></i>
+                <span className="nav-label">Texts</span>
+              </Link>
+            </div>
+          )}
 
-          {/* Compliance Evaluation link - for SubscriptionManager and regular users */}
+          {/* Compliance Evaluation link - for SubscriptionManager and other users (Auditor, Manager, User) */}
           {(userRole === 'SubscriptionManager' || userRole === 'User' || userRole === 'Auditor' || userRole === 'Manager') && (
             <div className="nav-item">
+              {/* SubscriptionManager goes to /company/compliance, others to /user/compliance */}
               <Link to={`${getBasePath()}/compliance`} className="nav-button">
                 <i className="fas fa-check-square"></i>
                 <span className="nav-label">Compliance</span>
               </Link>
             </div>
           )}
+          
+          {/* Action Plan link - for SubscriptionManager and other users (Auditor, Manager, User)
+              This link could be added here if a top-level nav item is desired.
+              Currently, ActionPlan is accessed via dashboards or direct routes.
+              If you want a top-level link for Action Plan:
+          */}
+          {/*
+          {(userRole === 'SubscriptionManager' || userRole === 'User' || userRole === 'Auditor' || userRole === 'Manager') && (
+            <div className="nav-item">
+              <Link to={`${getBasePath()}/action-plan`} className="nav-button">
+                <i className="fas fa-tasks"></i>
+                <span className="nav-label">Action Plan</span>
+              </Link>
+            </div>
+          )}
+          */}
+
 
           {/* Taxonomy Manager link - only for SuperAdmin */}
           {userRole === 'SuperAdmin' && (
@@ -227,7 +248,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             </button>
             {manualOpen && (
               <div className="dropdown-menu">
-                <div className="dropdown-item">
+                <div className="dropdown-item"> {/* These could be links or trigger functions */}
                   <i className="fas fa-video"></i>
                   <span>Video Tutorial</span>
                 </div>
@@ -239,15 +260,15 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             )}
           </div>
 
-          {/* History button */}
+          {/* History button - visible to all, path adapts to role. 
+              Ensure /user/history, /company/history, /admin/history routes are defined or planned.
+          */}
           <div className="nav-item">
             <Link to={`${getBasePath()}/history`} className="nav-button">
               <i className="fas fa-history"></i>
               <span className="nav-label">History</span>
             </Link>
           </div>
-
-
 
           {/* Account dropdown */}
           <div className="nav-item account-dropdown" ref={accountDropdownRef}>
@@ -261,7 +282,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             {accountDropdownOpen && (
               <div className="dropdown-menu account-menu">
                 <div className="account-info">
-                  <p><strong>Account Reference:</strong> {userRole}</p>
+                  <p><strong>Account Role:</strong> {userRole}</p> {/* Changed label for clarity */}
                   <p><strong>Expiration:</strong> {getAccountExpirationDate()}</p>
                 </div>
                 <div className="dropdown-divider"></div>
@@ -269,12 +290,15 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
                   <i className="fas fa-user-cog"></i>
                   <span>My Profile</span>
                 </Link>
-                <Link to={`${getBasePath()}/settings`} className="dropdown-item">
-                  <i className="fas fa-cog"></i>
-                  <span>Settings</span>
-                </Link>
+                {/* Settings link - only for SuperAdmin and SubscriptionManager */}
+                {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
+                  <Link to={`${getBasePath()}/settings`} className="dropdown-item">
+                    <i className="fas fa-cog"></i>
+                    <span>Settings</span>
+                  </Link>
+                )}
                 <div className="dropdown-divider"></div>
-                <div className="dropdown-item" onClick={handleLogout}>
+                <div className="dropdown-item" onClick={handleLogout} style={{cursor: 'pointer'}}>
                   <i className="fas fa-sign-out-alt"></i>
                   <span>Logout</span>
                 </div>

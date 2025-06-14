@@ -41,7 +41,7 @@ body, html {
 
 .auth-image-side {
   flex: 0 0 45%; /* Give image a fixed proportion of width */
-  display: none; 
+  display: none;
 }
 
 .auth-image {
@@ -52,18 +52,20 @@ body, html {
 
 .auth-form-side {
   flex: 1; /* Form side takes remaining space */
-  padding: 2rem; /* 32px */
+  padding: 2rem; /* 32px. This padding will be around the .auth-form-container */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;   /* MODIFIED: Ensures content starts at the top */
+  align-items: center;           /* ADDED: Keeps .auth-form-container horizontally centered */
   overflow-y: auto; /* Allow vertical scrolling if content overflows */
-  max-height: 100vh; /* Ensure it doesn't exceed viewport height */
+  max-height: 100vh; /* Ensure it doesn't exceed viewport height (actual height constrained by parent) */
 }
 
 .auth-form-container {
   width: 100%;
   max-width: 380px; /* Max width for the form itself */
-  margin: auto; /* Center the form an_form_container */
+  margin: auto; /* Center the form an_form_container - this will now mostly affect vertical margins if specified, horizontal centering is by parent's align-items */
+                 /* The existing padding on .auth-form-side provides top/bottom spacing */
 }
 
 .auth-title {
@@ -226,17 +228,17 @@ select.form-input {
 
 @media (min-width: 992px) { /* Adjustments for typical laptop screens like 1366x768 and larger */
   .auth-container {
-     min-height: 600px; 
+     min-height: 600px;
      max-width: 1050px;
   }
   .auth-form-side {
     padding: 2.5rem; /* 40px */
   }
    .auth-image-side {
-    flex: 0 0 48%; 
+    flex: 0 0 48%;
   }
   .auth-form-side {
-    flex: 0 0 52%; 
+    flex: 0 0 52%;
   }
 }
 
@@ -247,13 +249,13 @@ select.form-input {
   }
   .auth-container {
     flex-direction: column;
-    max-width: 480px; 
+    max-width: 480px;
     min-height: auto;
     margin: 1rem auto; /* Add some margin for small screens */
     box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Softer shadow for mobile */
   }
   .auth-image-side {
-    display: none; 
+    display: none;
   }
   .auth-form-side {
     padding: 1.5rem; /* 24px */
@@ -295,7 +297,7 @@ select.form-input {
   }
 }
 
-/* Add this if you want the form container itself to scroll on very small heights, 
+/* Add this if you want the form container itself to scroll on very small heights,
    otherwise .auth-form-side handles scrolling */
 @media (max-height: 600px) and (min-width: 768px) {
   .auth-form-side {

@@ -101,17 +101,17 @@ namespace server.Controllers
                 var totalCount = await query.CountAsync();
 
                 // Get actions for current page
-                var actions = await query
-                    .OrderByDescending(a => a.CreatedAt)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(a => new
-                    {
-                        actionId = a.ActionId,
-                        textId = a.TextId,
-                        textReference = a.Text.Reference,
-                        requirementId = a.RequirementId,
-                        requirementTitle = a.Requirement != null ? a.Requirement.Title : null,
+var actions = await query
+    .OrderByDescending(a => a.CreatedAt)
+    .Skip((page - 1) * pageSize)
+    .Take(pageSize)
+    .Select(a => new
+    {
+        actionId = a.ActionId,
+        textId = a.TextId,
+        textReference = a.Text.Reference,
+        requirementId = a.RequirementId,
+        requirementTitle = a.Requirement != null ? a.Requirement.Title : null,
                         description = a.Description,
                         responsibleId = a.ResponsibleId,
                         responsibleName = a.Responsible != null ? a.Responsible.Name : null,
