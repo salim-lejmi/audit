@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import '../../styles/compliance.css';
-
 import { 
   Box, Paper, Typography, Button, Divider, 
   TextField, CircularProgress, Grid,
@@ -13,10 +12,7 @@ import {
   PictureAsPdf, Save, Print, ArrowForward
 } from '@mui/icons-material';
 import axios from 'axios';
-import { 
-  TextWithRequirements, ObservationDialogState, 
-  MonitoringDialogState, FileDialogState
-} from './types';
+import { TextWithRequirements, ObservationDialogState, MonitoringDialogState, FileDialogState } from './types';
 import { useNavigate } from 'react-router-dom';
 
 interface ComplianceRequirementEvaluationProps {
@@ -27,9 +23,8 @@ interface ComplianceRequirementEvaluationProps {
 const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationProps> = ({ textId, onBack }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<TextWithRequirements | null>(null);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  // Dialogs state
   const [observationDialog, setObservationDialog] = useState<ObservationDialogState>({
     open: false,
     evaluationId: null,
@@ -67,12 +62,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
 
   const handleStatusChange = async (requirementId: number, status: string) => {
     try {
-      await axios.post('/api/compliance/evaluate', {
-        requirementId,
-        status
-      });
-  
-      // Refresh data
+      await axios.post('/api/compliance/evaluate', { requirementId, status });
       fetchTextWithRequirements();
     } catch (error) {
       console.error('Error updating requirement status:', error);
@@ -82,13 +72,10 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
   const handleAddObservation = async () => {
     try {
       if (observationDialog.evaluationId === null) return;
-      
       await axios.post('/api/compliance/observation', {
         evaluationId: observationDialog.evaluationId,
         content: observationDialog.content
       });
-      
-      // Close dialog and refresh data
       setObservationDialog({ open: false, evaluationId: null, content: '' });
       fetchTextWithRequirements();
     } catch (error) {
@@ -99,8 +86,6 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
   const handleDeleteObservation = async (observationId: number) => {
     try {
       await axios.delete(`/api/compliance/observation/${observationId}`);
-      
-      // Refresh data
       fetchTextWithRequirements();
     } catch (error) {
       console.error('Error deleting observation:', error);
@@ -110,14 +95,11 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
   const handleAddMonitoring = async () => {
     try {
       if (monitoringDialog.evaluationId === null) return;
-      
       await axios.post('/api/compliance/monitoring-parameter', {
         evaluationId: monitoringDialog.evaluationId,
         parameterName: monitoringDialog.name,
         parameterValue: monitoringDialog.value
       });
-      
-      // Close dialog and refresh data
       setMonitoringDialog({ open: false, evaluationId: null, name: '', value: '' });
       fetchTextWithRequirements();
     } catch (error) {
@@ -128,8 +110,6 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
   const handleDeleteMonitoring = async (parameterId: number) => {
     try {
       await axios.delete(`/api/compliance/monitoring-parameter/${parameterId}`);
-      
-      // Refresh data
       fetchTextWithRequirements();
     } catch (error) {
       console.error('Error deleting monitoring parameter:', error);
@@ -138,19 +118,13 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
 
   const handleFileUpload = async () => {
     if (!fileDialog.file || fileDialog.evaluationId === null) return;
-    
     const formData = new FormData();
     formData.append('evaluationId', fileDialog.evaluationId.toString());
     formData.append('file', fileDialog.file);
-    
     try {
       await axios.post('/api/compliance/attachment', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
-      // Close dialog and refresh data
       setFileDialog({ open: false, evaluationId: null, file: null });
       fetchTextWithRequirements();
     } catch (error) {
@@ -161,8 +135,6 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
   const handleDeleteAttachment = async (attachmentId: number) => {
     try {
       await axios.delete(`/api/compliance/attachment/${attachmentId}`);
-      
-      // Refresh data
       fetchTextWithRequirements();
     } catch (error) {
       console.error('Error deleting attachment:', error);
@@ -171,11 +143,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
 
   const handleDownloadAttachment = async (attachmentId: number, fileName: string) => {
     try {
-      const response = await axios.get(`/api/compliance/attachment/${attachmentId}`, {
-        responseType: 'blob'
-      });
-      
-      // Create download link
+      const response = await axios.get(`/api/compliance/attachment/${attachmentId}`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -190,9 +158,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
 
   const handleSaveToHistory = async () => {
     try {
-      await axios.post('/api/compliance/save-to-history', {
-        textId
-      });
+      await axios.post('/api/compliance/save-to-history', { textId });
       alert('Évaluations sauvegardées dans l\'historique avec succès');
     } catch (error) {
       console.error('Error saving to history:', error);
@@ -202,9 +168,6 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
   const handleExportPdf = async () => {
     try {
       const response = await axios.get(`/api/compliance/export/${textId}`);
-      
-      // In a real app, you would generate a PDF here using a library like jsPDF
-      // For now, we'll just download the JSON data
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(response.data));
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
@@ -225,18 +188,12 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
 
   const getStatusColor = (status: string | undefined): string => {
     if (!status) return 'grey';
-    
     switch (status.toLowerCase()) {
-      case 'applicable':
-        return 'green';
-      case 'non-applicable':
-        return 'red';
-      case 'à vérifier':
-        return 'orange';
-      case 'pour information':
-        return 'blue';
-      default:
-        return 'grey';
+      case 'applicable': return 'green';
+      case 'non-applicable': return 'red';
+      case 'à vérifier': return 'orange';
+      case 'pour information': return 'blue';
+      default: return 'grey';
     }
   };
 
@@ -251,12 +208,8 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
   if (!data || !data.text) {
     return (
       <Box>
-        <Button startIcon={<ArrowBack />} onClick={onBack}>
-          Retour
-        </Button>
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Texte non trouvé
-        </Typography>
+        <Button startIcon={<ArrowBack />} onClick={onBack}>Retour</Button>
+        <Typography variant="h6" sx={{ mt: 2 }}>Texte non trouvé</Typography>
       </Box>
     );
   }
@@ -265,71 +218,30 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
 
   return (
     <Box>
-      <Button startIcon={<ArrowBack />} onClick={onBack}>
-        Retour à la liste
-      </Button>
-      
+      <Button startIcon={<ArrowBack />} onClick={onBack}>Retour à la liste</Button>
       <Paper sx={{ p: 3, mt: 2, mb: 3 }}>
         <Grid container spacing={3}>
           <Grid sx={{ xs: 12, md: 6 }}>
-            <Typography variant="h5" gutterBottom>
-              {text.reference}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              <strong>Domaine:</strong> {text.domain || '-'}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              <strong>Thème:</strong> {text.theme || '-'}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              <strong>Sous-thème:</strong> {text.subTheme || '-'}
-            </Typography>
+            <Typography variant="h5" gutterBottom>{text.reference}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Domaine:</strong> {text.domain || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Thème:</strong> {text.theme || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Sous-thème:</strong> {text.subTheme || '-'}</Typography>
           </Grid>
           <Grid sx={{ xs: 12, md: 6 }}>
-            <Typography variant="body1" gutterBottom>
-              <strong>Nature:</strong> {text.nature || '-'}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              <strong>Année de publication:</strong> {text.publicationYear || '-'}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              <strong>Pénalités/Incitations:</strong> {text.penalties || '-'}
-            </Typography>
+            <Typography variant="body1" gutterBottom><strong>Nature:</strong> {text.nature || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Année de publication:</strong> {text.publicationYear || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Pénalités/Incitations:</strong> {text.penalties || '-'}</Typography>
           </Grid>
           <Grid sx={{ xs: 12 }}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button 
-                variant="outlined" 
-                startIcon={<PictureAsPdf />}
-                onClick={handleExportPdf}
-                sx={{ mr: 1 }}
-              >
-                Exporter
-              </Button>
-              <Button 
-                variant="outlined" 
-                startIcon={<Print />}
-                onClick={() => window.print()}
-                sx={{ mr: 1 }}
-              >
-                Imprimer
-              </Button>
-              <Button 
-                variant="contained" 
-                startIcon={<Save />}
-                onClick={handleSaveToHistory}
-              >
-                Sauvegarder dans l'historique
-              </Button>
+              <Button variant="outlined" startIcon={<PictureAsPdf />} onClick={handleExportPdf} sx={{ mr: 1 }}>Exporter</Button>
+              <Button variant="outlined" startIcon={<Print />} onClick={() => window.print()} sx={{ mr: 1 }}>Imprimer</Button>
+              <Button variant="contained" startIcon={<Save />} onClick={handleSaveToHistory}>Sauvegarder dans l'historique</Button>
             </Box>
           </Grid>
         </Grid>
       </Paper>
-      
-      <Typography variant="h6" gutterBottom>
-        Liste des exigences
-      </Typography>
-      
+      <Typography variant="h6" gutterBottom>Liste des exigences</Typography>
       {requirements.length === 0 ? (
         <Typography>Aucune exigence trouvée pour ce texte.</Typography>
       ) : (
@@ -337,24 +249,19 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
           <Accordion key={req.requirementId} sx={{ mb: 2 }}>
             <AccordionSummary
               expandIcon={<KeyboardArrowDown />}
-              sx={{ 
-                borderLeft: `4px solid ${getStatusColor(req.evaluation?.status)}`,
-                '&:hover': { bgcolor: '#f5f5f5' }
-              }}
+              sx={{ borderLeft: `4px solid ${getStatusColor(req.evaluation?.status || req.status)}`, '&:hover': { bgcolor: '#f5f5f5' } }}
             >
               <Grid container spacing={1} alignItems="center">
                 <Grid sx={{ xs: 8 }}>
-                  <Typography>
-                    <strong>{req.number}.</strong> {req.title}
-                  </Typography>
+                  <Typography><strong>{req.number}.</strong> {req.title}</Typography>
                 </Grid>
                 <Grid sx={{ xs: 4 }}>
                   <Chip 
-                    label={req.evaluation?.status || 'À vérifier'}
+                    label={req.evaluation?.status || req.status}
                     size="small"
                     sx={{ 
-                      bgcolor: getStatusColor(req.evaluation?.status) + '1A', 
-                      color: getStatusColor(req.evaluation?.status),
+                      bgcolor: getStatusColor(req.evaluation?.status || req.status) + '1A', 
+                      color: getStatusColor(req.evaluation?.status || req.status),
                       borderRadius: 1
                     }}
                   />
@@ -364,21 +271,19 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
             <AccordionDetails sx={{ p: 3 }}>
               <Grid container spacing={3}>
                 <Grid sx={{ xs: 12 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Modifier statut:
-                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>Modifier statut:</Typography>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     {['applicable', 'non-applicable', 'à vérifier', 'pour information'].map((status) => (
                       <Button
                         key={status}
-                        variant={req.evaluation?.status === status ? "contained" : "outlined"}
+                        variant={(req.evaluation?.status || req.status) === status ? "contained" : "outlined"}
                         size="small"
                         sx={{ 
                           borderColor: getStatusColor(status),
-                          bgcolor: req.evaluation?.status === status ? getStatusColor(status) : 'transparent',
-                          color: req.evaluation?.status === status ? 'white' : getStatusColor(status),
+                          bgcolor: (req.evaluation?.status || req.status) === status ? getStatusColor(status) : 'transparent',
+                          color: (req.evaluation?.status || req.status) === status ? 'white' : getStatusColor(status),
                           '&:hover': { 
-                            bgcolor: req.evaluation?.status === status 
+                            bgcolor: (req.evaluation?.status || req.status) === status 
                               ? getStatusColor(status) 
                               : getStatusColor(status) + '1A'
                           }
@@ -390,15 +295,21 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                     ))}
                   </Box>
                 </Grid>
-                
+                <Grid sx={{ xs: 12 }}>
+                  <Button 
+                    variant="outlined" 
+                    size="small"
+                    onClick={() => navigate(`/company/action-plan?textId=${textId}&requirementId=${req.requirementId}`)}
+                  >
+                    Créer une action
+                  </Button>
+                </Grid>
                 {req.evaluation && (
                   <>
                     <Grid sx={{ xs: 12 }}>
                       <Divider sx={{ my: 2 }} />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">
-                          Observations:
-                        </Typography>
+                        <Typography variant="subtitle1">Observations:</Typography>
                         <Button 
                           startIcon={<Add />} 
                           size="small"
@@ -440,13 +351,10 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                         </Typography>
                       )}
                     </Grid>
-                    
                     <Grid sx={{ xs: 12 }}>
                       <Divider sx={{ my: 2 }} />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">
-                          Paramètres de monitoring:
-                        </Typography>
+                        <Typography variant="subtitle1">Paramètres de monitoring:</Typography>
                         <Button 
                           startIcon={<Add />} 
                           size="small"
@@ -489,13 +397,10 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                         </Typography>
                       )}
                     </Grid>
-                    
                     <Grid sx={{ xs: 12 }}>
                       <Divider sx={{ my: 2 }} />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">
-                          Pièces jointes:
-                        </Typography>
+                        <Typography variant="subtitle1">Pièces jointes:</Typography>
                         <Button 
                           startIcon={<Add />} 
                           size="small"
@@ -555,21 +460,12 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
           </Accordion>
         ))
       )}
-      
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, mb: 5 }}>
-    <Button startIcon={<ArrowBack />} onClick={onBack}>
-      Textes applicables
-    </Button>
-    <Button 
-      endIcon={<ArrowForward />} 
-      color="primary"
-      onClick={() => navigate(`/company/action-plan?textId=${textId}`)}
-    >
-      Plan d'action
-    </Button>
-  </Box>
-
-      {/* Observation Dialog */}
+        <Button startIcon={<ArrowBack />} onClick={onBack}>Textes applicables</Button>
+        <Button endIcon={<ArrowForward />} color="primary" onClick={() => navigate(`/company/action-plan?textId=${textId}`)}>
+          Plan d'action
+        </Button>
+      </Box>
       <Dialog open={observationDialog.open} onClose={() => setObservationDialog({ ...observationDialog, open: false })}>
         <DialogTitle>Ajouter une observation</DialogTitle>
         <DialogContent>
@@ -590,8 +486,6 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
           <Button onClick={handleAddObservation} variant="contained">Ajouter</Button>
         </DialogActions>
       </Dialog>
-
-      {/* Monitoring Parameter Dialog */}
       <Dialog open={monitoringDialog.open} onClose={() => setMonitoringDialog({ ...monitoringDialog, open: false })}>
         <DialogTitle>Ajouter un paramètre de monitoring</DialogTitle>
         <DialogContent>
@@ -619,8 +513,6 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
           <Button onClick={handleAddMonitoring} variant="contained">Ajouter</Button>
         </DialogActions>
       </Dialog>
-
-      {/* File Upload Dialog */}
       <Dialog open={fileDialog.open} onClose={() => setFileDialog({ ...fileDialog, open: false })}>
         <DialogTitle>Importer un fichier PDF</DialogTitle>
         <DialogContent>
@@ -633,26 +525,16 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
               onChange={handleFileChange}
             />
             <label htmlFor="raised-button-file">
-              <Button variant="outlined" component="span">
-                Sélectionner un fichier
-              </Button>
+              <Button variant="outlined" component="span">Sélectionner un fichier</Button>
             </label>
             {fileDialog.file && (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                Fichier sélectionné: {fileDialog.file.name}
-              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>Fichier sélectionné: {fileDialog.file.name}</Typography>
             )}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFileDialog({ ...fileDialog, open: false })}>Annuler</Button>
-          <Button 
-            onClick={handleFileUpload}
-            variant="contained"
-            disabled={!fileDialog.file}
-          >
-            Importer
-          </Button>
+          <Button onClick={handleFileUpload} variant="contained" disabled={!fileDialog.file}>Importer</Button>
         </DialogActions>
       </Dialog>
     </Box>

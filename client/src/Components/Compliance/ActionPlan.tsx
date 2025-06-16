@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Container, Typography, Paper, Button, Grid, 
   TextField, MenuItem, CircularProgress, 
-   IconButton, Chip, Tooltip, Dialog,
+  IconButton, Chip, Tooltip, Dialog,
   DialogTitle, DialogContent, DialogActions,
   FormControl, InputLabel, Select, Slider,
   Divider, LinearProgress
@@ -15,12 +15,11 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  Action, Domain, Theme, SubTheme, User, ActionDialogState
+  Action, Domain, Theme, SubTheme, User, ActionDialogState, TextRequirement
 } from './types';
 import dayjs from 'dayjs';
 import '../../styles/compliance.css';
 
-// Add type for valid status colors
 type StatusColor = 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
 
 const ActionPlan: React.FC = () => {
@@ -28,7 +27,6 @@ const ActionPlan: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   
-  // Extract text and requirement IDs if passed in URL
   const textId = queryParams.get('textId') ? parseInt(queryParams.get('textId')!) : undefined;
   const requirementId = queryParams.get('requirementId') ? parseInt(queryParams.get('requirementId')!) : undefined;
   
@@ -36,12 +34,12 @@ const ActionPlan: React.FC = () => {
   const [actions, setActions] = useState<Action[]>([]);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  
-  // Filter state
   const [domains, setDomains] = useState<Domain[]>([]);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [subThemes, setSubThemes] = useState<SubTheme[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [requirements, setRequirements] = useState<TextRequirement[]>([]); // Added state for requirements
+  
   const [filters, setFilters] = useState({
     domainId: '',
     themeId: '',
@@ -54,14 +52,13 @@ const ActionPlan: React.FC = () => {
   });
   const [showFilters, setShowFilters] = useState<boolean>(false);
   
-  // Action dialog state
   const [actionDialog, setActionDialog] = useState<ActionDialogState>({
     open: false,
     mode: 'create',
     textId: undefined,
-    requirementId: undefined,
     actionId: undefined,
     data: {
+      requirementId: undefined, // Added requirementId to data
       description: '',
       responsibleId: 0,
       deadline: dayjs().add(30, 'day').format('YYYY-MM-DD'),
@@ -72,7 +69,6 @@ const ActionPlan: React.FC = () => {
   });
   
   useEffect(() => {
-    // If textId and/or requirementId are provided, set them in filters
     if (textId) {
       setFilters(prev => ({ ...prev, textId: textId.toString() }));
     }
@@ -81,11 +77,15 @@ const ActionPlan: React.FC = () => {
     fetchActions();
   }, [textId, requirementId]);
   
+  useEffect(() => {
+    if (actionDialog.open && actionDialog.textId) {
+      fetchRequirements(actionDialog.textId); // Fetch requirements when dialog opens with textId
+    }
+  }, [actionDialog.open, actionDialog.textId]);
+  
   const fetchDomains = async () => {
     try {
       const response = await axios.get('/api/taxonomy/domains');
-          console.log('domains fetched successfully:', response.data);
-
       setDomains(response.data);
     } catch (error) {
       console.error('Error fetching domains:', error);
@@ -113,18 +113,24 @@ const ActionPlan: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get('/api/company/users');
-          console.log('Users fetched successfully:', response.data);
-
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
   };
   
+  const fetchRequirements = async (textId: number) => {
+    try {
+      const response = await axios.get(`/api/compliance/text/${textId}`);
+      setRequirements(response.data.requirements);
+    } catch (error) {
+      console.error('Error fetching requirements:', error);
+    }
+  };
+  
   const fetchActions = async (page: number = 1) => {
     setLoading(true);
     try {
-      // Build query parameters
       const params = new URLSearchParams();
       params.append('page', page.toString());
       
@@ -158,13 +164,11 @@ const ActionPlan: React.FC = () => {
     
     setFilters(prev => ({ ...prev, [name]: value }));
     
-    // If domain changes, reset theme and subTheme
     if (name === 'domainId') {
       setFilters(prev => ({ ...prev, themeId: '', subThemeId: '' }));
       if (value) fetchThemes(value);
     }
     
-    // If theme changes, reset subTheme
     if (name === 'themeId') {
       setFilters(prev => ({ ...prev, subThemeId: '' }));
       if (value) fetchSubThemes(value);
@@ -198,8 +202,9 @@ const ActionPlan: React.FC = () => {
       open: true,
       mode: 'create',
       textId: textId,
-      requirementId: requirementId,
+      actionId: undefined,
       data: {
+        requirementId: requirementId, // Preselect requirementId from URL if provided
         description: '',
         responsibleId: 0,
         deadline: dayjs().add(30, 'day').format('YYYY-MM-DD'),
@@ -216,8 +221,8 @@ const ActionPlan: React.FC = () => {
       mode: 'edit',
       actionId: action.actionId,
       textId: action.textId,
-      requirementId: action.requirementId,
       data: {
+        requirementId: action.requirementId,
         description: action.description,
         responsibleId: action.responsibleId,
         deadline: dayjs(action.deadline).format('YYYY-MM-DD'),
@@ -233,20 +238,19 @@ const ActionPlan: React.FC = () => {
       ...prev,
       data: {
         ...prev.data,
-        [field]: value
+        [field]: value === '' ? undefined : value // Handle empty string as undefined
       }
     }));
   };
   
   const handleActionDialogSubmit = async () => {
     try {
-      const { mode, actionId, textId, requirementId, data } = actionDialog;
+      const { mode, actionId, textId, data } = actionDialog;
       
       if (mode === 'create') {
-        // Create action
         await axios.post('/api/action-plan', {
           textId,
-          requirementId,
+          requirementId: data.requirementId, // Send selected requirementId
           description: data.description,
           responsibleId: data.responsibleId,
           deadline: data.deadline,
@@ -255,7 +259,6 @@ const ActionPlan: React.FC = () => {
           status: data.status
         });
       } else {
-        // Update action
         await axios.put(`/api/action-plan/${actionId}`, {
           description: data.description,
           responsibleId: data.responsibleId,
@@ -266,7 +269,6 @@ const ActionPlan: React.FC = () => {
         });
       }
       
-      // Close dialog and refresh
       setActionDialog(prev => ({ ...prev, open: false }));
       fetchActions(currentPage);
     } catch (error) {
@@ -293,8 +295,6 @@ const ActionPlan: React.FC = () => {
       
       const response = await axios.get(`/api/action-plan/export?${params.toString()}`);
       
-      // In a real app, you would generate a PDF here using a library like jsPDF
-      // For now, we'll just download the JSON data
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(response.data));
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
@@ -321,14 +321,10 @@ const ActionPlan: React.FC = () => {
 
   const getStatusColor = (status: string): StatusColor => {
     switch (status.toLowerCase()) {
-      case 'active':
-        return 'primary';
-      case 'completed':
-        return 'success';
-      case 'canceled':
-        return 'error';
-      default:
-        return 'default';
+      case 'active': return 'primary';
+      case 'completed': return 'success';
+      case 'canceled': return 'error';
+      default: return 'default';
     }
   };
   
@@ -339,43 +335,21 @@ const ActionPlan: React.FC = () => {
           variant="h4" 
           component="h1" 
           gutterBottom 
-          sx={{ 
-            fontSize: { xs: '1.5rem', md: '2rem' },
-            fontWeight: 600,
-            mb: 3
-          }}
+          sx={{ fontSize: { xs: '1.5rem', md: '2rem' }, fontWeight: 600, mb: 3 }}
         >
           Plan d'action
         </Typography>
         
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            width: '100%',
-            overflow: 'hidden',
-            p: { xs: 2, md: 3 }
-          }}
-        >
+        <Paper elevation={0} sx={{ width: '100%', overflow: 'hidden', p: { xs: 2, md: 3 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            <Button 
-              startIcon={<ArrowBack />} 
-              onClick={handleNavigateToEvaluation}
-            >
+            <Button startIcon={<ArrowBack />} onClick={handleNavigateToEvaluation}>
               Évaluation de conformité
             </Button>
             <Box>
-              <Button 
-                startIcon={<PictureAsPdf />}
-                onClick={handleExportPdf}
-                sx={{ mr: 1 }}
-              >
+              <Button startIcon={<PictureAsPdf />} onClick={handleExportPdf} sx={{ mr: 1 }}>
                 Exporter PDF
               </Button>
-              <Button 
-                startIcon={<Add />}
-                variant="contained"
-                onClick={handleCreateAction}
-              >
+              <Button startIcon={<Add />} variant="contained" onClick={handleCreateAction}>
                 Nouvelle action
               </Button>
             </Box>
@@ -402,12 +376,12 @@ const ActionPlan: React.FC = () => {
                       label="Domaine"
                       onChange={handleFilterChange}
                     >
-                    <MenuItem value="">Tous</MenuItem>
-{Array.isArray(domains) ? domains.map(domain => (
-  <MenuItem key={domain.domainId} value={domain.domainId}>
-    {domain.name}
-  </MenuItem>
-)) : null}
+                      <MenuItem value="">Tous</MenuItem>
+                      {Array.isArray(domains) ? domains.map(domain => (
+                        <MenuItem key={domain.domainId} value={domain.domainId}>
+                          {domain.name}
+                        </MenuItem>
+                      )) : null}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -493,13 +467,12 @@ const ActionPlan: React.FC = () => {
                       onChange={handleFilterChange}
                     >
                       <MenuItem value="">Tous</MenuItem>
-                   {users.map(user => (
-  <MenuItem key={user.userId} value={user.userId}>
-    {user.name}
-  </MenuItem>
-))}
-<MenuItem value="null">Non assigné</MenuItem>
-
+                      {users.map(user => (
+                        <MenuItem key={user.userId} value={user.userId}>
+                          {user.name}
+                        </MenuItem>
+                      ))}
+                      <MenuItem value="null">Non assigné</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -537,9 +510,7 @@ const ActionPlan: React.FC = () => {
                 
                 <Grid item sx={{ xs: 12 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                    <Button onClick={handleClearFilters}>
-                      Réinitialiser
-                    </Button>
+                    <Button onClick={handleClearFilters}>Réinitialiser</Button>
                     <Button 
                       variant="contained" 
                       startIcon={<Search />}
@@ -586,7 +557,7 @@ const ActionPlan: React.FC = () => {
                         <td>{action.textReference}</td>
                         <td>{action.requirementTitle || '-'}</td>
                         <td>{action.description}</td>
-<td>{action.responsibleName || 'Non assigné'}</td>
+                        <td>{action.responsibleName || 'Non assigné'}</td>
                         <td>
                           <Tooltip title={`Créée le ${new Date(action.createdAt).toLocaleDateString()}`}>
                             <span>{new Date(action.deadline).toLocaleDateString()}</span>
@@ -599,9 +570,7 @@ const ActionPlan: React.FC = () => {
                               value={action.progress} 
                               sx={{ flexGrow: 1, mr: 1 }}
                             />
-                            <Typography variant="body2">
-                              {action.progress}%
-                            </Typography>
+                            <Typography variant="body2">{action.progress}%</Typography>
                           </Box>
                         </td>
                         <td>{action.effectiveness || '-'}</td>
@@ -672,7 +641,6 @@ const ActionPlan: React.FC = () => {
         </Box>
       </Box>
       
-      {/* Action Dialog */}
       <Dialog 
         open={actionDialog.open} 
         onClose={() => setActionDialog(prev => ({ ...prev, open: false }))}
@@ -684,6 +652,34 @@ const ActionPlan: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
+            {actionDialog.mode === 'create' && actionDialog.textId && (
+              <Grid item sx={{ xs: 12 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="requirement-label">Exigence</InputLabel>
+                  <Select
+                    labelId="requirement-label"
+                    id="requirement-select"
+                    value={actionDialog.data.requirementId || ''}
+                    label="Exigence"
+                    onChange={(e) => handleActionDialogChange('requirementId', e.target.value)}
+                  >
+                    <MenuItem value="">Aucune</MenuItem>
+                    {requirements.map(req => (
+                      <MenuItem key={req.requirementId} value={req.requirementId}>
+                        {req.number} - {req.title}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+            {actionDialog.mode === 'edit' && actionDialog.data.requirementId && (
+              <Grid item sx={{ xs: 12 }}>
+                <Typography>
+                  <strong>Exigence:</strong> {requirements.find(r => r.requirementId === actionDialog.data.requirementId)?.title || '-'}
+                </Typography>
+              </Grid>
+            )}
             <Grid item sx={{ xs: 12 }}>
               <TextField
                 fullWidth
@@ -696,26 +692,25 @@ const ActionPlan: React.FC = () => {
                 required
               />
             </Grid>
-            
             <Grid item sx={{ xs: 12, sm: 6 }}>
-<FormControl fullWidth>
-  <InputLabel id="responsible-dialog-label">Responsable</InputLabel>
-  <Select
-    labelId="responsible-dialog-label"
-    id="responsible-dialog-select"
-    value={actionDialog.data.responsibleId || ''}
-    label="Responsable"
-    onChange={(e) => handleActionDialogChange('responsibleId', e.target.value === '' ? null : e.target.value)}
-  >
-    <MenuItem value="">Sélectionner un responsable</MenuItem>
-    {users.map(user => (
-      <MenuItem key={user.userId} value={user.userId}>
-        {user.name}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>            </Grid>
-            
+              <FormControl fullWidth>
+                <InputLabel id="responsible-dialog-label">Responsable</InputLabel>
+                <Select
+                  labelId="responsible-dialog-label"
+                  id="responsible-dialog-select"
+                  value={actionDialog.data.responsibleId || ''}
+                  label="Responsable"
+                  onChange={(e) => handleActionDialogChange('responsibleId', e.target.value === '' ? null : e.target.value)}
+                >
+                  <MenuItem value="">Sélectionner un responsable</MenuItem>
+                  {users.map(user => (
+                    <MenuItem key={user.userId} value={user.userId}>
+                      {user.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item sx={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
@@ -728,11 +723,8 @@ const ActionPlan: React.FC = () => {
                 required
               />
             </Grid>
-            
             <Grid item sx={{ xs: 12 }}>
-              <Typography gutterBottom>
-                Progression: {actionDialog.data.progress}%
-              </Typography>
+              <Typography gutterBottom>Progression: {actionDialog.data.progress}%</Typography>
               <Slider
                 value={actionDialog.data.progress}
                 onChange={(_, value) => handleActionDialogChange('progress', value)}
@@ -744,7 +736,6 @@ const ActionPlan: React.FC = () => {
                 max={100}
               />
             </Grid>
-            
             <Grid item sx={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
@@ -755,7 +746,6 @@ const ActionPlan: React.FC = () => {
                 helperText="Par exemple: Mesures d'impact, résultats de l'action"
               />
             </Grid>
-            
             <Grid item sx={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
                 <InputLabel id="status-dialog-label">Statut</InputLabel>
@@ -776,9 +766,7 @@ const ActionPlan: React.FC = () => {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}
-          >
+          <Button onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}>
             Annuler
           </Button>
           <Button 

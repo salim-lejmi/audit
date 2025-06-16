@@ -4,7 +4,6 @@ using server.Data;
 using server.Models;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,159 +22,155 @@ namespace server.Controllers
             _environment = environment;
         }
 
-[HttpGet("texts")]
-public async Task<IActionResult> GetTextsForEvaluation(
-    [FromQuery] int? domainId = null,
-    [FromQuery] int? themeId = null,
-    [FromQuery] int? subThemeId = null,
-    [FromQuery] string nature = null,
-    [FromQuery] int? publicationYear = null,
-    [FromQuery] string keyword = null,
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 10)
-{
-    try
-    {
-        // Check authentication
-        var userId = HttpContext.Session.GetInt32("UserId");
-        var companyId = HttpContext.Session.GetInt32("CompanyId");
-        
-        if (!userId.HasValue || !companyId.HasValue)
+        [HttpGet("texts")]
+        public async Task<IActionResult> GetTextsForEvaluation(
+            [FromQuery] int? domainId = null,
+            [FromQuery] int? themeId = null,
+            [FromQuery] int? subThemeId = null,
+            [FromQuery] string nature = null,
+            [FromQuery] int? publicationYear = null,
+            [FromQuery] string keyword = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
-            return Unauthorized(new { message = "Not authenticated" });
+            try
+            {
+                var userId = HttpContext.Session.GetInt32("UserId");
+                var companyId = HttpContext.Session.GetInt32("CompanyId");
+                
+                if (!userId.HasValue || !companyId.HasValue)
+                {
+                    return Unauthorized(new { message = "Not authenticated" });
+                }
+
+                IQueryable<Text> query = _context.Texts
+                    .Include(t => t.DomainObject)
+                    .Include(t => t.ThemeObject)
+                    .Include(t => t.SubThemeObject)
+                    .Include(t => t.Requirements)
+                    .Where(t => t.CompanyId == companyId.Value);
+
+                if (domainId.HasValue)
+                    query = query.Where(t => t.DomainId == domainId.Value);
+                if (themeId.HasValue)
+                    query = query.Where(t => t.ThemeId == themeId.Value);
+                if (subThemeId.HasValue)
+                    query = query.Where(t => t.SubThemeId == subThemeId.Value);
+                if (!string.IsNullOrEmpty(nature))
+                    query = query.Where(t => t.Nature.Contains(nature));
+                if (publicationYear.HasValue)
+                    query = query.Where(t => t.PublicationYear == publicationYear.Value);
+                if (!string.IsNullOrEmpty(keyword))
+                    query = query.Where(t => t.Reference.Contains(keyword) || t.Content.Contains(keyword));
+
+                var totalCount = await query.CountAsync();
+
+                var textIds = await query
+                    .OrderByDescending(t => t.CreatedAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(t => t.TextId)
+                    .ToListAsync();
+
+                var textsWithDetails = await query
+                    .Where(t => textIds.Contains(t.TextId))
+                    .OrderByDescending(t => t.CreatedAt)
+                    .Select(t => new
+                    {
+                        textId = t.TextId,
+                        domain = t.DomainObject != null ? t.DomainObject.Name : "",
+                        theme = t.ThemeObject != null ? t.ThemeObject.Name : "",
+                        subTheme = t.SubThemeObject != null ? t.SubThemeObject.Name : "",
+                        reference = t.Reference,
+                        penaltyOrIncentive = t.Penalties
+                    })
+                    .ToListAsync();
+
+                var requirementCounts = await _context.TextRequirements
+                    .Where(tr => textIds.Contains(tr.TextId))
+                    .GroupBy(tr => tr.TextId)
+                    .Select(g => new
+                    {
+                        TextId = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
+
+                var requirementStatuses = await _context.TextRequirements
+                    .Where(tr => textIds.Contains(tr.TextId))
+                    .GroupJoin(
+                        _context.ComplianceEvaluations,
+                        tr => tr.RequirementId,
+                        ce => ce.RequirementId,
+                        (tr, ceGroup) => new
+                        {
+                            TextId = tr.TextId,
+                            Status = ceGroup.Any() ? ceGroup.First().Status : tr.Status
+                        }
+                    )
+                    .GroupBy(x => new { x.TextId, x.Status })
+                    .Select(g => new
+                    {
+                        TextId = g.Key.TextId,
+                        Status = g.Key.Status,
+                        Count = g.Count()
+                    })
+                    .ToListAsync();
+
+                var result = textsWithDetails.Select(t => 
+                {
+                    var reqCount = requirementCounts
+                        .FirstOrDefault(rc => rc.TextId == t.textId)?.Count ?? 0;
+                    
+                    var statusCounts = requirementStatuses
+                        .Where(rs => rs.TextId == t.textId)
+                        .Select(rs => new { status = rs.Status, count = rs.Count })
+                        .ToList();
+                    
+                    var applicableCount = requirementStatuses
+                        .Where(rs => rs.TextId == t.textId && rs.Status == "applicable")
+                        .Sum(rs => rs.Count);
+                    
+                    int applicablePercentage = reqCount > 0 
+                        ? (int)Math.Round((double)applicableCount / reqCount * 100) 
+                        : 0;
+
+                    return new
+                    {
+                        t.textId,
+                        t.domain,
+                        t.theme,
+                        t.subTheme,
+                        t.reference,
+                        t.penaltyOrIncentive,
+                        requirementsStatuses = statusCounts,
+                        applicablePercentage
+                    };
+                }).ToList();
+
+                return Ok(new
+                {
+                    texts = result,
+                    totalCount,
+                    totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+                    currentPage = page
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetTextsForEvaluation: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, ex.ToString());
+            }
         }
 
-        // Build query with filters
-        IQueryable<Text> query = _context.Texts
-            .Include(t => t.DomainObject)
-            .Include(t => t.ThemeObject)
-            .Include(t => t.SubThemeObject)
-            .Include(t => t.Requirements)
-            .Where(t => t.CompanyId == companyId.Value); // Filter by company
 
-        if (domainId.HasValue)
-            query = query.Where(t => t.DomainId == domainId.Value);
-
-        if (themeId.HasValue)
-            query = query.Where(t => t.ThemeId == themeId.Value);
-
-        if (subThemeId.HasValue)
-            query = query.Where(t => t.SubThemeId == subThemeId.Value);
-
-        if (!string.IsNullOrEmpty(nature))
-            query = query.Where(t => t.Nature.Contains(nature));
-
-        if (publicationYear.HasValue)
-            query = query.Where(t => t.PublicationYear == publicationYear.Value);
-
-        if (!string.IsNullOrEmpty(keyword))
-            query = query.Where(t => t.Reference.Contains(keyword) ||
-                                    t.Content.Contains(keyword));
-
-        // Get total count for pagination
-        var totalCount = await query.CountAsync();
-
-        // First, get the text IDs for the current page
-        var textIds = await query
-            .OrderByDescending(t => t.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(t => t.TextId)
-            .ToListAsync();
-
-        // Fetch all the data we need separately
-        var textsWithDetails = await query
-            .Where(t => textIds.Contains(t.TextId))
-            .OrderByDescending(t => t.CreatedAt)
-            .Select(t => new
-            {
-                textId = t.TextId,
-                domain = t.DomainObject != null ? t.DomainObject.Name : "",
-                theme = t.ThemeObject != null ? t.ThemeObject.Name : "",
-                subTheme = t.SubThemeObject != null ? t.SubThemeObject.Name : "",
-                reference = t.Reference,
-                penaltyOrIncentive = t.Penalties
-            })
-            .ToListAsync();
-
-        // Separately fetch requirement counts
-        var requirementCounts = await _context.TextRequirements
-            .Where(tr => textIds.Contains(tr.TextId))
-            .GroupBy(tr => tr.TextId)
-            .Select(g => new
-            {
-                TextId = g.Key,
-                Count = g.Count()
-            })
-            .ToListAsync();
-
-        // Separately fetch evaluation status counts
-        var evaluationStatusCounts = await _context.ComplianceEvaluations
-            .Where(ce => textIds.Contains(ce.TextId))
-            .GroupBy(ce => new { ce.TextId, ce.Status })
-            .Select(g => new
-            {
-                TextId = g.Key.TextId,
-                Status = g.Key.Status,
-                Count = g.Count()
-            })
-            .ToListAsync();
-
-        // Combine the data
-        var result = textsWithDetails.Select(t => 
-        {
-            var reqCount = requirementCounts
-                .FirstOrDefault(rc => rc.TextId == t.textId)?.Count ?? 0;
-            
-            var statusCounts = evaluationStatusCounts
-                .Where(esc => esc.TextId == t.textId)
-                .Select(esc => new { status = esc.Status, count = esc.Count })
-                .ToList();
-            
-            var applicableCount = evaluationStatusCounts
-                .Where(esc => esc.TextId == t.textId && esc.Status == "applicable")
-                .Sum(esc => esc.Count);
-            
-            int applicablePercentage = reqCount > 0 
-                ? (int)Math.Round((double)applicableCount / reqCount * 100) 
-                : 0;
-
-            return new
-            {
-                t.textId,
-                t.domain,
-                t.theme,
-                t.subTheme,
-                t.reference,
-                t.penaltyOrIncentive,
-                requirementsStatuses = statusCounts,
-                applicablePercentage
-            };
-        }).ToList();
-
-        return Ok(new
-        {
-            texts = result,
-            totalCount,
-            totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
-            currentPage = page
-        });
-    }
-    catch (Exception ex)
-    {
-        // Log the error
-        Console.WriteLine($"Error in GetTextsForEvaluation: {ex.Message}");
-        Console.WriteLine($"Stack trace: {ex.StackTrace}");
-        return StatusCode(500, ex.ToString());
-    }
-}
         // Remove the CalculateApplicablePercentage method as we've moved its logic inline
 
         // Rest of your controller methods remain unchanged
 [HttpGet("text/{textId}")]
 public async Task<IActionResult> GetTextWithRequirements(int textId)
 {
-    // Check authentication
     var userId = HttpContext.Session.GetInt32("UserId");
     var companyId = HttpContext.Session.GetInt32("CompanyId");
     
@@ -184,20 +179,18 @@ public async Task<IActionResult> GetTextWithRequirements(int textId)
         return Unauthorized(new { message = "Not authenticated" });
     }
 
-    // Get text with requirements
     var text = await _context.Texts
         .Include(t => t.DomainObject)
         .Include(t => t.ThemeObject)
         .Include(t => t.SubThemeObject)
         .Include(t => t.Requirements)
-        .FirstOrDefaultAsync(t => t.TextId == textId && t.CompanyId == companyId.Value); // Filter by company
+        .FirstOrDefaultAsync(t => t.TextId == textId && t.CompanyId == companyId.Value);
 
     if (text == null)
     {
         return NotFound(new { message = "Text not found" });
     }
 
-    // Get requirements with evaluations
     var requirements = await _context.TextRequirements
         .Where(tr => tr.TextId == textId)
         .Select(tr => new
@@ -205,6 +198,7 @@ public async Task<IActionResult> GetTextWithRequirements(int textId)
             requirementId = tr.RequirementId,
             number = tr.Number,
             title = tr.Title,
+            status = tr.Status, // Include initial requirement status
             evaluation = _context.ComplianceEvaluations
                 .Where(ce => ce.RequirementId == tr.RequirementId)
                 .OrderByDescending(ce => ce.EvaluatedAt)
@@ -258,7 +252,6 @@ public async Task<IActionResult> GetTextWithRequirements(int textId)
 
     return Ok(result);
 }
-
 [HttpPost("evaluate")]
 public async Task<IActionResult> EvaluateRequirement([FromBody] EvaluateRequirementRequest request)
 {

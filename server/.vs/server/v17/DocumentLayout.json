@@ -37,22 +37,20 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "dbo.Actions [Data]",
+              "Title": "dbo.Actions.sql",
               "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Actions.sql",
-              "ToolTip": "dbo.Actions [Data]",
+              "ToolTip": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Actions.sql",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-06-14T20:38:04.952Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-14T20:38:04.952Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "dbo.Texts [Data]",
+              "Title": "dbo.Texts.sql",
               "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Texts.sql",
-              "ToolTip": "dbo.Texts [Data]",
+              "ToolTip": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Texts.sql",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
-              "WhenOpened": "2025-06-14T20:37:50.405Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-14T20:37:50.405Z"
             },
             {
               "$type": "Document",
@@ -64,8 +62,7 @@
               "RelativeToolTip": "Data\\AuditDbContext.cs",
               "ViewState": "AgIAAJsAAAAAAAAAAAAwwKUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-14T20:20:43.059Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-14T20:20:43.059Z"
             }
           ]
         }

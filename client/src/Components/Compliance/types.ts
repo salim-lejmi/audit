@@ -77,6 +77,7 @@ export interface Requirement {
   requirementId: number;
   number: string;
   title: string;
+  status: string;
   evaluation?: Evaluation;
 }
 
@@ -112,6 +113,7 @@ export interface FileDialogState {
   evaluationId: number | null;
   file: File | null;
 }
+
 export interface Action {
   actionId: number;
   textId: number;
@@ -133,6 +135,14 @@ export interface Action {
   subTheme?: string;
 }
 
+export interface TextRequirement {
+  requirementId: number;
+  number: string;
+  title: string;
+  status: string;
+  evaluation?: Evaluation;
+}
+
 export interface ActionDialogState {
   open: boolean;
   mode: 'create' | 'edit';
@@ -140,6 +150,7 @@ export interface ActionDialogState {
   requirementId?: number;
   actionId?: number;
   data: {
+    requirementId?: number; // Added requirementId
     description: string;
     responsibleId: number;
     deadline: string;
