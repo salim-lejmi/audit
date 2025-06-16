@@ -166,3 +166,29 @@ export interface User {
   email: string;
   role: string;
 }
+export interface StatisticsByStatus {
+  status: string;
+  count: number;
+}
+
+export interface ActionProgressGroup {
+  range: string;
+  count: number;
+}
+
+export interface ActionByResponsible {
+  responsibleId: number;
+  responsibleName: string;
+  totalActions: number;
+  completedActions: number;
+  averageProgress: number;
+}
+
+export interface StatisticsData {
+  domains: Domain[];
+  textsByStatus: StatisticsByStatus[];
+  requirementsByStatus: StatisticsByStatus[];
+  actionsByStatus: StatisticsByStatus[];
+  actionProgressGroups: ActionProgressGroup[];
+  actionsByResponsible: ActionByResponsible[];
+}

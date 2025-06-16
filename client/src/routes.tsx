@@ -14,6 +14,7 @@ import ComplianceEvaluation from './Components/Compliance/ComplianceEvaluation';
 import ProtectedRoute from './Components/Common/ProtectedRoute';
 import ActionPlan from './Components/Compliance/ActionPlan';
 import UserDashboard from "./Components/Company/UserDashboard"; // Import UserDashboard
+import StatisticsPage from './Components/Company/StatisticsPage';
 
 const AppRoutes = () => {
   return (
@@ -45,6 +46,8 @@ const AppRoutes = () => {
           <Route path="action-plan" element={<ActionPlan />} />
           <Route path="settings" element={<div>Company Settings (To be implemented)</div>} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="statistics" element={<StatisticsPage />} />
+
           {/* Add /company/history if needed */}
         </Route>
 
@@ -52,6 +55,8 @@ const AppRoutes = () => {
    <Route path="/user" element={<ProtectedRoute role="User" />}>
   <Route path="dashboard" element={<UserDashboard />} />
   <Route path="compliance" element={<ComplianceEvaluation />} />
+  <Route path="statistics" element={<StatisticsPage />} />
+
   <Route path="action-plan" element={<ActionPlan />} />
   <Route path="profile" element={<ProfilePage />} />
 </Route>
