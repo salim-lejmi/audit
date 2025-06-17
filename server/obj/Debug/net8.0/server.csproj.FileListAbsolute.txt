@@ -929,3 +929,16 @@ C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.pdb
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.genruntimeconfig.cache
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\ref\server.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\server.staticwebassets.runtime.json
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.barcodes.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.bouncy-castle-connector.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.forms.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.io.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.kernel.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.layout.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.pdfa.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.pdfua.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.sign.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.styledxmlparser.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.svg.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.commons.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.DotNet.PlatformAbstractions.dll

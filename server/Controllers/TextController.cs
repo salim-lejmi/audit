@@ -33,11 +33,10 @@ public async Task<IActionResult> GetTexts(
     [FromQuery] int? publicationYear = null,
     [FromQuery] string keyword = null,
     [FromQuery] string status = null,
-    [FromQuery] string textType = null, // "À vérifier" or "Pour information"
+    [FromQuery] string textType = null,
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
 {
-    // Check authentication
     var userId = HttpContext.Session.GetInt32("UserId");
     var companyId = HttpContext.Session.GetInt32("CompanyId");
     
@@ -46,14 +45,14 @@ public async Task<IActionResult> GetTexts(
         return Unauthorized(new { message = "Not authenticated" });
     }
 
-    // Build query with filters
     IQueryable<Text> query = _context.Texts
         .Include(t => t.CreatedBy)
         .Include(t => t.DomainObject)
         .Include(t => t.ThemeObject)
         .Include(t => t.SubThemeObject)
-        .Where(t => t.CompanyId == companyId.Value); // Filter by company
+        .Where(t => t.CompanyId == companyId.Value);
 
+    // Apply your existing filters...
     if (domainId.HasValue)
         query = query.Where(t => t.DomainId == domainId.Value);
 
@@ -79,10 +78,8 @@ public async Task<IActionResult> GetTexts(
     if (!string.IsNullOrEmpty(textType))
         query = query.Where(t => t.Status == textType);
 
-    // Get total count for pagination
     var totalCount = await query.CountAsync();
 
-    // Apply pagination
     var texts = await query
         .OrderByDescending(t => t.CreatedAt)
         .Skip((page - 1) * pageSize)
@@ -96,7 +93,7 @@ public async Task<IActionResult> GetTexts(
             domain = t.DomainObject != null ? t.DomainObject.Name : "",
             theme = t.ThemeObject != null ? t.ThemeObject.Name : "",
             subTheme = t.SubThemeObject != null ? t.SubThemeObject.Name : "",
-            reference = t.Reference,
+            reference = t.Reference ?? "", // Ensure reference is never null
             nature = t.Nature,
             publicationYear = t.PublicationYear,
             status = t.Status,
@@ -114,7 +111,6 @@ public async Task<IActionResult> GetTexts(
         currentPage = page
     });
 }
-
             [HttpGet("domains")]
             public async Task<IActionResult> GetDomains()
             {
@@ -200,17 +196,17 @@ public async Task<IActionResult> GetTexts(
             }
 
             [HttpGet("{id}")]
-public async Task<IActionResult> GetText(int id)
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    var companyId = HttpContext.Session.GetInt32("CompanyId");
-    
-    if (!userId.HasValue || !companyId.HasValue)
+    public async Task<IActionResult> GetText(int id)
     {
-        return Unauthorized(new { message = "Not authenticated" });
-    }
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var companyId = HttpContext.Session.GetInt32("CompanyId");
+        
+        if (!userId.HasValue || !companyId.HasValue)
+        {
+            return Unauthorized(new { message = "Not authenticated" });
+        }
 
-    var text = await _context.Texts
+        var text = await _context.Texts
         .Include(t => t.CreatedBy)
         .Include(t => t.Requirements)
         .Include(t => t.DomainObject)

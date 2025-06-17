@@ -9,6 +9,10 @@
       "PackagePath": "staticwebassets\\pdfs\\review_11.pdf"
     },
     {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_12.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\review_12.pdf"
+    },
+    {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.server.props",
       "PackagePath": "build\\server.props"
     },

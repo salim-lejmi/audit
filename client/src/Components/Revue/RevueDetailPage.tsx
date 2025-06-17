@@ -54,18 +54,26 @@ interface Text {
 const RevueDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [review, setReview] = useState<ReviewDetail | null>(null);
-  const [texts, setTexts] = useState<Text[]>([]);
-  const [loading, setLoading] = useState(true);
+const [texts, setTexts] = useState<{ textId: number; reference: string }[]>([]);  
+const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+const [textsLoaded, setTextsLoaded] = useState(false);
 
   // Modal states
-  const [showLegalTextModal, setShowLegalTextModal] = useState(false);
+const [showLegalTextModal, setShowLegalTextModal] = useState(false);
   const [showRequirementModal, setShowRequirementModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
   const [showStakeholderModal, setShowStakeholderModal] = useState(false);
 
   // Form states
-  const [legalTextForm, setLegalTextForm] = useState({ textId: 0, penalties: '', incentives: '', risks: '', opportunities: '', followUp: '' });
+const [legalTextForm, setLegalTextForm] = useState({
+    textId: 0,
+    penalties: '',
+    incentives: '',
+    risks: '',
+    opportunities: '',
+    followUp: '',
+  });  
   const [requirementForm, setRequirementForm] = useState({ description: '', implementation: '', communication: '', followUp: '' });
   const [actionForm, setActionForm] = useState({ description: '', source: '', status: '', observation: '', followUp: '' });
   const [stakeholderForm, setStakeholderForm] = useState({ stakeholderName: '', relationshipStatus: '', reason: '', action: '', followUp: '' });
@@ -89,15 +97,22 @@ const RevueDetailPage: React.FC = () => {
       });
   };
 
-  const fetchTexts = () => {
-    axios.get('/api/texts')
-      .then(response => {
-        console.log('Texts API response:', response.data);
-        setTexts(Array.isArray(response.data) ? response.data : []);
-      })
-      .catch(err => console.error('Failed to load texts', err));
-  };
-
+const fetchTexts = async () => {
+  try {
+    const response = await axios.get('/api/texts');
+    console.log('Raw Texts API response:', response.data);
+    
+    const fetchedTexts = response.data.texts || [];
+    console.log('Fetched texts:', fetchedTexts);
+    
+    setTexts(fetchedTexts);
+    setTextsLoaded(true);
+  } catch (err) {
+    console.error('Failed to load texts', err);
+    setTexts([]);
+    setTextsLoaded(true);
+  }
+};
   const handleAddLegalText = () => {
     if (legalTextForm.textId === 0) {
       alert('Please select a text');
@@ -360,17 +375,21 @@ const RevueDetailPage: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium">Text</label>
-                <select
-                  value={legalTextForm.textId}
-                  onChange={e => setLegalTextForm({ ...legalTextForm, textId: parseInt(e.target.value) })}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value={0}>Select Text</option>
-                  {Array.isArray(texts) ? texts.map(text => (
-                    <option key={text.textId} value={text.textId}>{text.reference}</option>
-                  )) : null}
-                </select>
-              </div>
+<select
+  value={legalTextForm.textId}
+  onChange={e => setLegalTextForm({ ...legalTextForm, textId: parseInt(e.target.value) })}
+  className="w-full p-2 border rounded"
+>
+  <option value={0}>Select Text</option>
+  {texts.length > 0 ? (
+    texts.map(text => (
+      <option key={text.textId} value={text.textId}>{text.reference}</option>
+    ))
+  ) : (
+    <option value={0}>No texts available</option>
+  )}
+</select>              
+</div>
               <div>
                 <label className="block text-sm font-medium">Penalties</label>
                 <input

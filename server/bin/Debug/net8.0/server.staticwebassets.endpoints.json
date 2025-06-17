@@ -165,6 +165,88 @@
           "Value": "pdfs/review_11.pdf"
         }
       ]
+    },
+    {
+      "Route": "pdfs/review_12.hxnqsqby9h.pdf",
+      "AssetFile": "pdfs/review_12.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "137"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"W5DzhwiRIwOtUvgkLCc51Ja2jt8YfksK3qY+IIYeJ+A=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 17 Jun 2025 02:03:01 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "hxnqsqby9h"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-W5DzhwiRIwOtUvgkLCc51Ja2jt8YfksK3qY+IIYeJ+A="
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_12.pdf"
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_12.pdf",
+      "AssetFile": "pdfs/review_12.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "137"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"W5DzhwiRIwOtUvgkLCc51Ja2jt8YfksK3qY+IIYeJ+A=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 17 Jun 2025 02:03:01 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-W5DzhwiRIwOtUvgkLCc51Ja2jt8YfksK3qY+IIYeJ+A="
+        }
+      ]
     }
   ]
 }
