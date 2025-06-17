@@ -1,5 +1,170 @@
 {
   "Version": 1,
   "ManifestType": "Build",
-  "Endpoints": []
+  "Endpoints": [
+    {
+      "Route": "pdfs/review_10.pdf",
+      "AssetFile": "pdfs/review_10.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "152"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"0nX77rD8vIHAyxvbi+XMYEREgfq5dRG4ziAGMSYjIMM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 16 Jun 2025 23:18:45 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-0nX77rD8vIHAyxvbi+XMYEREgfq5dRG4ziAGMSYjIMM="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_10.u8fozlfziz.pdf",
+      "AssetFile": "pdfs/review_10.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "152"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"0nX77rD8vIHAyxvbi+XMYEREgfq5dRG4ziAGMSYjIMM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 16 Jun 2025 23:18:45 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "u8fozlfziz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-0nX77rD8vIHAyxvbi+XMYEREgfq5dRG4ziAGMSYjIMM="
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_10.pdf"
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_11.pdf",
+      "AssetFile": "pdfs/review_11.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "262"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"MJI6gk+xp+Zk4YaJh8HxGf5lfwAC6cW5DtZLTS990aw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 16 Jun 2025 23:24:06 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-MJI6gk+xp+Zk4YaJh8HxGf5lfwAC6cW5DtZLTS990aw="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_11.s5u6cmh0gu.pdf",
+      "AssetFile": "pdfs/review_11.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "262"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"MJI6gk+xp+Zk4YaJh8HxGf5lfwAC6cW5DtZLTS990aw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 16 Jun 2025 23:24:06 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "s5u6cmh0gu"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-MJI6gk+xp+Zk4YaJh8HxGf5lfwAC6cW5DtZLTS990aw="
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_11.pdf"
+        }
+      ]
+    }
+  ]
 }

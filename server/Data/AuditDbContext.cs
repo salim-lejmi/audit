@@ -24,6 +24,11 @@ namespace server.Data
         public DbSet<EvaluationAttachment> EvaluationAttachments { get; set; }
         public DbSet<EvaluationHistory> EvaluationHistory { get; set; }
         public DbSet<Models.Action> Actions { get; set; }
+        public DbSet<RevueDeDirection> RevueDeDirections { get; set; }
+        public DbSet<RevueLegalText> RevueLegalTexts { get; set; }
+        public DbSet<RevueRequirement> RevueRequirements { get; set; }
+        public DbSet<RevueAction> RevueActions { get; set; }
+        public DbSet<RevueStakeholder> RevueStakeholders { get; set; }
 
         private static readonly DateTime SeedCreatedAt = new DateTime(2025, 3, 10, 1, 2, 0, DateTimeKind.Utc);
         private const string AdminPasswordHash = "$2b$12$ovPPLXG.u1usgak7T7fnAeJEZjgdCOJ4GgIEpL1bM9QAbdUXNDib2";
@@ -140,6 +145,48 @@ namespace server.Data
                 .HasOne(ce => ce.EvaluatedBy)
                 .WithMany()
                 .HasForeignKey(ce => ce.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // RevueDeDirection → RevueLegalText (CASCADE)
+            modelBuilder.Entity<RevueLegalText>()
+                .HasOne(rlt => rlt.Revue)
+                .WithMany(r => r.LegalTexts)
+                .HasForeignKey(rlt => rlt.RevueId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // RevueDeDirection → RevueRequirement (CASCADE)
+            modelBuilder.Entity<RevueRequirement>()
+                .HasOne(rr => rr.Revue)
+                .WithMany(r => r.Requirements)
+                .HasForeignKey(rr => rr.RevueId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // RevueDeDirection → RevueAction (CASCADE)
+            modelBuilder.Entity<RevueAction>()
+                .HasOne(ra => ra.Revue)
+                .WithMany(r => r.Actions)
+                .HasForeignKey(ra => ra.RevueId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // RevueDeDirection → RevueStakeholder (CASCADE)
+            modelBuilder.Entity<RevueStakeholder>()
+                .HasOne(rs => rs.Revue)
+                .WithMany(r => r.Stakeholders)
+                .HasForeignKey(rs => rs.RevueId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // RevueLegalText → Text (NO ACTION)
+            modelBuilder.Entity<RevueLegalText>()
+                .HasOne(rlt => rlt.Text)
+                .WithMany()
+                .HasForeignKey(rlt => rlt.TextId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // RevueDeDirection → User (NO ACTION for CreatedById)
+            modelBuilder.Entity<RevueDeDirection>()
+                .HasOne(r => r.CreatedBy)
+                .WithMany()
+                .HasForeignKey(r => r.CreatedById)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Seed data

@@ -3,12 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Container, Box, Typography, Paper, Grid, 
   FormControl, InputLabel, Select, MenuItem,
-  Button, CircularProgress, Divider
+  Button, CircularProgress, Divider, Card, CardContent,
+  Chip, Stack, useTheme, useMediaQuery
 } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PersonIcon from '@mui/icons-material/Person';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
-import { Pie, Bar } from 'react-chartjs-2';
+import { Pie, Bar, Doughnut } from 'react-chartjs-2';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Domain, StatisticsData } from '../Compliance/types';
@@ -23,17 +28,27 @@ const StatisticsPage: React.FC = () => {
   const [statisticsData, setStatisticsData] = useState<StatisticsData | null>(null);
   const chartsContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallScreen = useMediaQuery('(max-width:1366px)');
 
-  // Chart colors
+  // Modern color palette
   const chartColors = [
-    'rgba(54, 162, 235, 0.8)',
-    'rgba(255, 99, 132, 0.8)',
-    'rgba(255, 206, 86, 0.8)',
-    'rgba(75, 192, 192, 0.8)',
-    'rgba(153, 102, 255, 0.8)',
-    'rgba(255, 159, 64, 0.8)',
-    'rgba(199, 199, 199, 0.8)',
-    'rgba(83, 102, 255, 0.8)',
+    '#3B82F6', // Blue
+    '#EF4444', // Red
+    '#10B981', // Green
+    '#F59E0B', // Amber
+    '#8B5CF6', // Purple
+    '#06B6D4', // Cyan
+    '#84CC16', // Lime
+    '#F97316', // Orange
+  ];
+
+  const gradientColors = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
   ];
 
   useEffect(() => {
@@ -97,7 +112,7 @@ const StatisticsPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Chart configurations
+  // Chart configurations with modern styling
   const getTextStatusChartData = () => {
     if (!statisticsData) return { labels: [], datasets: [] };
     
@@ -108,8 +123,9 @@ const StatisticsPage: React.FC = () => {
           label: 'Number of Texts',
           data: statisticsData.textsByStatus.map(item => item.count),
           backgroundColor: chartColors,
-          borderColor: chartColors.map(color => color.replace('0.8', '1')),
-          borderWidth: 1,
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          hoverBorderWidth: 3,
         },
       ],
     };
@@ -125,8 +141,9 @@ const StatisticsPage: React.FC = () => {
           label: 'Number of Requirements',
           data: statisticsData.requirementsByStatus.map(item => item.count),
           backgroundColor: chartColors,
-          borderColor: chartColors.map(color => color.replace('0.8', '1')),
-          borderWidth: 1,
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          hoverBorderWidth: 3,
         },
       ],
     };
@@ -142,8 +159,9 @@ const StatisticsPage: React.FC = () => {
           label: 'Number of Actions',
           data: statisticsData.actionsByStatus.map(item => item.count),
           backgroundColor: chartColors,
-          borderColor: chartColors.map(color => color.replace('0.8', '1')),
-          borderWidth: 1,
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          hoverBorderWidth: 3,
         },
       ],
     };
@@ -158,9 +176,11 @@ const StatisticsPage: React.FC = () => {
         {
           label: 'Actions by Progress',
           data: statisticsData.actionProgressGroups.map(item => item.count),
-          backgroundColor: chartColors,
-          borderColor: chartColors.map(color => color.replace('0.8', '1')),
+          backgroundColor: chartColors.map(color => color + '80'),
+          borderColor: chartColors,
           borderWidth: 1,
+          borderRadius: 8,
+          borderSkipped: false,
         },
       ],
     };
@@ -177,16 +197,20 @@ const StatisticsPage: React.FC = () => {
         {
           label: 'Total Actions',
           data: statisticsData.actionsByResponsible.map(item => item.totalActions),
-          backgroundColor: 'rgba(54, 162, 235, 0.8)',
-          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: '#3B82F680',
+          borderColor: '#3B82F6',
           borderWidth: 1,
+          borderRadius: 8,
+          borderSkipped: false,
         },
         {
           label: 'Completed Actions',
           data: statisticsData.actionsByResponsible.map(item => item.completedActions),
-          backgroundColor: 'rgba(75, 192, 192, 0.8)',
-          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: '#10B98180',
+          borderColor: '#10B981',
           borderWidth: 1,
+          borderRadius: 8,
+          borderSkipped: false,
         },
       ],
     };
@@ -203,60 +227,223 @@ const StatisticsPage: React.FC = () => {
         {
           label: 'Average Progress (%)',
           data: statisticsData.actionsByResponsible.map(item => item.averageProgress),
-          backgroundColor: 'rgba(255, 99, 132, 0.8)',
-          borderColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: '#EF444480',
+          borderColor: '#EF4444',
           borderWidth: 1,
+          borderRadius: 8,
+          borderSkipped: false,
         },
       ],
     };
   };
 
-  const barOptions = {
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: 'bottom' as const,
+        labels: {
+          padding: 15,
+          usePointStyle: true,
+          font: {
+            size: isSmallScreen ? 11 : 12,
+          }
+        },
       },
-      title: {
-        display: false,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: '#3B82F6',
+        borderWidth: 1,
+        cornerRadius: 8,
       },
     },
   };
 
-  return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
-      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Statistics
-          </Typography>
-          <Box>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              startIcon={<PictureAsPdfIcon />}
-              onClick={handleExportPDF}
-              sx={{ mr: 1 }}
-            >
-              Export as PDF
-            </Button>
-            <Button 
-              variant="outlined" 
-              onClick={() => navigate('/company/action-plan')}
-            >
-              Back to Action Plan
-            </Button>
-          </Box>
+  const barOptions = {
+    ...chartOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+        ticks: {
+          font: {
+            size: isSmallScreen ? 10 : 12,
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          font: {
+            size: isSmallScreen ? 10 : 12,
+          }
+        }
+      },
+    },
+  };
+
+  const StatsCard = ({ title, value, icon, gradient }: { title: string; value: number; icon: React.ReactNode; gradient: string }) => (
+    <Card 
+      sx={{ 
+        background: gradient,
+        color: 'white',
+        height: isSmallScreen ? '70px' : '80px', // Reduced height significantly
+        display: 'flex',
+        alignItems: 'center',
+        borderRadius: 2,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        transition: 'transform 0.2s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+        }
+      }}
+    >
+      <CardContent 
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          width: '100%', 
+          p: isSmallScreen ? '8px 12px' : '12px 16px', // Reduced padding
+          '&:last-child': { pb: isSmallScreen ? '8px' : '12px' } // Override default padding-bottom
+        }}
+      >
+        <Box sx={{ mr: isSmallScreen ? 1 : 1.5, opacity: 0.9, display: 'flex', alignItems: 'center' }}>
+          {React.cloneElement(icon as React.ReactElement, { 
+            fontSize: isSmallScreen ? "small" : "medium" // Smaller icons
+          })}
         </Box>
-        
-        <Box mb={4}>
-          <FormControl fullWidth variant="outlined">
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography 
+            variant={isSmallScreen ? "h6" : "h5"} 
+            component="div" 
+            fontWeight="bold"
+            sx={{ 
+              lineHeight: 1.2,
+              fontSize: isSmallScreen ? '1.1rem' : '1.25rem' // Smaller font
+            }}
+          >
+            {value}
+          </Typography>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              opacity: 0.9,
+              fontSize: isSmallScreen ? '0.7rem' : '0.8rem', // Smaller subtitle
+              lineHeight: 1.1,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {title}
+          </Typography>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+
+  const ChartCard = ({ title, children, icon }: { title: string; children: React.ReactNode; icon?: React.ReactNode }) => (
+    <Card 
+      sx={{ 
+        borderRadius: 3, 
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        transition: 'transform 0.2s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.12)',
+        }
+      }}
+    >
+      <CardContent sx={{ p: isSmallScreen ? 2 : 3 }}>
+        <Box display="flex" alignItems="center" mb={2}>
+          {icon && <Box sx={{ mr: 1, color: '#3B82F6' }}>{icon}</Box>}
+          <Typography variant={isSmallScreen ? "h6" : "h5"} fontWeight="600" color="text.primary">
+            {title}
+          </Typography>
+        </Box>
+        {children}
+      </CardContent>
+    </Card>
+  );
+
+  const getSummaryStats = () => {
+    if (!statisticsData) return { texts: 0, requirements: 0, actions: 0, completed: 0 };
+    
+    const texts = statisticsData.textsByStatus.reduce((sum, item) => sum + item.count, 0);
+    const requirements = statisticsData.requirementsByStatus.reduce((sum, item) => sum + item.count, 0);
+    const actions = statisticsData.actionsByStatus.reduce((sum, item) => sum + item.count, 0);
+    const completed = statisticsData.actionsByStatus.find(item => item.status.toLowerCase().includes('completed'))?.count || 0;
+    
+    return { texts, requirements, actions, completed };
+  };
+
+  const summaryStats = getSummaryStats();
+
+  return (
+    <Container maxWidth="xl" sx={{ py: isSmallScreen ? 2 : 3 }}>
+      {/* Header */}
+      <Box mb={isSmallScreen ? 2 : 3}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: isSmallScreen ? 2 : 3, 
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white'
+          }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+            <Box>
+              <Typography variant={isSmallScreen ? "h4" : "h3"} component="h1" fontWeight="bold" gutterBottom>
+                Analytics Dashboard
+              </Typography>
+              <Typography variant={isSmallScreen ? "body2" : "body1"} sx={{ opacity: 0.9 }}>
+                Comprehensive compliance statistics and insights
+              </Typography>
+            </Box>
+            <Stack direction={isMobile ? "column" : "row"} spacing={1} alignItems="stretch">
+              <Button 
+                variant="contained" 
+                color="inherit"
+                startIcon={<PictureAsPdfIcon />}
+                onClick={handleExportPDF}
+                sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.2)', 
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
+                  fontSize: isSmallScreen ? '0.8rem' : '0.875rem'
+                }}
+              >
+                Export PDF
+              </Button>
+              <Button 
+                variant="outlined" 
+                color="inherit"
+                onClick={() => navigate('/company/action-plan')}
+                sx={{ 
+                  borderColor: 'rgba(255,255,255,0.5)',
+                  '&:hover': { borderColor: 'rgba(255,255,255,0.8)', bgcolor: 'rgba(255,255,255,0.1)' },
+                  fontSize: isSmallScreen ? '0.8rem' : '0.875rem'
+                }}
+              >
+                Back to Action Plan
+              </Button>
+            </Stack>
+          </Box>
+        </Paper>
+      </Box>
+
+      {/* Domain Filter */}
+      <Box mb={isSmallScreen ? 2 : 3}>
+        <Paper sx={{ p: isSmallScreen ? 2 : 3, borderRadius: 3, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+          <FormControl fullWidth variant="outlined" size={isSmallScreen ? "small" : "medium"}>
             <InputLabel>Filter by Domain</InputLabel>
             <Select
               value={domainId}
@@ -273,216 +460,178 @@ const StatisticsPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
+        </Paper>
+      </Box>
+
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress size={60} />
         </Box>
-        
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-            <CircularProgress />
-          </Box>
-        ) : (
-          <div ref={chartsContainerRef}>
-            {(!statisticsData || 
-             (!statisticsData.textsByStatus.length && 
-              !statisticsData.requirementsByStatus.length && 
-              !statisticsData.actionsByStatus.length)) ? (
-              <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-                <Typography variant="h6" color="textSecondary">
-                  No data available for the selected domain
-                </Typography>
-              </Box>
-            ) : (
-              <>
-                <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                  Text Compliance Status
-                </Typography>
-                <Grid container spacing={4}>
-                  <Grid item xs={12} md={6}>
-                    <Paper elevation={2} sx={{ p: 3, height: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      ) : (
+        <div ref={chartsContainerRef}>
+          {(!statisticsData || 
+           (!statisticsData.textsByStatus.length && 
+            !statisticsData.requirementsByStatus.length && 
+            !statisticsData.actionsByStatus.length)) ? (
+            <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
+              <Typography variant="h6" color="text.secondary">
+                No data available for the selected domain
+              </Typography>
+            </Paper>
+          ) : (
+            <>
+              {/* Summary Cards - Now much more compact */}
+              <Grid container spacing={isSmallScreen ? 1.5 : 2} mb={isSmallScreen ? 2 : 3}>
+                <Grid item xs={6} sm={3}>
+                  <StatsCard 
+                    title="Total Texts" 
+                    value={summaryStats.texts} 
+                    icon={<AssignmentIcon />}
+                    gradient={gradientColors[0]}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <StatsCard 
+                    title="Requirements" 
+                    value={summaryStats.requirements} 
+                    icon={<BarChartIcon />}
+                    gradient={gradientColors[1]}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <StatsCard 
+                    title="Total Actions" 
+                    value={summaryStats.actions} 
+                    icon={<TrendingUpIcon />}
+                    gradient={gradientColors[2]}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <StatsCard 
+                    title="Completed" 
+                    value={summaryStats.completed} 
+                    icon={<PersonIcon />}
+                    gradient={gradientColors[3]}
+                  />
+                </Grid>
+              </Grid>
+
+              {/* Charts Grid */}
+              <Grid container spacing={isSmallScreen ? 2 : 3}>
+                {/* Text Status */}
+                <Grid item xs={12} lg={6}>
+                  <ChartCard title="Text Compliance Status" icon={<AssignmentIcon />}>
+                    <Box sx={{ height: isSmallScreen ? '250px' : '300px' }}>
                       {statisticsData?.textsByStatus.length ? (
-                        <Pie data={getTextStatusChartData()} />
+                        <Doughnut data={getTextStatusChartData()} options={chartOptions} />
                       ) : (
-                        <Typography textAlign="center">No text status data available</Typography>
-                      )}
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Paper elevation={2} sx={{ p: 3, height: '400px' }}>
-                      {statisticsData?.textsByStatus.length ? (
-                        <Box sx={{ height: '100%' }}>
-                          <Typography variant="h6" gutterBottom textAlign="center">
-                            Text Status Distribution
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2 }}>
-                            {statisticsData.textsByStatus.map((item, index) => (
-                              <Box key={item.status} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <Box 
-                                    sx={{ 
-                                      width: 16, 
-                                      height: 16, 
-                                      bgcolor: chartColors[index % chartColors.length],
-                                      mr: 1,
-                                      borderRadius: '50%'
-                                    }} 
-                                  />
-                                  <Typography>{item.status}</Typography>
-                                </Box>
-                                <Typography fontWeight="bold">{item.count}</Typography>
-                              </Box>
-                            ))}
-                          </Box>
+                        <Box display="flex" alignItems="center" justifyContent="center" height="100%">
+                          <Typography color="text.secondary">No data available</Typography>
                         </Box>
-                      ) : (
-                        <Typography textAlign="center">No text status data available</Typography>
                       )}
-                    </Paper>
-                  </Grid>
+                    </Box>
+                  </ChartCard>
                 </Grid>
 
-                <Divider sx={{ my: 4 }} />
-
-                <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                  Requirement Compliance Status
-                </Typography>
-                <Grid container spacing={4}>
-                  <Grid item xs={12} md={6}>
-                    <Paper elevation={2} sx={{ p: 3, height: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                {/* Requirement Status */}
+                <Grid item xs={12} lg={6}>
+                  <ChartCard title="Requirement Status" icon={<BarChartIcon />}>
+                    <Box sx={{ height: isSmallScreen ? '250px' : '300px' }}>
                       {statisticsData?.requirementsByStatus.length ? (
-                        <Pie data={getRequirementStatusChartData()} />
+                        <Doughnut data={getRequirementStatusChartData()} options={chartOptions} />
                       ) : (
-                        <Typography textAlign="center">No requirement status data available</Typography>
-                      )}
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Paper elevation={2} sx={{ p: 3, height: '400px' }}>
-                      {statisticsData?.requirementsByStatus.length ? (
-                        <Box sx={{ height: '100%' }}>
-                          <Typography variant="h6" gutterBottom textAlign="center">
-                            Requirement Status Distribution
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2 }}>
-                            {statisticsData.requirementsByStatus.map((item, index) => (
-                              <Box key={item.status} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <Box 
-                                    sx={{ 
-                                      width: 16, 
-                                      height: 16, 
-                                      bgcolor: chartColors[index % chartColors.length],
-                                      mr: 1,
-                                      borderRadius: '50%'
-                                    }} 
-                                  />
-                                  <Typography>{item.status}</Typography>
-                                </Box>
-                                <Typography fontWeight="bold">{item.count}</Typography>
-                              </Box>
-                            ))}
-                          </Box>
+                        <Box display="flex" alignItems="center" justifyContent="center" height="100%">
+                          <Typography color="text.secondary">No data available</Typography>
                         </Box>
-                      ) : (
-                        <Typography textAlign="center">No requirement status data available</Typography>
                       )}
-                    </Paper>
-                  </Grid>
+                    </Box>
+                  </ChartCard>
                 </Grid>
 
-                <Divider sx={{ my: 4 }} />
-
-                <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                  Action Status
-                </Typography>
-                <Grid container spacing={4}>
-                  <Grid item xs={12} md={6}>
-                    <Paper elevation={2} sx={{ p: 3, height: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                {/* Action Status */}
+                <Grid item xs={12} lg={6}>
+                  <ChartCard title="Action Status Distribution" icon={<TrendingUpIcon />}>
+                    <Box sx={{ height: isSmallScreen ? '250px' : '300px' }}>
                       {statisticsData?.actionsByStatus.length ? (
-                        <Pie data={getActionStatusChartData()} />
+                        <Pie data={getActionStatusChartData()} options={chartOptions} />
                       ) : (
-                        <Typography textAlign="center">No action status data available</Typography>
+                        <Box display="flex" alignItems="center" justifyContent="center" height="100%">
+                          <Typography color="text.secondary">No data available</Typography>
+                        </Box>
                       )}
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Paper elevation={2} sx={{ p: 3, height: '400px' }}>
+                    </Box>
+                  </ChartCard>
+                </Grid>
+
+                {/* Action Progress */}
+                <Grid item xs={12} lg={6}>
+                  <ChartCard title="Action Progress Groups" icon={<TrendingUpIcon />}>
+                    <Box sx={{ height: isSmallScreen ? '250px' : '300px' }}>
                       {statisticsData?.actionProgressGroups.length ? (
-                        <Box sx={{ height: '100%' }}>
-                          <Typography variant="h6" gutterBottom textAlign="center">
-                            Action Progress
-                          </Typography>
-                          <Box sx={{ height: 300 }}>
-                            <Bar 
-                              data={getActionProgressChartData()} 
-                              options={barOptions} 
-                            />
-                          </Box>
-                        </Box>
+                        <Bar data={getActionProgressChartData()} options={barOptions} />
                       ) : (
-                        <Typography textAlign="center">No action progress data available</Typography>
+                        <Box display="flex" alignItems="center" justifyContent="center" height="100%">
+                          <Typography color="text.secondary">No data available</Typography>
+                        </Box>
                       )}
-                    </Paper>
-                  </Grid>
+                    </Box>
+                  </ChartCard>
                 </Grid>
 
-                <Divider sx={{ my: 4 }} />
-
-                <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                  Actions by Responsible Person
-                </Typography>
-                <Grid container spacing={4}>
-                  <Grid item xs={12}>
-                    <Paper elevation={2} sx={{ p: 3, height: '500px' }}>
+                {/* Actions by Responsible */}
+                <Grid item xs={12}>
+                  <ChartCard title="Actions by Responsible Person" icon={<PersonIcon />}>
+                    <Box sx={{ height: isSmallScreen ? '300px' : '400px' }}>
                       {statisticsData?.actionsByResponsible.length ? (
-                        <Box sx={{ height: '100%' }}>
-                          <Typography variant="h6" gutterBottom textAlign="center">
-                            Actions and Progress by Responsible Person
-                          </Typography>
-                          <Box sx={{ height: 400 }}>
-                            <Bar 
-                              data={getActionsByResponsibleChartData()} 
-                              options={barOptions} 
-                            />
-                          </Box>
-                        </Box>
+                        <Bar data={getActionsByResponsibleChartData()} options={barOptions} />
                       ) : (
-                        <Typography textAlign="center">No data available for actions by responsible person</Typography>
-                      )}
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Paper elevation={2} sx={{ p: 3, height: '500px' }}>
-                      {statisticsData?.actionsByResponsible.length ? (
-                        <Box sx={{ height: '100%' }}>
-                          <Typography variant="h6" gutterBottom textAlign="center">
-                            Average Action Progress by Responsible Person
-                          </Typography>
-                          <Box sx={{ height: 400 }}>
-                            <Bar 
-                              data={getActionProgressByResponsibleChartData()} 
-                              options={barOptions} 
-                            />
-                          </Box>
+                        <Box display="flex" alignItems="center" justifyContent="center" height="100%">
+                          <Typography color="text.secondary">No data available</Typography>
                         </Box>
-                      ) : (
-                        <Typography textAlign="center">No progress data available by responsible person</Typography>
                       )}
-                    </Paper>
-                  </Grid>
+                    </Box>
+                  </ChartCard>
                 </Grid>
-              </>
-            )}
-          </div>
-        )}
-      </Paper>
 
-      <Box position="fixed" bottom="20px" right="20px">
+                {/* Progress by Responsible */}
+                <Grid item xs={12}>
+                  <ChartCard title="Average Progress by Responsible Person" icon={<PersonIcon />}>
+                    <Box sx={{ height: isSmallScreen ? '300px' : '400px' }}>
+                      {statisticsData?.actionsByResponsible.length ? (
+                        <Bar data={getActionProgressByResponsibleChartData()} options={barOptions} />
+                      ) : (
+                        <Box display="flex" alignItems="center" justifyContent="center" height="100%">
+                          <Typography color="text.secondary">No data available</Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </ChartCard>
+                </Grid>
+              </Grid>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Scroll to Top Button */}
+      <Box position="fixed" bottom={20} right={20} zIndex={1000}>
         <Button
           variant="contained"
-          color="primary"
           onClick={scrollToTop}
-          sx={{ borderRadius: '50%', width: 56, height: 56, minWidth: 'unset' }}
+          sx={{ 
+            borderRadius: '50%', 
+            width: isSmallScreen ? 48 : 56, 
+            height: isSmallScreen ? 48 : 56, 
+            minWidth: 'unset',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+            }
+          }}
         >
-          <ArrowUpwardIcon />
+          <ArrowUpwardIcon fontSize={isSmallScreen ? "medium" : "large"} />
         </Button>
       </Box>
     </Container>

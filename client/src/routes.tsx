@@ -13,8 +13,10 @@ import SubscriptionManagerDashboard from './Components/Company/SubscriptionManag
 import ComplianceEvaluation from './Components/Compliance/ComplianceEvaluation';
 import ProtectedRoute from './Components/Common/ProtectedRoute';
 import ActionPlan from './Components/Compliance/ActionPlan';
-import UserDashboard from "./Components/Company/UserDashboard"; // Import UserDashboard
+import UserDashboard from "./Components/Company/UserDashboard";
 import StatisticsPage from './Components/Company/StatisticsPage';
+import RevueDeDirectionPage from './Components/Revue/RevueDeDirectionPage';
+import RevueDetailPage from './Components/Revue/RevueDetailPage';
 
 const AppRoutes = () => {
   return (
@@ -33,7 +35,6 @@ const AppRoutes = () => {
           <Route path="texts" element={<TextManagement />} />
           <Route path="taxonomy" element={<TaxonomyManager />} />
           <Route path="profile" element={<ProfilePage />} />
-          {/* Add /admin/history and /admin/settings if needed */}
         </Route>
 
         {/* Subscription Manager Routes */}
@@ -47,20 +48,22 @@ const AppRoutes = () => {
           <Route path="settings" element={<div>Company Settings (To be implemented)</div>} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="statistics" element={<StatisticsPage />} />
-
-          {/* Add /company/history if needed */}
+          <Route path="revue" element={<RevueDeDirectionPage />} />
+          <Route path="revue/:id" element={<RevueDetailPage />} />
+          <Route path="revue/:id/edit" element={<RevueDetailPage />} /> {/* Added for Modify */}
         </Route>
 
         {/* User Routes (for roles like 'User', 'Auditor', 'Manager') */}
-   <Route path="/user" element={<ProtectedRoute role="User" />}>
-  <Route path="dashboard" element={<UserDashboard />} />
-  <Route path="compliance" element={<ComplianceEvaluation />} />
-  <Route path="statistics" element={<StatisticsPage />} />
-
-  <Route path="action-plan" element={<ActionPlan />} />
-  <Route path="profile" element={<ProfilePage />} />
-</Route>
-
+        <Route path="/user" element={<ProtectedRoute role="User" />}>
+          <Route path="dashboard" element={<UserDashboard />} />
+          <Route path="compliance" element={<ComplianceEvaluation />} />
+          <Route path="statistics" element={<StatisticsPage />} />
+          <Route path="action-plan" element={<ActionPlan />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="revue" element={<RevueDeDirectionPage />} />
+          <Route path="revue/:id" element={<RevueDetailPage />} />
+          <Route path="revue/:id/edit" element={<RevueDetailPage />} /> {/* Added for Modify */}
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

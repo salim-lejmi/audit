@@ -92,34 +92,38 @@ const SubscriptionManagerDashboard: React.FC = () => {
             <h5>Quick Actions</h5>
           </div>
           <div className="card-body">
-            <div className="actions-grid">
-              <Link to="/company/users" className="action-button primary">
-                <i className="fas fa-users"></i>
-                Manage Users
-              </Link>
-              <Link to="/company/roles" className="action-button success">
-                <i className="fas fa-user-tag"></i>
-                Manage Roles
-              </Link>
-              <Link to="/company/compliance" className="action-button warning">
-                <i className="fas fa-check-square"></i>
-                Compliance Evaluation
-              </Link>
-              <Link to="/company/settings" className="action-button info">
-                <i className="fas fa-cog"></i>
-                Company Settings
-              </Link>
-              <button 
-                className="action-button danger"
-                onClick={() => {
-                  axios.post('/api/auth/logout')
-                    .then(() => window.location.href = '/')
-                }}
-              >
-                <i className="fas fa-sign-out-alt"></i>
-                Logout
-              </button>
-            </div>
+     <div className="actions-grid">
+  <Link to="/company/users" className="action-button primary">
+    <i className="fas fa-users"></i>
+    Manage Users
+  </Link>
+  <Link to="/company/roles" className="action-button success">
+    <i className="fas fa-user-tag"></i>
+    Manage Roles
+  </Link>
+  <Link to="/company/compliance" className="action-button warning">
+    <i className="fas fa-check-square"></i>
+    Compliance Evaluation
+  </Link>
+  <Link to="/company/revue" className="action-button info">
+    <i className="fas fa-folder-open"></i>
+    Revue de Direction
+  </Link>
+  <Link to="/company/settings" className="action-button info">
+    <i className="fas fa-cog"></i>
+    Company Settings
+  </Link>
+  <button 
+    className="action-button danger"
+    onClick={() => {
+      axios.post('/api/auth/logout')
+        .then(() => window.location.href = '/')
+    }}
+  >
+    <i className="fas fa-sign-out-alt"></i>
+    Logout
+  </button>
+</div>
           </div>
         </div>
 

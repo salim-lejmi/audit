@@ -143,30 +143,34 @@ const UserDashboard: React.FC = () => {
             <h5>Quick Actions</h5>
           </div>
           <div className="card-body">
-            <div className="actions-grid">
-              <Link to="/user/action-plan" className="action-button primary">
-                <i className="fas fa-tasks"></i>
-                Action Plans
-              </Link>
-              <Link to="/user/compliance" className="action-button primary">
-                <i className="fas fa-check-square"></i>
-                Compliance Evaluation
-              </Link>
-              <Link to="/user/profile" className="action-button info">
-                <i className="fas fa-user"></i>
-                My Profile
-              </Link>
-              <button 
-                className="action-button danger"
-                onClick={() => {
-                  axios.post('/api/auth/logout')
-                    .then(() => window.location.href = '/')
-                }}
-              >
-                <i className="fas fa-sign-out-alt"></i>
-                Logout
-              </button>
-            </div>
+           <div className="actions-grid">
+  <Link to="/user/action-plan" className="action-button primary">
+    <i className="fas fa-tasks"></i>
+    Action Plans
+  </Link>
+  <Link to="/user/compliance" className="action-button primary">
+    <i className="fas fa-check-square"></i>
+    Compliance Evaluation
+  </Link>
+  <Link to="/user/revue" className="action-button info">
+    <i className="fas fa-folder-open"></i>
+    Revue de Direction
+  </Link>
+  <Link to="/user/profile" className="action-button info">
+    <i className="fas fa-user"></i>
+    My Profile
+  </Link>
+  <button 
+    className="action-button danger"
+    onClick={() => {
+      axios.post('/api/auth/logout')
+        .then(() => window.location.href = '/')
+    }}
+  >
+    <i className="fas fa-sign-out-alt"></i>
+    Logout
+  </button>
+</div>
           </div>
         </div>
 

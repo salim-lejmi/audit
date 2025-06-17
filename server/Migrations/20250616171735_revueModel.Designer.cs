@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using server.Data;
 
@@ -11,9 +12,11 @@ using server.Data;
 namespace server.Migrations
 {
     [DbContext(typeof(AuditDbContext))]
-    partial class AuditDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250616171735_revueModel")]
+    partial class revueModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -377,9 +380,6 @@ namespace server.Migrations
 
                     b.Property<int>("DomainId")
                         .HasColumnType("int");
-
-                    b.Property<string>("PdfFilePath")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ReviewDate")
                         .HasColumnType("datetime2");

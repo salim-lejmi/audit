@@ -3,14 +3,23 @@
   "WorkspaceRootPath": "C:\\Users\\salim\\Documents\\audit\\server\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Actions.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.RevueStakeholders.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Texts.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.RevueRequirements.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.RevueDeDirections.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|c:\\users\\salim\\documents\\audit\\server\\data\\auditdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{80CFD4F2-042C-4F90-9128-C6D55E21B1E0}|server.csproj|solutionrelative:data\\auditdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Actions.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Texts.sql||{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}"
     }
   ],
   "DocumentGroupContainers": [
@@ -37,6 +46,36 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "dbo.RevueStakeholders [Data]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.RevueStakeholders.sql",
+              "ToolTip": "dbo.RevueStakeholders [Data]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-06-16T18:51:18.369Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "dbo.RevueRequirements [Data]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.RevueRequirements.sql",
+              "ToolTip": "dbo.RevueRequirements [Data]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-06-16T18:51:13.757Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "dbo.RevueDeDirections [Data]",
+              "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.RevueDeDirections.sql",
+              "ToolTip": "dbo.RevueDeDirections [Data]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2025-06-16T18:51:07.237Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "dbo.Actions.sql",
               "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Actions.sql",
               "ToolTip": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Actions.sql",
@@ -45,7 +84,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "dbo.Texts.sql",
               "DocumentMoniker": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Texts.sql",
               "ToolTip": "ViewDataWindow_MSSQL__/_localdb__MSSQLLocalDB/AuditDB/True/SqlTable/dbo.Texts.sql",
@@ -54,15 +93,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "AuditDbContext.cs",
               "DocumentMoniker": "C:\\Users\\salim\\Documents\\audit\\server\\Data\\AuditDbContext.cs",
               "RelativeDocumentMoniker": "Data\\AuditDbContext.cs",
               "ToolTip": "C:\\Users\\salim\\Documents\\audit\\server\\Data\\AuditDbContext.cs",
               "RelativeToolTip": "Data\\AuditDbContext.cs",
-              "ViewState": "AgIAAJsAAAAAAAAAAAAwwKUAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAKMAAAAAAAAAAAAuwLYAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-14T20:20:43.059Z"
+              "WhenOpened": "2025-06-14T20:20:43.059Z",
+              "EditorCaption": ""
             }
           ]
         }
