@@ -70,6 +70,7 @@ const RevueDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [textsLoaded, setTextsLoaded] = useState(false);
+const [userRole, setUserRole] = useState<string>('');
 
   // Modal states
   const [showLegalTextModal, setShowLegalTextModal] = useState(false);
@@ -96,10 +97,40 @@ const RevueDetailPage: React.FC = () => {
   const [stakeholderForm, setStakeholderForm] = useState({ stakeholderName: '', relationshipStatus: '', reason: '', action: '', followUp: '' });
 
   useEffect(() => {
-    fetchReview();
-    fetchTexts();
-  }, [id]);
+  // Get user role
+  const verifyAuth = async () => {
+    try {
+      const response = await axios.get('/api/auth/verify');
+      setUserRole(response.data.role);
+    } catch (err) {
+      console.error('Failed to verify auth:', err);
+    }
+  };
+  
+  verifyAuth();
+  fetchReview();
+  fetchTexts();
+}, [id]);
+const handleCompleteReview = () => {
+  if (!window.confirm('Are you sure you want to complete this review? This action cannot be undone.')) {
+    return;
+  }
+ 
 
+  axios.post(`/api/revue/${review?.revueId}/complete`)
+    .then(() => fetchReview())
+    .catch(err => alert('Failed to complete review'));
+};
+
+
+const canModify = () => {
+  return userRole === 'SubscriptionManager' || userRole === 'Auditor';
+};
+
+const canParticipate = () => {
+  // All company members can participate (add content)
+  return true; // Since this page is already protected by authentication
+};
   const fetchReview = () => {
     setLoading(true);
     axios.get(`/api/revue/${id}`)
@@ -155,20 +186,34 @@ const RevueDetailPage: React.FC = () => {
       .catch(err => alert('Failed to add legal text'));
   };
 
-  const handleAddRequirement = () => {
-    if (requirementForm.textRequirementId === 0) {
-      alert('Please select a requirement');
-      return;
-    }
-    axios.post(`/api/revue/${review?.revueId}/requirement`, requirementForm)
-      .then(() => {
-        setShowRequirementModal(false);
-        setRequirementForm({ textRequirementId: 0, implementation: '', communication: '', followUp: '' });
-        fetchReview();
-      })
-      .catch(err => alert('Failed to add requirement'));
+const handleAddRequirement = () => {
+  if (requirementForm.textRequirementId === 0) {
+    alert('Please select a requirement');
+    return;
+  }
+  
+  const requestData = {
+    TextRequirementId: requirementForm.textRequirementId,
+    Implementation: requirementForm.implementation,
+    Communication: requirementForm.communication,
+    FollowUp: requirementForm.followUp
   };
-
+  
+  console.log('Submitting requirement form:', requestData);
+  
+  axios.post(`/api/revue/${review?.revueId}/requirement`, requestData)
+    .then(response => {
+      console.log('Requirement added successfully:', response.data);
+      setShowRequirementModal(false);
+      setRequirementForm({ textRequirementId: 0, implementation: '', communication: '', followUp: '' });
+      fetchReview();
+    })
+    .catch(err => {
+      console.error('Failed to add requirement:', err);
+      console.error('Error response data:', err.response?.data);
+      alert(`Failed to add requirement: ${err.response?.data?.message || err.message}`);
+    });
+};
   const handleAddAction = () => {
     if (!actionForm.description) {
       alert('Description is required');
@@ -197,22 +242,23 @@ const RevueDetailPage: React.FC = () => {
       .catch(err => alert('Failed to add stakeholder'));
   };
 
-  const handleGeneratePdf = () => {
-    axios.post(`/api/revue/${review?.revueId}/generate-pdf`, null, { responseType: 'blob' })
-      .then(response => {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `review_${review?.revueId}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        fetchReview();
-      })
-      .catch(err => alert('Failed to generate PDF'));
-  };
-
-  const handleStartReview = () => {
+const handleGeneratePdf = () => {
+  axios.post(`/api/revue/${review?.revueId}/generate-pdf`, null, { responseType: 'blob' })
+    .then(response => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `review_${review?.revueId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      fetchReview();
+    })
+    .catch(err => {
+      console.error('PDF generation failed:', err);
+      alert('Failed to generate PDF. Please try again.');
+    });
+};  const handleStartReview = () => {
     axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'In Progress' })
       .then(() => fetchReview())
       .catch(err => alert('Failed to start review'));
@@ -247,31 +293,36 @@ const RevueDetailPage: React.FC = () => {
           )}
         </div>
 
-        <div className="action-buttons-row">
-          {review.status === 'Draft' && (
-            <button onClick={handleStartReview} className="action-btn-primary btn-start">
-              Start Review
-            </button>
-          )}
-          {review.status !== 'Canceled' && review.status !== 'Completed' && (
-            <button onClick={handleCancelReview} className="action-btn-primary btn-cancel">
-              Cancel Review
-            </button>
-          )}
-          <button onClick={handleGeneratePdf} className="action-btn-primary btn-pdf">
-            Generate PDF
-          </button>
-        </div>
-
+<div className="action-buttons-row">
+  {review.status === 'Draft' && canModify() && (
+    <button onClick={handleStartReview} className="action-btn-primary btn-start">
+      Start Review
+    </button>
+  )}
+  {review.status === 'In Progress' && canModify() && (
+    <button onClick={handleCompleteReview} className="action-btn-primary btn-complete">
+      Complete Review
+    </button>
+  )}
+  {review.status !== 'Canceled' && review.status !== 'Completed' && canModify() && (
+    <button onClick={handleCancelReview} className="action-btn-primary btn-cancel">
+      Cancel Review
+    </button>
+  )}
+  <button onClick={handleGeneratePdf} className="action-btn-primary btn-pdf">
+    Generate PDF
+  </button>
+</div>
         {/* Legal Texts */}
-        <section className="section">
-          <div className="section-header">
-            <h2>Legal Texts</h2>
-            <button onClick={() => setShowLegalTextModal(true)} className="add-btn">
-              Add Legal Text
-            </button>
-          </div>
-          <div className="overflow-x-auto">
+<section className="section">
+  <div className="section-header">
+    <h2>Legal Texts</h2>
+    {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
+      <button onClick={() => setShowLegalTextModal(true)} className="add-btn">
+        Add Legal Text
+      </button>
+    )}
+  </div>          <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
@@ -300,13 +351,16 @@ const RevueDetailPage: React.FC = () => {
         </section>
 
         {/* Requirements */}
-        <section className="section">
-          <div className="section-header">
-            <h2>Requirements</h2>
-            <button onClick={handleShowRequirementModal} className="add-btn">
-              Add Requirement
-            </button>
-          </div>
+     <section className="section">
+  <div className="section-header">
+    <h2>Requirements</h2>
+    {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
+      <button onClick={handleShowRequirementModal} className="add-btn">
+        Add Requirement
+      </button>
+    )}
+  </div>
+
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
@@ -334,13 +388,15 @@ const RevueDetailPage: React.FC = () => {
         </section>
 
         {/* Actions */}
-        <section className="section">
-          <div className="section-header">
-            <h2>Actions</h2>
-            <button onClick={() => setShowActionModal(true)} className="add-btn">
-              Add Action
-            </button>
-          </div>
+      <section className="section">
+  <div className="section-header">
+    <h2>Actions</h2>
+    {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
+      <button onClick={() => setShowActionModal(true)} className="add-btn">
+        Add Action
+      </button>
+    )}
+  </div>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
@@ -368,13 +424,15 @@ const RevueDetailPage: React.FC = () => {
         </section>
 
         {/* Stakeholders */}
-        <section className="section">
-          <div className="section-header">
-            <h2>Stakeholders</h2>
-            <button onClick={() => setShowStakeholderModal(true)} className="add-btn">
-              Add Stakeholder
-            </button>
-          </div>
+       <section className="section">
+  <div className="section-header">
+    <h2>Stakeholders</h2>
+    {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
+      <button onClick={() => setShowStakeholderModal(true)} className="add-btn">
+        Add Stakeholder
+      </button>
+    )}
+  </div>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>

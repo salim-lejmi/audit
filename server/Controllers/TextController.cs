@@ -678,14 +678,49 @@ public async Task<IActionResult> DeleteRequirement(int id, int requirementId)
     return Ok(new { message = "Requirement deleted successfully" });
 }
 
-[HttpDelete("{id}")]
-public async Task<IActionResult> DeleteText(int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteText(int id)
+        {
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+
+            if (!userId.HasValue || !companyId.HasValue || userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            var text = await _context.Texts
+                .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value);
+
+            if (text == null)
+            {
+                return NotFound(new { message = "Text not found" });
+            }
+
+            // Delete file if exists
+            if (!string.IsNullOrEmpty(text.FilePath))
+            {
+                var filePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+
+            _context.Texts.Remove(text);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Text deleted successfully" });
+        }
+[HttpPut("{id}/status")]
+public async Task<IActionResult> UpdateTextStatus(int id, [FromBody] UpdateTextStatusRequest request)
 {
     var userRole = HttpContext.Session.GetString("UserRole");
     var userId = HttpContext.Session.GetInt32("UserId");
     var companyId = HttpContext.Session.GetInt32("CompanyId");
 
-    if (!userId.HasValue || !companyId.HasValue || userRole != "SuperAdmin")
+    if (!userId.HasValue || !companyId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
     {
         return Forbid();
     }
@@ -698,20 +733,15 @@ public async Task<IActionResult> DeleteText(int id)
         return NotFound(new { message = "Text not found" });
     }
 
-    // Delete file if exists
-    if (!string.IsNullOrEmpty(text.FilePath))
+    if (string.IsNullOrEmpty(request.Status))
     {
-        var filePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
-        if (System.IO.File.Exists(filePath))
-        {
-            System.IO.File.Delete(filePath);
-        }
+        return BadRequest(new { message = "Status is required" });
     }
 
-    _context.Texts.Remove(text);
+    text.Status = request.Status;
     await _context.SaveChangesAsync();
 
-    return Ok(new { message = "Text deleted successfully" });
+    return Ok(new { message = "Text status updated successfully" });
 }
 
             public class CreateTextRequest
@@ -746,13 +776,17 @@ public async Task<IActionResult> DeleteText(int id)
                 public string Content { get; set; }
                 public IFormFile File { get; set; }
             }
+            public class UpdateTextStatusRequest
+{
+    public string Status { get; set; }
+}
 
             public class UpdateRequirementRequest
-            {
-                public string Number { get; set; }
-                public string Title { get; set; }
-                public string Status { get; set; }
-            }
+        {
+            public string Number { get; set; }
+            public string Title { get; set; }
+            public string Status { get; set; }
+        }
 
             public class AddRequirementRequest
             {

@@ -91,21 +91,20 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     }
   };
 
-  // Update text status
-  const handleUpdateStatus = async () => {
-    if (!text) return;
-    
-    try {
-      await axios.put(`/api/texts/${textId}`, { status: textStatus });
-      setText({ ...text, status: textStatus });
-      alert('Text status updated successfully');
-      setEditMode(false);
-    } catch (err) {
-      alert('Failed to update text status');
-      console.error('Error updating text status:', err);
-    }
-  };
-
+// Update text status
+const handleUpdateStatus = async () => {
+  if (!text) return;
+  
+  try {
+    await axios.put(`/api/texts/${textId}/status`, { status: textStatus });
+    setText({ ...text, status: textStatus });
+    alert('Text status updated successfully');
+    setEditMode(false);
+  } catch (err) {
+    alert('Failed to update text status');
+    console.error('Error updating text status:', err);
+  }
+};
   // Start editing a requirement
   const startEditRequirement = (requirement: Requirement) => {
     setEditingRequirement(requirement);

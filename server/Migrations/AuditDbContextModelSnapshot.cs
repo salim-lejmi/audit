@@ -461,10 +461,6 @@ namespace server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("FollowUp")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

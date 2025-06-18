@@ -45,6 +45,7 @@
           "Swashbuckle.AspNetCore": "8.1.0",
           "System.Net.Mail": "1.0.0-rtm-00002",
           "itext7": "9.2.0",
+          "itext7.bouncy-castle-adapter": "9.2.0",
           "Microsoft.AspNetCore.Antiforgery": "8.0.0.0",
           "Microsoft.AspNetCore.Authentication.Abstractions": "8.0.0.0",
           "Microsoft.AspNetCore.Authentication.BearerToken": "8.0.0.0",
@@ -393,6 +394,17 @@
           "lib/net6.0/BCrypt.Net-Next.dll": {}
         }
       },
+      "BouncyCastle.Cryptography/2.4.0": {
+        "runtime": {
+          "lib/net6.0/BouncyCastle.Cryptography.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.4.0.33771"
+          }
+        },
+        "compile": {
+          "lib/net6.0/BouncyCastle.Cryptography.dll": {}
+        }
+      },
       "Humanizer.Core/2.14.1": {
         "runtime": {
           "lib/net6.0/Humanizer.dll": {
@@ -479,6 +491,21 @@
           "lib/netstandard2.0/itext.svg.dll": {}
         }
       },
+      "itext.bouncy-castle-adapter/9.2.0": {
+        "dependencies": {
+          "BouncyCastle.Cryptography": "2.4.0",
+          "itext.commons": "9.2.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/itext.bouncy-castle-adapter.dll": {
+            "assemblyVersion": "9.2.0.0",
+            "fileVersion": "9.2.0.0"
+          }
+        },
+        "compile": {
+          "lib/netstandard2.0/itext.bouncy-castle-adapter.dll": {}
+        }
+      },
       "itext.commons/9.2.0": {
         "dependencies": {
           "Microsoft.Extensions.Logging": "9.0.2",
@@ -497,6 +524,11 @@
       "itext7/9.2.0": {
         "dependencies": {
           "itext": "9.2.0"
+        }
+      },
+      "itext7.bouncy-castle-adapter/9.2.0": {
+        "dependencies": {
+          "itext.bouncy-castle-adapter": "9.2.0"
         }
       },
       "Microsoft.AspNetCore.Cryptography.Internal/2.3.0": {},
@@ -4053,6 +4085,13 @@
       "path": "bcrypt.net-next/4.0.3",
       "hashPath": "bcrypt.net-next.4.0.3.nupkg.sha512"
     },
+    "BouncyCastle.Cryptography/2.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SwXsAV3sMvAU/Nn31pbjhWurYSjJ+/giI/0n6tCrYoupEK34iIHCuk3STAd9fx8yudM85KkLSVdn951vTng/vQ==",
+      "path": "bouncycastle.cryptography/2.4.0",
+      "hashPath": "bouncycastle.cryptography.2.4.0.nupkg.sha512"
+    },
     "Humanizer.Core/2.14.1": {
       "type": "package",
       "serviceable": true,
@@ -4067,6 +4106,13 @@
       "path": "itext/9.2.0",
       "hashPath": "itext.9.2.0.nupkg.sha512"
     },
+    "itext.bouncy-castle-adapter/9.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-qn2exafWaUTDK45co7U76BZvQ2xcIz8F1X0lkc9icH86kZOfZZr89qkM7wIIN9R/9nvsC7ErF60whcgLmBYBpA==",
+      "path": "itext.bouncy-castle-adapter/9.2.0",
+      "hashPath": "itext.bouncy-castle-adapter.9.2.0.nupkg.sha512"
+    },
     "itext.commons/9.2.0": {
       "type": "package",
       "serviceable": true,
@@ -4080,6 +4126,13 @@
       "sha512": "sha512-fsOz8BpXlMN5GJM+7gdpUCqYhOR4GWKT3krnhB6Tbwio7QxIMyos3x7DTfdYsDAPOojr+NW/iKmnDCB4Vc9xWg==",
       "path": "itext7/9.2.0",
       "hashPath": "itext7.9.2.0.nupkg.sha512"
+    },
+    "itext7.bouncy-castle-adapter/9.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-EmcyTAm63zZm8lkrvjcgsVQ8vERrROTDzl1awvdTCoOUIZ8PNjHQdMn1CjF4LDl1W3diifGB+wYOSpRGHCkvNg==",
+      "path": "itext7.bouncy-castle-adapter/9.2.0",
+      "hashPath": "itext7.bouncy-castle-adapter.9.2.0.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Cryptography.Internal/2.3.0": {
       "type": "package",

@@ -1,4 +1,4 @@
-    using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using server.Data;
     using server.Models;
@@ -65,21 +65,22 @@ using iText.IO.Font.Constants;
             }
 
             // POST: api/revue
-            [HttpPost]
-            public async Task<IActionResult> CreateReview([FromBody] CreateReviewRequest request)
-            {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                var companyId = HttpContext.Session.GetInt32("CompanyId");
-                var userRole = HttpContext.Session.GetString("UserRole");
-                if (!userId.HasValue || !companyId.HasValue)
-                {
-                    return Unauthorized(new { message = "Not authenticated" });
-                }
+[HttpPost]
+public async Task<IActionResult> CreateReview([FromBody] CreateReviewRequest request)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    var userRole = HttpContext.Session.GetString("UserRole");
+    
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
 
-                if (userRole != "SubscriptionManager" && userRole != "Auditor")
-                {
-                    return Forbid();
-                }
+    if (userRole != "SubscriptionManager")
+    {   
+        return Forbid();
+    }
 
                 var domain = await _context.Domains.FindAsync(request.DomainId);
                 if (domain == null)
@@ -104,29 +105,28 @@ using iText.IO.Font.Constants;
             }
 
         // GET: api/revue/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetReview(int id)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var companyId = HttpContext.Session.GetInt32("CompanyId");
-            if (!userId.HasValue || !companyId.HasValue)
-            {
-                return Unauthorized(new { message = "Not authenticated" });
-            }
+[HttpGet("{id}")]
+public async Task<IActionResult> GetReview(int id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
 
-            var review = await _context.RevueDeDirections
-                .Include(r => r.Domain)
-                .Include(r => r.LegalTexts).ThenInclude(lt => lt.Text)
-                .Include(r => r.Requirements).ThenInclude(req => req.TextRequirement).ThenInclude(tr => tr.Text)
-                .Include(r => r.Actions)
-                .Include(r => r.Stakeholders)
-                .FirstOrDefaultAsync(r => r.RevueId == id && r.CompanyId == companyId.Value);
+    var review = await _context.RevueDeDirections
+        .Include(r => r.Domain)
+        .Include(r => r.LegalTexts).ThenInclude(lt => lt.Text)
+        .Include(r => r.Requirements).ThenInclude(req => req.TextRequirement).ThenInclude(tr => tr.Text)
+        .Include(r => r.Actions)
+        .Include(r => r.Stakeholders)
+        .FirstOrDefaultAsync(r => r.RevueId == id && r.CompanyId == companyId.Value);
 
-            if (review == null)
-            {
-                return NotFound(new { message = "Review not found" });
-            }
-
+    if (review == null)
+    {
+        return NotFound(new { message = "Review not found" });
+    }
             var result = new
             {
                 review.RevueId,
@@ -179,6 +179,41 @@ using iText.IO.Font.Constants;
 
             return Ok(result);
         }
+        [HttpPost("{id}/complete")]
+public async Task<IActionResult> CompleteReview(int id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    var userRole = HttpContext.Session.GetString("UserRole");
+    
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
+
+    // Only SubscriptionManager and Auditor can complete reviews
+    if (userRole != "SubscriptionManager" && userRole != "Auditor")
+    {
+        return Forbid();
+    }
+
+    var review = await _context.RevueDeDirections.FindAsync(id);
+    if (review == null || review.CompanyId != companyId.Value)
+    {
+        return NotFound(new { message = "Review not found" });
+    }
+
+    if (review.Status == "Canceled" || review.Status == "Completed")
+    {
+        return BadRequest(new { message = "Review cannot be completed in its current status" });
+    }
+
+    review.Status = "Completed";
+    await _context.SaveChangesAsync();
+
+    return Ok(new { message = "Review completed successfully" });
+}
+
 [HttpGet("{id}/available-requirements")]
 public async Task<IActionResult> GetAvailableRequirements(int id)
 {
@@ -289,24 +324,25 @@ public async Task<IActionResult> GetAvailableRequirements(int id)
             [HttpPost("{id}/legaltext")]
             public async Task<IActionResult> AddLegalText(int id, [FromBody] AddLegalTextRequest request)
             {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                var companyId = HttpContext.Session.GetInt32("CompanyId");
-                var userRole = HttpContext.Session.GetString("UserRole");
-                if (!userId.HasValue || !companyId.HasValue)
-                {
-                    return Unauthorized(new { message = "Not authenticated" });
-                }
+               var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    var userRole = HttpContext.Session.GetString("UserRole");
+    
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
 
-                if (userRole != "SubscriptionManager" && userRole != "Auditor")
-                {
-                    return Forbid();
-                }
+               var review = await _context.RevueDeDirections.FindAsync(id);
+    if (review == null || review.CompanyId != companyId.Value)
+    {
+        return NotFound(new { message = "Review not found" });
+    }
+  if (review.Status == "Completed" || review.Status == "Canceled")
+    {
+        return BadRequest(new { message = "Cannot modify a completed or canceled review" });
+    }
 
-                var review = await _context.RevueDeDirections.FindAsync(id);
-                if (review == null || review.CompanyId != companyId.Value)
-                {
-                    return NotFound(new { message = "Review not found" });
-                }
 
                 var text = await _context.Texts.FindAsync(request.TextId);
                 if (text == null || text.CompanyId != companyId.Value)
@@ -456,167 +492,197 @@ public async Task<IActionResult> AddRequirement(int id, [FromBody] AddRequiremen
 [HttpPost("{id}/generate-pdf")]
 public async Task<IActionResult> GeneratePdf(int id)
 {
-    var userId = HttpContext.Session.GetInt32("UserId");
-    var companyId = HttpContext.Session.GetInt32("CompanyId");
-    if (!userId.HasValue || !companyId.HasValue)
+    try
     {
-        return Unauthorized(new { message = "Not authenticated" });
-    }
-
-    var review = await _context.RevueDeDirections
-        .Include(r => r.Domain)
-        .Include(r => r.LegalTexts).ThenInclude(lt => lt.Text)
-        .Include(r => r.Requirements)
-        .Include(r => r.Actions)
-        .Include(r => r.Stakeholders)
-        .FirstOrDefaultAsync(r => r.RevueId == id && r.CompanyId == companyId.Value);
-
-    if (review == null)
-    {
-        return NotFound(new { message = "Review not found" });
-    }
-
-    var pdfFileName = $"review_{review.RevueId}.pdf";
-    var pdfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "pdfs", pdfFileName);
-    Directory.CreateDirectory(Path.GetDirectoryName(pdfPath));
-
-    using (var stream = new MemoryStream())
-    {
-        using (var writer = new PdfWriter(stream))
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var companyId = HttpContext.Session.GetInt32("CompanyId");
+        if (!userId.HasValue || !companyId.HasValue)
         {
-            using (var pdf = new PdfDocument(writer))
-            {
-                using (var document = new Document(pdf))
-                {
-                    // Define fonts
-                    var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
-                    var regularFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
-
-                    // Title
-                    document.Add(new Paragraph($"Review ID: {review.RevueId}")
-                        .SetFont(boldFont)
-                        .SetFontSize(20));
-
-                    // Review Info
-                    document.Add(new Paragraph($"Domain: {review.Domain.Name}")
-                        .SetFont(regularFont));
-                    document.Add(new Paragraph($"Review Date: {review.ReviewDate:yyyy-MM-dd}")
-                        .SetFont(regularFont));
-                    document.Add(new Paragraph($"Status: {review.Status}")
-                        .SetFont(regularFont));
-                    document.Add(new Paragraph("\n"));
-
-                    // Legal Texts Table
-                    if (review.LegalTexts.Any())
-                    {
-                        document.Add(new Paragraph("Legal Texts")
-                            .SetFont(boldFont)
-                            .SetFontSize(14));
-                        var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 16, 16, 16, 16, 16 }));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Reference").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Penalties").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Incentives").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Risks").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Opportunities").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
-
-                        foreach (var lt in review.LegalTexts)
-                        {
-                            table.AddCell(new Cell().Add(new Paragraph(lt.Text.Reference).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(lt.Penalties).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(lt.Incentives).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(lt.Risks).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(lt.Opportunities).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(lt.FollowUp).SetFont(regularFont)));
-                        }
-                        document.Add(table);
-                        document.Add(new Paragraph("\n"));
-                    }
-
-                    // Requirements Table
-                    if (review.Requirements.Any())
-                    {
-                        document.Add(new Paragraph("Requirements")
-                            .SetFont(boldFont)
-                            .SetFontSize(14));
-                        var table = new Table(UnitValue.CreatePercentArray(new float[] { 25, 25, 25, 25 }));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Description").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Implementation").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Communication").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
-
-                        foreach (var req in review.Requirements)
-                        {
-                            table.AddCell(new Cell().Add(new Paragraph(req.Description).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(req.Implementation).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(req.Communication).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(req.FollowUp).SetFont(regularFont)));
-                        }
-                        document.Add(table);
-                        document.Add(new Paragraph("\n"));
-                    }
-
-                    // Actions Table
-                    if (review.Actions.Any())
-                    {
-                        document.Add(new Paragraph("Actions")
-                            .SetFont(boldFont)
-                            .SetFontSize(14));
-                        var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 20, 20, 20, 20 }));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Description").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Source").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Status").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Observation").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
-
-                        foreach (var act in review.Actions)
-                        {
-                            table.AddCell(new Cell().Add(new Paragraph(act.Description).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(act.Source).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(act.Status).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(act.Observation).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(act.FollowUp).SetFont(regularFont)));
-                        }
-                        document.Add(table);
-                        document.Add(new Paragraph("\n"));
-                    }
-
-                    // Stakeholders Table
-                    if (review.Stakeholders.Any())
-                    {
-                        document.Add(new Paragraph("Stakeholders")
-                            .SetFont(boldFont)
-                            .SetFontSize(14));
-                        var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 20, 20, 20, 20 }));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Name").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Relationship Status").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Reason").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Action").SetFont(boldFont)));
-                        table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
-
-                        foreach (var stake in review.Stakeholders)
-                        {
-                            table.AddCell(new Cell().Add(new Paragraph(stake.StakeholderName).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(stake.RelationshipStatus).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(stake.Reason).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(stake.Action).SetFont(regularFont)));
-                            table.AddCell(new Cell().Add(new Paragraph(stake.FollowUp).SetFont(regularFont)));
-                        }
-                        document.Add(table);
-                    }
-                }
-            }
+            return Unauthorized(new { message = "Not authenticated" });
         }
 
-        var pdfBytes = stream.ToArray();
+        var review = await _context.RevueDeDirections
+            .Include(r => r.Domain)
+            .Include(r => r.LegalTexts).ThenInclude(lt => lt.Text)
+            .Include(r => r.Requirements).ThenInclude(req => req.TextRequirement).ThenInclude(tr => tr.Text)
+            .Include(r => r.Actions)
+            .Include(r => r.Stakeholders)
+            .FirstOrDefaultAsync(r => r.RevueId == id && r.CompanyId == companyId.Value);
+
+        if (review == null)
+        {
+            return NotFound(new { message = "Review not found" });
+        }
+
+        var pdfFileName = $"review_{review.RevueId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+        var directory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "pdfs");
+        var pdfPath = Path.Combine(directory, pdfFileName);
+        
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        byte[] pdfBytes;
+        
+        using (var stream = new MemoryStream())
+        {
+            using (var writer = new PdfWriter(stream))
+            using (var pdf = new PdfDocument(writer))
+            using (var document = new Document(pdf))
+            {
+                var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                var regularFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
+                // Title
+                document.Add(new Paragraph($"Review ID: {review.RevueId}")
+                    .SetFont(boldFont)
+                    .SetFontSize(20));
+
+                // Review Info
+                document.Add(new Paragraph($"Domain: {review.Domain?.Name ?? "N/A"}")
+                    .SetFont(regularFont));
+                document.Add(new Paragraph($"Review Date: {review.ReviewDate:yyyy-MM-dd}")
+                    .SetFont(regularFont));
+                document.Add(new Paragraph($"Status: {review.Status ?? "N/A"}")
+                    .SetFont(regularFont));
+                document.Add(new Paragraph($"Generated on: {DateTime.Now}")
+                    .SetFont(regularFont));
+                document.Add(new Paragraph("\n"));
+
+                if (review.LegalTexts != null && review.LegalTexts.Any())
+                {
+                    AddLegalTextsSection(document, review.LegalTexts, boldFont, regularFont);
+                }
+
+                if (review.Requirements != null && review.Requirements.Any())
+                {
+                    AddRequirementsSection(document, review.Requirements, boldFont, regularFont);
+                }
+
+                if (review.Actions != null && review.Actions.Any())
+                {
+                    AddActionsSection(document, review.Actions, boldFont, regularFont);
+                }
+
+                if (review.Stakeholders != null && review.Stakeholders.Any())
+                {
+                    AddStakeholdersSection(document, review.Stakeholders, boldFont, regularFont);
+                }
+            }
+            
+            pdfBytes = stream.ToArray();
+        }
+
         await System.IO.File.WriteAllBytesAsync(pdfPath, pdfBytes);
+        
         review.PdfFilePath = $"/pdfs/{pdfFileName}";
         await _context.SaveChangesAsync();
-
+        
         return File(pdfBytes, "application/pdf", pdfFileName);
     }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Error generating PDF" });
+    }
 }
-            public class CreateReviewRequest
+
+private void AddLegalTextsSection(Document document, IEnumerable<RevueLegalText> legalTexts, PdfFont boldFont, PdfFont regularFont)
+{
+    document.Add(new Paragraph("Legal Texts").SetFont(boldFont).SetFontSize(14));
+    
+    var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 16, 16, 16, 16, 16 }));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Reference").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Penalties").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Incentives").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Risks").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Opportunities").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
+
+    foreach (var lt in legalTexts)
+    {
+        table.AddCell(new Cell().Add(new Paragraph(lt.Text?.Reference ?? "N/A").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(lt.Penalties ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(lt.Incentives ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(lt.Risks ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(lt.Opportunities ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(lt.FollowUp ?? "").SetFont(regularFont)));
+    }
+    
+    document.Add(table);
+    document.Add(new Paragraph("\n"));
+}
+
+private void AddRequirementsSection(Document document, IEnumerable<RevueRequirement> requirements, PdfFont boldFont, PdfFont regularFont)
+{
+    document.Add(new Paragraph("Requirements").SetFont(boldFont).SetFontSize(14));
+    
+    var table = new Table(UnitValue.CreatePercentArray(new float[] { 25, 25, 25, 25 }));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Description").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Implementation").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Communication").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
+
+    foreach (var req in requirements)
+    {
+        var description = req.TextRequirement?.Title ?? "N/A";
+        
+        table.AddCell(new Cell().Add(new Paragraph(description).SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(req.Implementation ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(req.Communication ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(req.FollowUp ?? "").SetFont(regularFont)));
+    }
+    
+    document.Add(table);
+    document.Add(new Paragraph("\n"));
+}
+
+private void AddActionsSection(Document document, IEnumerable<RevueAction> actions, PdfFont boldFont, PdfFont regularFont)
+{
+    document.Add(new Paragraph("Actions").SetFont(boldFont).SetFontSize(14));
+    
+    var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 20, 20, 20, 20 }));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Description").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Source").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Status").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Observation").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
+
+    foreach (var act in actions)
+    {
+        table.AddCell(new Cell().Add(new Paragraph(act.Description ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(act.Source ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(act.Status ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(act.Observation ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(act.FollowUp ?? "").SetFont(regularFont)));
+    }
+    
+    document.Add(table);
+    document.Add(new Paragraph("\n"));
+}
+
+private void AddStakeholdersSection(Document document, IEnumerable<RevueStakeholder> stakeholders, PdfFont boldFont, PdfFont regularFont)
+{
+    document.Add(new Paragraph("Stakeholders").SetFont(boldFont).SetFontSize(14));
+    
+    var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 20, 20, 20, 20 }));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Name").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Relationship Status").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Reason").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Action").SetFont(boldFont)));
+    table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
+
+    foreach (var stake in stakeholders)
+    {
+        table.AddCell(new Cell().Add(new Paragraph(stake.StakeholderName ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(stake.RelationshipStatus ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(stake.Reason ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(stake.Action ?? "").SetFont(regularFont)));
+        table.AddCell(new Cell().Add(new Paragraph(stake.FollowUp ?? "").SetFont(regularFont)));
+    }
+    
+    document.Add(table);
+}         public class CreateReviewRequest
             {
                 public int DomainId { get; set; }
                 public DateTime ReviewDate { get; set; }
@@ -642,7 +708,6 @@ public async Task<IActionResult> GeneratePdf(int id)
             {
                     public int TextRequirementId { get; set; }
 
-                public string Description { get; set; }
                 public string Implementation { get; set; }
                 public string Communication { get; set; }
                 public string FollowUp { get; set; }

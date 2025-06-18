@@ -9,7 +9,6 @@ namespace server.Models
         public int RequirementId { get; set; }
         public int RevueId { get; set; }
         public int TextRequirementId { get; set; }
-        public string Description { get; set; }
         public string Implementation { get; set; }
         public string Communication { get; set; }
         public string FollowUp { get; set; }

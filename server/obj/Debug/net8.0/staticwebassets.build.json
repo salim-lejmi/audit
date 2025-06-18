@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "mhlEzF4wO53vMhfvw8kWL2je0NSx81C8bVa6MtuCuOg=",
+  "Hash": "HyQ1fcJ+HzPjtrj37TYioZsabmZXakKU+fa4ODUYXBY=",
   "Source": "server",
   "BasePath": "_content/server",
   "Mode": "Default",
@@ -78,6 +78,132 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\pdfs\\review_12.pdf"
+    },
+    {
+      "Identity": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_20250618_204558.pdf",
+      "SourceId": "server",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\",
+      "BasePath": "_content/server",
+      "RelativePath": "pdfs/review_15_20250618_204558#[.{fingerprint}]?.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "j3qcdq7y20",
+      "Integrity": "4StFk8eKklCciB6AqMBniOy8V79txZZDcA0NF/fooT4=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\pdfs\\review_15_20250618_204558.pdf"
+    },
+    {
+      "Identity": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_20250618_204834.pdf",
+      "SourceId": "server",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\",
+      "BasePath": "_content/server",
+      "RelativePath": "pdfs/review_15_20250618_204834#[.{fingerprint}]?.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "zt3fn37ak5",
+      "Integrity": "JxSYAl8NPaBsnXKV8ukcb/FwF5drpLI/jSiaL/X6ads=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\pdfs\\review_15_20250618_204834.pdf"
+    },
+    {
+      "Identity": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858144862948606.pdf",
+      "SourceId": "server",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\",
+      "BasePath": "_content/server",
+      "RelativePath": "pdfs/review_15_638858144862948606#[.{fingerprint}]?.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "u6brcz10lj",
+      "Integrity": "mobUg0K/CpimhJLtIQXDUMo8kk43uqFLYB8alkRtZso=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\pdfs\\review_15_638858144862948606.pdf"
+    },
+    {
+      "Identity": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858144878994648.pdf",
+      "SourceId": "server",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\",
+      "BasePath": "_content/server",
+      "RelativePath": "pdfs/review_15_638858144878994648#[.{fingerprint}]?.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "zjri3gumua",
+      "Integrity": "/95H6/jzBCcLObmTPn+eyp/+4mqB/YEFmogMe6XJOUE=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\pdfs\\review_15_638858144878994648.pdf"
+    },
+    {
+      "Identity": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858146173481836.pdf",
+      "SourceId": "server",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\",
+      "BasePath": "_content/server",
+      "RelativePath": "pdfs/review_15_638858146173481836#[.{fingerprint}]?.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "tk60i44z8n",
+      "Integrity": "s/xkeNXP1FqfPPYSKk9H6KTQiLnkEASMZC1hRL4n0CA=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\pdfs\\review_15_638858146173481836.pdf"
+    },
+    {
+      "Identity": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858146450203487.pdf",
+      "SourceId": "server",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\",
+      "BasePath": "_content/server",
+      "RelativePath": "pdfs/review_15_638858146450203487#[.{fingerprint}]?.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "adyo4m2db9",
+      "Integrity": "/r/YBsV1tQp0ZOAPGkAUU+RCFge7Iti8whoZTqmb1iw=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\pdfs\\review_15_638858146450203487.pdf"
     }
   ],
   "Endpoints": [
@@ -324,6 +450,498 @@
         {
           "Name": "integrity",
           "Value": "sha256-W5DzhwiRIwOtUvgkLCc51Ja2jt8YfksK3qY+IIYeJ+A="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_20250618_204558.j3qcdq7y20.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_20250618_204558.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2933"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"4StFk8eKklCciB6AqMBniOy8V79txZZDcA0NF/fooT4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 19:46:00 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j3qcdq7y20"
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_15_20250618_204558.pdf"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-4StFk8eKklCciB6AqMBniOy8V79txZZDcA0NF/fooT4="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_20250618_204558.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_20250618_204558.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2933"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"4StFk8eKklCciB6AqMBniOy8V79txZZDcA0NF/fooT4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 19:46:00 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-4StFk8eKklCciB6AqMBniOy8V79txZZDcA0NF/fooT4="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_20250618_204834.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_20250618_204834.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2932"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"JxSYAl8NPaBsnXKV8ukcb/FwF5drpLI/jSiaL/X6ads=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 19:48:34 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-JxSYAl8NPaBsnXKV8ukcb/FwF5drpLI/jSiaL/X6ads="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_20250618_204834.zt3fn37ak5.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_20250618_204834.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2932"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"JxSYAl8NPaBsnXKV8ukcb/FwF5drpLI/jSiaL/X6ads=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 19:48:34 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "zt3fn37ak5"
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_15_20250618_204834.pdf"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-JxSYAl8NPaBsnXKV8ukcb/FwF5drpLI/jSiaL/X6ads="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_638858144862948606.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858144862948606.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2904"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"mobUg0K/CpimhJLtIQXDUMo8kk43uqFLYB8alkRtZso=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 02:34:47 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-mobUg0K/CpimhJLtIQXDUMo8kk43uqFLYB8alkRtZso="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_638858144862948606.u6brcz10lj.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858144862948606.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2904"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"mobUg0K/CpimhJLtIQXDUMo8kk43uqFLYB8alkRtZso=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 02:34:47 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "u6brcz10lj"
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_15_638858144862948606.pdf"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-mobUg0K/CpimhJLtIQXDUMo8kk43uqFLYB8alkRtZso="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_638858144878994648.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858144878994648.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2904"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/95H6/jzBCcLObmTPn+eyp/+4mqB/YEFmogMe6XJOUE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 02:34:47 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-/95H6/jzBCcLObmTPn+eyp/+4mqB/YEFmogMe6XJOUE="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_638858144878994648.zjri3gumua.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858144878994648.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2904"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/95H6/jzBCcLObmTPn+eyp/+4mqB/YEFmogMe6XJOUE=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 02:34:47 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "zjri3gumua"
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_15_638858144878994648.pdf"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-/95H6/jzBCcLObmTPn+eyp/+4mqB/YEFmogMe6XJOUE="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_638858146173481836.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858146173481836.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2904"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"s/xkeNXP1FqfPPYSKk9H6KTQiLnkEASMZC1hRL4n0CA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 02:36:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-s/xkeNXP1FqfPPYSKk9H6KTQiLnkEASMZC1hRL4n0CA="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_638858146173481836.tk60i44z8n.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858146173481836.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2904"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"s/xkeNXP1FqfPPYSKk9H6KTQiLnkEASMZC1hRL4n0CA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 02:36:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "tk60i44z8n"
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_15_638858146173481836.pdf"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-s/xkeNXP1FqfPPYSKk9H6KTQiLnkEASMZC1hRL4n0CA="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_638858146450203487.adyo4m2db9.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858146450203487.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2904"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/r/YBsV1tQp0ZOAPGkAUU+RCFge7Iti8whoZTqmb1iw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 02:37:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "adyo4m2db9"
+        },
+        {
+          "Name": "label",
+          "Value": "pdfs/review_15_638858146450203487.pdf"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-/r/YBsV1tQp0ZOAPGkAUU+RCFge7Iti8whoZTqmb1iw="
+        }
+      ]
+    },
+    {
+      "Route": "pdfs/review_15_638858146450203487.pdf",
+      "AssetFile": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\review_15_638858146450203487.pdf",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2904"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/pdf"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"/r/YBsV1tQp0ZOAPGkAUU+RCFge7Iti8whoZTqmb1iw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Wed, 18 Jun 2025 02:37:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-/r/YBsV1tQp0ZOAPGkAUU+RCFge7Iti8whoZTqmb1iw="
         }
       ]
     }

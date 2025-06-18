@@ -19,7 +19,11 @@ interface Domain {
   name: string;
 }
 
-const RevueDeDirectionPage: React.FC = () => {
+interface RevueDeDirectionPageProps {
+  userRole?: string; // Add userRole prop
+}
+
+const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [filterDomainId, setFilterDomainId] = useState<number | null>(null);
@@ -30,8 +34,21 @@ const RevueDeDirectionPage: React.FC = () => {
   const [newReview, setNewReview] = useState({ domainId: 0, reviewDate: '' });
   const [showEditModal, setShowEditModal] = useState(false);
   const [editReview, setEditReview] = useState<Review | null>(null);
+  const [userRole, setUserRole] = useState<string>('');
 
   useEffect(() => {
+    // Get user role from auth verification
+    const verifyAuth = async () => {
+      try {
+        const response = await axios.get('/api/auth/verify');
+        setUserRole(response.data.role);
+      } catch (err) {
+        console.error('Failed to verify auth:', err);
+      }
+    };
+    
+    verifyAuth();
+    
     axios.get('/api/taxonomy/domains')
       .then(response => setDomains(response.data))
       .catch(err => setError('Failed to load domains'));
@@ -59,31 +76,28 @@ const RevueDeDirectionPage: React.FC = () => {
       });
   };
 
-const handleCreateReview = () => {
-  if (newReview.domainId === 0 || !newReview.reviewDate) {
-    alert('Please select a domain and set a review date');
-    return;
-  }
-  axios.post('/api/revue', newReview)
-    .then(() => {
-      setShowCreateModal(false);
-      setNewReview({ domainId: 0, reviewDate: '' });
-      fetchReviews();
-    })
-    .catch(err => {
-      console.error('Create review error:', err);
-      if (err.response) {
-        // Server responded with a status code outside 2xx
-        alert(`Failed to create review: ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
-      } else if (err.request) {
-        // Request was made but no response received
-        alert('Failed to create review: No response from server');
-      } else {
-        // Something else happened
-        alert(`Failed to create review: ${err.message}`);
-      }
-    });
-};
+  const handleCreateReview = () => {
+    if (newReview.domainId === 0 || !newReview.reviewDate) {
+      alert('Please select a domain and set a review date');
+      return;
+    }
+    axios.post('/api/revue', newReview)
+      .then(() => {
+        setShowCreateModal(false);
+        setNewReview({ domainId: 0, reviewDate: '' });
+        fetchReviews();
+      })
+      .catch(err => {
+        console.error('Create review error:', err);
+        if (err.response) {
+          alert(`Failed to create review: ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
+        } else if (err.request) {
+          alert('Failed to create review: No response from server');
+        } else {
+          alert(`Failed to create review: ${err.message}`);
+        }
+      });
+  };
 
   const handleEditReview = () => {
     if (!editReview || editReview.domainId === 0 || !editReview.reviewDate) {
@@ -107,6 +121,16 @@ const handleCreateReview = () => {
     axios.delete(`/api/revue/${id}`)
       .then(() => fetchReviews())
       .catch(err => alert('Failed to delete review'));
+  };
+
+  // Helper function to check if user can create/delete
+  const canCreateDelete = () => {
+    return userRole === 'SubscriptionManager';
+  };
+
+  // Helper function to check if user can edit
+  const canEdit = () => {
+    return userRole === 'SubscriptionManager' || userRole === 'Auditor';
   };
 
   return (
@@ -133,6 +157,7 @@ const handleCreateReview = () => {
           Apply Filters
         </button>
       </div>
+      
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
@@ -163,88 +188,64 @@ const handleCreateReview = () => {
                     <a href={review.pdfFilePath} download className="text-blue-500">Download</a>
                   ) : 'N/A'}
                 </td>
-<td className="p-2">
-  <div className="action-buttons">
-    <Link to={`/company/revue/${review.revueId}`} className="action-btn view">View</Link>
-    <button
-      onClick={() => { setEditReview(review); setShowEditModal(true); }}
-      className="action-btn edit"
-    >
-      Edit
-    </button>
-    <button
-      onClick={() => handleDeleteReview(review.revueId)}
-      className="action-btn delete"
-    >
-      Delete
-    </button>
-  </div>
-</td>
+                <td className="p-2">
+                  <div className="action-buttons">
+                    {/* All company members can view */}
+                    <Link to={`${review.revueId}`} className="action-btn view">View</Link>
+                    
+                    {/* Only SubscriptionManager and Auditor can edit */}
+                    {canEdit() && (
+                      <button
+                        onClick={() => { setEditReview(review); setShowEditModal(true); }}
+                        className="action-btn edit"
+                      >
+                        Edit
+                      </button>
+                    )}
+                    
+                    {/* Only SubscriptionManager can delete */}
+                    {canCreateDelete() && (
+                      <button
+                        onClick={() => handleDeleteReview(review.revueId)}
+                        className="action-btn delete"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
-      <button
-        className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-        onClick={() => setShowCreateModal(true)}
-      >
-        + Create New Review
-      </button>
+      
+      {/* Only SubscriptionManager can create new reviews */}
+      {canCreateDelete() && (
+        <button
+          className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          onClick={() => setShowCreateModal(true)}
+        >
+          + Create New Review
+        </button>
+      )}
 
-      {/* Create Modal */}
-      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Create New Review</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium">Domain</label>
-              <select
-                value={newReview.domainId}
-                onChange={e => setNewReview({ ...newReview, domainId: parseInt(e.target.value) })}
-                className="w-full p-2 border rounded"
-              >
-                <option value={0}>Select Domain</option>
-                {domains.map(domain => (
-                  <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Review Date</label>
-              <input
-                type="date"
-                value={newReview.reviewDate}
-                onChange={e => setNewReview({ ...newReview, reviewDate: e.target.value })}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Close</Button>
-          <Button variant="primary" onClick={handleCreateReview}>Create</Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Review</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {editReview && (
+      {/* Create Modal - only shown to SubscriptionManager */}
+      {canCreateDelete() && (
+        <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Create New Review</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium">Domain</label>
                 <select
-                  value={editReview.domainId}
-                  onChange={e => setEditReview({ ...editReview, domainId: parseInt(e.target.value) })}
+                  value={newReview.domainId}
+                  onChange={e => setNewReview({ ...newReview, domainId: parseInt(e.target.value) })}
                   className="w-full p-2 border rounded"
-                  disabled
                 >
+                  <option value={0}>Select Domain</option>
                   {domains.map(domain => (
                     <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
                   ))}
@@ -254,19 +255,60 @@ const handleCreateReview = () => {
                 <label className="block text-sm font-medium">Review Date</label>
                 <input
                   type="date"
-                  value={editReview.reviewDate.split('T')[0]}
-                  onChange={e => setEditReview({ ...editReview, reviewDate: e.target.value })}
+                  value={newReview.reviewDate}
+                  onChange={e => setNewReview({ ...newReview, reviewDate: e.target.value })}
                   className="w-full p-2 border rounded"
                 />
               </div>
             </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowEditModal(false)}>Close</Button>
-          <Button variant="primary" onClick={handleEditReview}>Save</Button>
-        </Modal.Footer>
-      </Modal>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Close</Button>
+            <Button variant="primary" onClick={handleCreateReview}>Create</Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {/* Edit Modal - only shown to SubscriptionManager and Auditor */}
+      {canEdit() && (
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Review</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {editReview && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium">Domain</label>
+                  <select
+                    value={editReview.domainId}
+                    onChange={e => setEditReview({ ...editReview, domainId: parseInt(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                    disabled
+                  >
+                    {domains.map(domain => (
+                      <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Review Date</label>
+                  <input
+                    type="date"
+                    value={editReview.reviewDate.split('T')[0]}
+                    onChange={e => setEditReview({ ...editReview, reviewDate: e.target.value })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Close</Button>
+            <Button variant="primary" onClick={handleEditReview}>Save</Button>
+          </Modal.Footer>
+        </Modal>
+      )}
     </div>
   );
 };

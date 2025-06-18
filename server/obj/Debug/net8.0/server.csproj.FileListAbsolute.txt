@@ -943,3 +943,5 @@ C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.svg.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.commons.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.DotNet.PlatformAbstractions.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\BouncyCastle.Cryptography.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.bouncy-castle-adapter.dll
