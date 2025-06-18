@@ -103,80 +103,125 @@ using iText.IO.Font.Constants;
                 return CreatedAtAction(nameof(GetReview), new { id = review.RevueId }, new { revueId = review.RevueId });
             }
 
-            // GET: api/revue/{id}
-            [HttpGet("{id}")]
-            public async Task<IActionResult> GetReview(int id)
+        // GET: api/revue/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetReview(int id)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            if (!userId.HasValue || !companyId.HasValue)
             {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                var companyId = HttpContext.Session.GetInt32("CompanyId");
-                if (!userId.HasValue || !companyId.HasValue)
-                {
-                    return Unauthorized(new { message = "Not authenticated" });
-                }
-
-                var review = await _context.RevueDeDirections
-                    .Include(r => r.Domain)
-                    .Include(r => r.LegalTexts).ThenInclude(lt => lt.Text)
-                    .Include(r => r.Requirements)
-                    .Include(r => r.Actions)
-                    .Include(r => r.Stakeholders)
-                    .FirstOrDefaultAsync(r => r.RevueId == id && r.CompanyId == companyId.Value);
-
-                if (review == null)
-                {
-                    return NotFound(new { message = "Review not found" });
-                }
-
-                var result = new
-                {
-                    review.RevueId,
-                    review.DomainId,
-                    DomainName = review.Domain.Name,
-                    review.ReviewDate,
-                    review.Status,
-                    review.PdfFilePath,
-                    LegalTexts = review.LegalTexts.Select(lt => new
-                    {
-                        lt.LegalTextId,
-                        lt.TextId,
-                        TextReference = lt.Text.Reference,
-                        lt.Penalties,
-                        lt.Incentives,
-                        lt.Risks,
-                        lt.Opportunities,
-                        lt.FollowUp
-                    }),
-                    Requirements = review.Requirements.Select(req => new
-                    {
-                        req.RequirementId,
-                        req.Description,
-                        req.Implementation,
-                        req.Communication,
-                        req.FollowUp
-                    }),
-                    Actions = review.Actions.Select(a => new
-                    {
-                        a.ActionId,
-                        a.Description,
-                        a.Source,
-                        a.Status,
-                        a.Observation,
-                        a.FollowUp
-                    }),
-                    Stakeholders = review.Stakeholders.Select(s => new
-                    {
-                        s.StakeholderId,
-                        s.StakeholderName,
-                        s.RelationshipStatus,
-                        s.Reason,
-                        s.Action,
-                        s.FollowUp
-                    })
-                };
-
-                return Ok(result);
+                return Unauthorized(new { message = "Not authenticated" });
             }
 
+            var review = await _context.RevueDeDirections
+                .Include(r => r.Domain)
+                .Include(r => r.LegalTexts).ThenInclude(lt => lt.Text)
+                .Include(r => r.Requirements).ThenInclude(req => req.TextRequirement).ThenInclude(tr => tr.Text)
+                .Include(r => r.Actions)
+                .Include(r => r.Stakeholders)
+                .FirstOrDefaultAsync(r => r.RevueId == id && r.CompanyId == companyId.Value);
+
+            if (review == null)
+            {
+                return NotFound(new { message = "Review not found" });
+            }
+
+            var result = new
+            {
+                review.RevueId,
+                review.DomainId,
+                DomainName = review.Domain.Name,
+                review.ReviewDate,
+                review.Status,
+                review.PdfFilePath,
+                LegalTexts = review.LegalTexts.Select(lt => new
+                {
+                    lt.LegalTextId,
+                    lt.TextId,
+                    TextReference = lt.Text.Reference,
+                    lt.Penalties,
+                    lt.Incentives,
+                    lt.Risks,
+                    lt.Opportunities,
+                    lt.FollowUp
+                }),
+                Requirements = review.Requirements.Select(req => new
+                {
+                    req.RequirementId,
+                    req.TextRequirementId,
+                    Description = req.TextRequirement.Title,
+                    RequirementNumber = req.TextRequirement.Number,
+                    TextReference = req.TextRequirement.Text.Reference,
+                    req.Implementation,
+                    req.Communication,
+                    req.FollowUp
+                }),
+                Actions = review.Actions.Select(a => new
+                {
+                    a.ActionId,
+                    a.Description,
+                    a.Source,
+                    a.Status,
+                    a.Observation,
+                    a.FollowUp
+                }),
+                Stakeholders = review.Stakeholders.Select(s => new
+                {
+                    s.StakeholderId,
+                    s.StakeholderName,
+                    s.RelationshipStatus,
+                    s.Reason,
+                    s.Action,
+                    s.FollowUp
+                })
+            };
+
+            return Ok(result);
+        }
+[HttpGet("{id}/available-requirements")]
+public async Task<IActionResult> GetAvailableRequirements(int id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
+
+    var review = await _context.RevueDeDirections
+        .Include(r => r.LegalTexts)
+        .FirstOrDefaultAsync(r => r.RevueId == id && r.CompanyId == companyId.Value);
+
+    if (review == null)
+    {
+        return NotFound(new { message = "Review not found" });
+    }
+
+    // Get text IDs from selected legal texts
+    var selectedTextIds = review.LegalTexts.Select(lt => lt.TextId).ToList();
+
+    // Get requirements from those texts that aren't already added to the review
+    var existingRequirementIds = await _context.RevueRequirements
+        .Where(rr => rr.RevueId == id)
+        .Select(rr => rr.TextRequirementId)
+        .ToListAsync();
+
+    var availableRequirements = await _context.TextRequirements
+        .Include(tr => tr.Text)
+        .Where(tr => selectedTextIds.Contains(tr.TextId) && !existingRequirementIds.Contains(tr.RequirementId))
+        .Select(tr => new
+        {
+            tr.RequirementId,
+            tr.Number,
+            tr.Title,
+            TextReference = tr.Text.Reference,
+            Description = $"{tr.Number} - {tr.Title} ({tr.Text.Reference})"
+        })
+        .ToListAsync();
+
+    return Ok(availableRequirements);
+}
             // PUT: api/revue/{id}
             [HttpPut("{id}")]
             public async Task<IActionResult> UpdateReview(int id, [FromBody] UpdateReviewRequest request)
@@ -287,43 +332,51 @@ using iText.IO.Font.Constants;
             }
 
             // POST: api/revue/{id}/requirement
-            [HttpPost("{id}/requirement")]
-            public async Task<IActionResult> AddRequirement(int id, [FromBody] AddRequirementRequest request)
-            {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                var companyId = HttpContext.Session.GetInt32("CompanyId");
-                var userRole = HttpContext.Session.GetString("UserRole");
-                if (!userId.HasValue || !companyId.HasValue)
-                {
-                    return Unauthorized(new { message = "Not authenticated" });
-                }
+[HttpPost("{id}/requirement")]
+public async Task<IActionResult> AddRequirement(int id, [FromBody] AddRequirementRequest request)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    var userRole = HttpContext.Session.GetString("UserRole");
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
 
-                if (userRole != "SubscriptionManager" && userRole != "Auditor")
-                {
-                    return Forbid();
-                }
+    if (userRole != "SubscriptionManager" && userRole != "Auditor")
+    {
+        return Forbid();
+    }
 
-                var review = await _context.RevueDeDirections.FindAsync(id);
-                if (review == null || review.CompanyId != companyId.Value)
-                {
-                    return NotFound(new { message = "Review not found" });
-                }
+    var review = await _context.RevueDeDirections.FindAsync(id);
+    if (review == null || review.CompanyId != companyId.Value)
+    {
+        return NotFound(new { message = "Review not found" });
+    }
 
-                var requirement = new RevueRequirement
-                {
-                    RevueId = id,
-                    Description = request.Description,
-                    Implementation = request.Implementation,
-                    Communication = request.Communication,
-                    FollowUp = request.FollowUp
-                };
+    // Verify that the TextRequirement exists and belongs to a selected legal text
+    var textRequirement = await _context.TextRequirements
+        .Include(tr => tr.Text)
+        .FirstOrDefaultAsync(tr => tr.RequirementId == request.TextRequirementId);
 
-                _context.RevueRequirements.Add(requirement);
-                await _context.SaveChangesAsync();
-                return Ok(new { requirementId = requirement.RequirementId });
-            }
+    if (textRequirement == null || textRequirement.Text.CompanyId != companyId.Value)
+    {
+        return NotFound(new { message = "Text requirement not found" });
+    }
 
-            // POST: api/revue/{id}/action
+    var requirement = new RevueRequirement
+    {
+        RevueId = id,
+        TextRequirementId = request.TextRequirementId,
+        Implementation = request.Implementation,
+        Communication = request.Communication,
+        FollowUp = request.FollowUp
+    };
+
+    _context.RevueRequirements.Add(requirement);
+    await _context.SaveChangesAsync();
+    return Ok(new { requirementId = requirement.RequirementId });
+}            // POST: api/revue/{id}/action
             [HttpPost("{id}/action")]
             public async Task<IActionResult> AddAction(int id, [FromBody] AddActionRequest request)
             {
@@ -587,6 +640,8 @@ public async Task<IActionResult> GeneratePdf(int id)
 
             public class AddRequirementRequest
             {
+                    public int TextRequirementId { get; set; }
+
                 public string Description { get; set; }
                 public string Implementation { get; set; }
                 public string Communication { get; set; }

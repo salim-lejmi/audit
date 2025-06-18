@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using server.Data;
+using server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,9 @@ builder.Services.AddSession(options =>
 
 // Add controllers
 builder.Services.AddControllers();
+
+// Register Email Service
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Add CORS services
 builder.Services.AddCors(options =>

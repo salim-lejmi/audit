@@ -23,7 +23,10 @@ interface ReviewDetail {
   }>;
   requirements: Array<{
     requirementId: number;
+    textRequirementId: number;
     description: string;
+    requirementNumber: string;
+    textReference: string;
     implementation: string;
     communication: string;
     followUp: string;
@@ -51,30 +54,44 @@ interface Text {
   reference: string;
 }
 
+interface AvailableRequirement {
+  requirementId: number;
+  number: string;
+  title: string;
+  textReference: string;
+  description: string;
+}
+
 const RevueDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [review, setReview] = useState<ReviewDetail | null>(null);
-const [texts, setTexts] = useState<{ textId: number; reference: string }[]>([]);  
-const [loading, setLoading] = useState(true);
+  const [texts, setTexts] = useState<{ textId: number; reference: string }[]>([]);
+  const [availableRequirements, setAvailableRequirements] = useState<AvailableRequirement[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-const [textsLoaded, setTextsLoaded] = useState(false);
+  const [textsLoaded, setTextsLoaded] = useState(false);
 
   // Modal states
-const [showLegalTextModal, setShowLegalTextModal] = useState(false);
+  const [showLegalTextModal, setShowLegalTextModal] = useState(false);
   const [showRequirementModal, setShowRequirementModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
   const [showStakeholderModal, setShowStakeholderModal] = useState(false);
 
   // Form states
-const [legalTextForm, setLegalTextForm] = useState({
+  const [legalTextForm, setLegalTextForm] = useState({
     textId: 0,
     penalties: '',
     incentives: '',
     risks: '',
     opportunities: '',
     followUp: '',
-  });  
-  const [requirementForm, setRequirementForm] = useState({ description: '', implementation: '', communication: '', followUp: '' });
+  });
+  const [requirementForm, setRequirementForm] = useState({ 
+    textRequirementId: 0, 
+    implementation: '', 
+    communication: '', 
+    followUp: '' 
+  });
   const [actionForm, setActionForm] = useState({ description: '', source: '', status: '', observation: '', followUp: '' });
   const [stakeholderForm, setStakeholderForm] = useState({ stakeholderName: '', relationshipStatus: '', reason: '', action: '', followUp: '' });
 
@@ -97,22 +114,33 @@ const [legalTextForm, setLegalTextForm] = useState({
       });
   };
 
-const fetchTexts = async () => {
-  try {
-    const response = await axios.get('/api/texts');
-    console.log('Raw Texts API response:', response.data);
-    
-    const fetchedTexts = response.data.texts || [];
-    console.log('Fetched texts:', fetchedTexts);
-    
-    setTexts(fetchedTexts);
-    setTextsLoaded(true);
-  } catch (err) {
-    console.error('Failed to load texts', err);
-    setTexts([]);
-    setTextsLoaded(true);
-  }
-};
+  const fetchTexts = async () => {
+    try {
+      const response = await axios.get('/api/texts');
+      console.log('Raw Texts API response:', response.data);
+      
+      const fetchedTexts = response.data.texts || [];
+      console.log('Fetched texts:', fetchedTexts);
+      
+      setTexts(fetchedTexts);
+      setTextsLoaded(true);
+    } catch (err) {
+      console.error('Failed to load texts', err);
+      setTexts([]);
+      setTextsLoaded(true);
+    }
+  };
+
+  const fetchAvailableRequirements = async () => {
+    try {
+      const response = await axios.get(`/api/revue/${id}/available-requirements`);
+      setAvailableRequirements(response.data);
+    } catch (err) {
+      console.error('Failed to load available requirements', err);
+      setAvailableRequirements([]);
+    }
+  };
+
   const handleAddLegalText = () => {
     if (legalTextForm.textId === 0) {
       alert('Please select a text');
@@ -128,14 +156,14 @@ const fetchTexts = async () => {
   };
 
   const handleAddRequirement = () => {
-    if (!requirementForm.description) {
-      alert('Description is required');
+    if (requirementForm.textRequirementId === 0) {
+      alert('Please select a requirement');
       return;
     }
     axios.post(`/api/revue/${review?.revueId}/requirement`, requirementForm)
       .then(() => {
         setShowRequirementModal(false);
-        setRequirementForm({ description: '', implementation: '', communication: '', followUp: '' });
+        setRequirementForm({ textRequirementId: 0, implementation: '', communication: '', followUp: '' });
         fetchReview();
       })
       .catch(err => alert('Failed to add requirement'));
@@ -194,6 +222,11 @@ const fetchTexts = async () => {
     axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'Canceled' })
       .then(() => fetchReview())
       .catch(err => alert('Failed to cancel review'));
+  };
+
+  const handleShowRequirementModal = () => {
+    fetchAvailableRequirements();
+    setShowRequirementModal(true);
   };
 
   if (loading) return <div className="text-center p-4">Loading...</div>;
@@ -270,7 +303,7 @@ const fetchTexts = async () => {
         <section className="section">
           <div className="section-header">
             <h2>Requirements</h2>
-            <button onClick={() => setShowRequirementModal(true)} className="add-btn">
+            <button onClick={handleShowRequirementModal} className="add-btn">
               Add Requirement
             </button>
           </div>
@@ -278,7 +311,8 @@ const fetchTexts = async () => {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Description</th>
+                  <th>Text Reference</th>
+                  <th>Requirement</th>
                   <th>Implementation</th>
                   <th>Communication</th>
                   <th>Follow Up</th>
@@ -287,7 +321,8 @@ const fetchTexts = async () => {
               <tbody>
                 {review.requirements.map(req => (
                   <tr key={req.requirementId}>
-                    <td>{req.description}</td>
+                    <td>{req.textReference}</td>
+                    <td>{req.requirementNumber} - {req.description}</td>
                     <td>{req.implementation}</td>
                     <td>{req.communication}</td>
                     <td>{req.followUp}</td>
@@ -375,21 +410,21 @@ const fetchTexts = async () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium">Text</label>
-<select
-  value={legalTextForm.textId}
-  onChange={e => setLegalTextForm({ ...legalTextForm, textId: parseInt(e.target.value) })}
-  className="w-full p-2 border rounded"
->
-  <option value={0}>Select Text</option>
-  {texts.length > 0 ? (
-    texts.map(text => (
-      <option key={text.textId} value={text.textId}>{text.reference}</option>
-    ))
-  ) : (
-    <option value={0}>No texts available</option>
-  )}
-</select>              
-</div>
+                <select
+                  value={legalTextForm.textId}
+                  onChange={e => setLegalTextForm({ ...legalTextForm, textId: parseInt(e.target.value) })}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value={0}>Select Text</option>
+                  {texts.length > 0 ? (
+                    texts.map(text => (
+                      <option key={text.textId} value={text.textId}>{text.reference}</option>
+                    ))
+                  ) : (
+                    <option value={0}>No texts available</option>
+                  )}
+                </select>              
+              </div>
               <div>
                 <label className="block text-sm font-medium">Penalties</label>
                 <input
@@ -451,13 +486,23 @@ const fetchTexts = async () => {
           <Modal.Body>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium">Description</label>
-                <input
-                  type="text"
-                  value={requirementForm.description}
-                  onChange={e => setRequirementForm({ ...requirementForm, description: e.target.value })}
+                <label className="block text-sm font-medium">Requirement</label>
+                <select
+                  value={requirementForm.textRequirementId}
+                  onChange={e => setRequirementForm({ ...requirementForm, textRequirementId: parseInt(e.target.value) })}
                   className="w-full p-2 border rounded"
-                />
+                >
+                  <option value={0}>Select Requirement</option>
+                  {availableRequirements.length > 0 ? (
+                    availableRequirements.map(req => (
+                      <option key={req.requirementId} value={req.requirementId}>
+                        {req.description}
+                      </option>
+                    ))
+                  ) : (
+                    <option value={0}>No requirements available (add Legal Texts first)</option>
+                  )}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium">Implementation</label>

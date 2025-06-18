@@ -43,6 +43,7 @@
           "Microsoft.EntityFrameworkCore.SqlServer": "9.0.2",
           "Microsoft.EntityFrameworkCore.Tools": "9.0.2",
           "Swashbuckle.AspNetCore": "8.1.0",
+          "System.Net.Mail": "1.0.0-rtm-00002",
           "itext7": "9.2.0",
           "Microsoft.AspNetCore.Antiforgery": "8.0.0.0",
           "Microsoft.AspNetCore.Authentication.Abstractions": "8.0.0.0",
@@ -182,7 +183,7 @@
           "System.Collections.Reference": "8.0.0.0",
           "System.Collections.Immutable.Reference": "8.0.0.0",
           "System.Collections.NonGeneric.Reference": "8.0.0.0",
-          "System.Collections.Specialized": "8.0.0.0",
+          "System.Collections.Specialized.Reference": "8.0.0.0",
           "System.ComponentModel.Annotations": "8.0.0.0",
           "System.ComponentModel.DataAnnotations": "4.0.0.0",
           "System.ComponentModel": "8.0.0.0",
@@ -192,7 +193,7 @@
           "System.Configuration": "4.0.0.0",
           "System.Console": "8.0.0.0",
           "System.Core": "4.0.0.0",
-          "System.Data.Common": "8.0.0.0",
+          "System.Data.Common.Reference": "8.0.0.0",
           "System.Data.DataSetExtensions": "8.0.0.0",
           "System.Data": "4.0.0.0",
           "System.Diagnostics.Contracts": "8.0.0.0",
@@ -238,11 +239,11 @@
           "System.Net.Http": "8.0.0.0",
           "System.Net.Http.Json": "8.0.0.0",
           "System.Net.HttpListener": "8.0.0.0",
-          "System.Net.Mail": "8.0.0.0",
+          "System.Net.Mail.Reference": "8.0.0.0",
           "System.Net.NameResolution": "8.0.0.0",
           "System.Net.NetworkInformation": "8.0.0.0",
           "System.Net.Ping": "8.0.0.0",
-          "System.Net.Primitives": "8.0.0.0",
+          "System.Net.Primitives.Reference": "8.0.0.0",
           "System.Net.Quic": "8.0.0.0",
           "System.Net.Requests": "8.0.0.0",
           "System.Net.Security": "8.0.0.0",
@@ -1447,6 +1448,17 @@
           }
         }
       },
+      "Newtonsoft.Json/8.0.3": {
+        "runtime": {
+          "lib/net45/Newtonsoft.Json.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.0.3.19514"
+          }
+        },
+        "compile": {
+          "lib/net45/Newtonsoft.Json.dll": {}
+        }
+      },
       "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {},
       "runtime.fedora.23-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {},
       "runtime.fedora.24-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {},
@@ -1590,6 +1602,17 @@
           "System.Threading": "4.3.0"
         }
       },
+      "System.Collections.Specialized/4.0.1": {
+        "dependencies": {
+          "System.Collections.NonGeneric": "4.3.0",
+          "System.Globalization": "4.3.0",
+          "System.Globalization.Extensions": "4.3.0",
+          "System.Resources.ResourceManager": "4.3.0",
+          "System.Runtime": "4.3.1",
+          "System.Runtime.Extensions": "4.3.0",
+          "System.Threading": "4.3.0"
+        }
+      },
       "System.Composition/7.0.0": {
         "dependencies": {
           "System.Composition.AttributedModel": "7.0.0",
@@ -1660,6 +1683,18 @@
             "assemblyVersion": "6.0.0.0",
             "fileVersion": "6.0.922.41905"
           }
+        }
+      },
+      "System.Data.Common/4.1.0": {
+        "dependencies": {
+          "System.Collections": "4.3.0",
+          "System.Globalization": "4.3.0",
+          "System.IO": "4.3.0",
+          "System.Resources.ResourceManager": "4.3.0",
+          "System.Runtime": "4.3.1",
+          "System.Runtime.Extensions": "4.3.0",
+          "System.Text.RegularExpressions": "4.3.1",
+          "System.Threading.Tasks": "4.3.0"
         }
       },
       "System.Diagnostics.Debug/4.3.0": {
@@ -1837,6 +1872,33 @@
         },
         "compile": {
           "lib/netstandard2.0/System.Memory.Data.dll": {}
+        }
+      },
+      "System.Net.Mail/1.0.0-rtm-00002": {
+        "dependencies": {
+          "Newtonsoft.Json": "8.0.3",
+          "System.Collections": "4.3.0",
+          "System.Collections.Specialized": "4.0.1",
+          "System.Data.Common": "4.1.0",
+          "System.Diagnostics.Debug": "4.3.0",
+          "System.Globalization": "4.3.0",
+          "System.Globalization.Extensions": "4.3.0",
+          "System.IO.FileSystem": "4.3.0",
+          "System.Net.Primitives": "4.0.11",
+          "System.Runtime": "4.3.1",
+          "System.Runtime.Extensions": "4.3.0",
+          "System.Text.Encoding.Extensions": "4.3.0",
+          "System.Threading": "4.3.0",
+          "System.Threading.Thread": "4.3.0",
+          "System.Threading.ThreadPool": "4.3.0"
+        }
+      },
+      "System.Net.Primitives/4.0.11": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "1.1.1",
+          "Microsoft.NETCore.Targets": "1.1.3",
+          "System.Runtime": "4.3.1",
+          "System.Runtime.Handles": "4.3.0"
         }
       },
       "System.Numerics.Vectors/4.5.0": {},
@@ -3062,7 +3124,7 @@
         },
         "compileOnly": true
       },
-      "System.Collections.Specialized/8.0.0.0": {
+      "System.Collections.Specialized.Reference/8.0.0.0": {
         "compile": {
           "System.Collections.Specialized.dll": {}
         },
@@ -3122,7 +3184,7 @@
         },
         "compileOnly": true
       },
-      "System.Data.Common/8.0.0.0": {
+      "System.Data.Common.Reference/8.0.0.0": {
         "compile": {
           "System.Data.Common.dll": {}
         },
@@ -3398,7 +3460,7 @@
         },
         "compileOnly": true
       },
-      "System.Net.Mail/8.0.0.0": {
+      "System.Net.Mail.Reference/8.0.0.0": {
         "compile": {
           "System.Net.Mail.dll": {}
         },
@@ -3422,7 +3484,7 @@
         },
         "compileOnly": true
       },
-      "System.Net.Primitives/8.0.0.0": {
+      "System.Net.Primitives.Reference/8.0.0.0": {
         "compile": {
           "System.Net.Primitives.dll": {}
         },
@@ -4453,6 +4515,13 @@
       "path": "mono.texttemplating/3.0.0",
       "hashPath": "mono.texttemplating.3.0.0.nupkg.sha512"
     },
+    "Newtonsoft.Json/8.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-KGsYQdS2zLH+H8x2cZaSI7e+YZ4SFIbyy1YJQYl6GYBWjf5o4H1A68nxyq+WTyVSOJQ4GqS/DiPE+UseUizgMg==",
+      "path": "newtonsoft.json/8.0.3",
+      "hashPath": "newtonsoft.json.8.0.3.nupkg.sha512"
+    },
     "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {
       "type": "package",
       "serviceable": true,
@@ -4628,6 +4697,13 @@
       "path": "system.collections.nongeneric/4.3.0",
       "hashPath": "system.collections.nongeneric.4.3.0.nupkg.sha512"
     },
+    "System.Collections.Specialized/4.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/HKQyVP0yH1I0YtK7KJL/28snxHNH/bi+0lgk/+MbURF6ULhAE31MDI+NZDerNWu264YbxklXCCygISgm+HMug==",
+      "path": "system.collections.specialized/4.0.1",
+      "hashPath": "system.collections.specialized.4.0.1.nupkg.sha512"
+    },
     "System.Composition/7.0.0": {
       "type": "package",
       "serviceable": true,
@@ -4676,6 +4752,13 @@
       "sha512": "sha512-jXw9MlUu/kRfEU0WyTptAVueupqIeE3/rl0EZDMlf8pcvJnitQ8HeVEp69rZdaStXwTV72boi/Bhw8lOeO+U2w==",
       "path": "system.configuration.configurationmanager/6.0.1",
       "hashPath": "system.configuration.configurationmanager.6.0.1.nupkg.sha512"
+    },
+    "System.Data.Common/4.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-epU8jeTe7aE7RqGHq9rZ8b0Q4Ah7DgubzHQblgZMSqgW1saW868WmooSyC5ywf8upLBkcVLDu93W9GPWUYsU2Q==",
+      "path": "system.data.common/4.1.0",
+      "hashPath": "system.data.common.4.1.0.nupkg.sha512"
     },
     "System.Diagnostics.Debug/4.3.0": {
       "type": "package",
@@ -4788,6 +4871,20 @@
       "sha512": "sha512-JGkzeqgBsiZwKJZ1IxPNsDFZDhUvuEdX8L8BDC8N3KOj+6zMcNU28CNN59TpZE/VJYy9cP+5M+sbxtWJx3/xtw==",
       "path": "system.memory.data/1.0.2",
       "hashPath": "system.memory.data.1.0.2.nupkg.sha512"
+    },
+    "System.Net.Mail/1.0.0-rtm-00002": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-PNVa3Z3agfOA52PZmQzZuglWLYFi73navELVlbBvgXVnUtdZBNc5onnsDx29WIU3TslPFPiMcs77HnKtCl/uYA==",
+      "path": "system.net.mail/1.0.0-rtm-00002",
+      "hashPath": "system.net.mail.1.0.0-rtm-00002.nupkg.sha512"
+    },
+    "System.Net.Primitives/4.0.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hVvfl4405DRjA2408luZekbPhplJK03j2Y2lSfMlny7GHXlkByw1iLnc9mgKW0GdQn73vvMcWrWewAhylXA4Nw==",
+      "path": "system.net.primitives/4.0.11",
+      "hashPath": "system.net.primitives.4.0.11.nupkg.sha512"
     },
     "System.Numerics.Vectors/4.5.0": {
       "type": "package",
@@ -5780,7 +5877,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "System.Collections.Specialized/8.0.0.0": {
+    "System.Collections.Specialized.Reference/8.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
@@ -5830,7 +5927,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "System.Data.Common/8.0.0.0": {
+    "System.Data.Common.Reference/8.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
@@ -6060,7 +6157,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "System.Net.Mail/8.0.0.0": {
+    "System.Net.Mail.Reference/8.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""
@@ -6080,7 +6177,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "System.Net.Primitives/8.0.0.0": {
+    "System.Net.Primitives.Reference/8.0.0.0": {
       "type": "referenceassembly",
       "serviceable": false,
       "sha512": ""

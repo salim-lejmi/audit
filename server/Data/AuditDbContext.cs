@@ -35,6 +35,22 @@ namespace server.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configure the new properties as nullable or with default values
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
+                entity.Property(e => e.Status).HasDefaultValue("Pending");
+                entity.Property(e => e.EmailVerificationToken).IsRequired(false);
+                entity.Property(e => e.EmailVerificationTokenExpiry).IsRequired(false);
+                entity.Property(e => e.CreatedAt).IsRequired(false);
+            });
+
+            modelBuilder.Entity<Company>(entity =>
+            {
+                entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
+                entity.Property(e => e.Status).HasDefaultValue("Pending");
+            });
+
             // ONLY these relationships can cascade - everything else is NoAction
 
             // Company → Users (CASCADE)
@@ -175,6 +191,13 @@ namespace server.Data
                 .HasForeignKey(rs => rs.RevueId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // RevueRequirement → TextRequirement (NO ACTION)
+            modelBuilder.Entity<RevueRequirement>()
+                .HasOne(rr => rr.TextRequirement)
+                .WithMany()
+                .HasForeignKey(rr => rr.TextRequirementId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // RevueLegalText → Text (NO ACTION)
             modelBuilder.Entity<RevueLegalText>()
                 .HasOne(rlt => rlt.Text)
@@ -189,7 +212,7 @@ namespace server.Data
                 .HasForeignKey(r => r.CreatedById)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Seed data
+            // Seed data - Updated to include new properties
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
@@ -199,7 +222,11 @@ namespace server.Data
                     PasswordHash = AdminPasswordHash,
                     Role = "SuperAdmin",
                     PhoneNumber = "99999999",
-                    CreatedAt = SeedCreatedAt
+                    CreatedAt = SeedCreatedAt,
+                    IsEmailVerified = true,
+                    EmailVerificationToken = null,
+                    EmailVerificationTokenExpiry = null,
+                    Status = "Active"
                 }
             );
 

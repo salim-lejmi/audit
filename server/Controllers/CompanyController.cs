@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using server.Data;
 using server.Models;
+using server.Services;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
@@ -13,11 +14,16 @@ namespace server.Controllers
     public class CompanyController : ControllerBase
     {
         private readonly AuditDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public CompanyController(AuditDbContext context)
-        {
-            _context = context;
-        }
+       public CompanyController(AuditDbContext context, IEmailService emailService, IConfiguration configuration)
+{
+    _context = context;
+    _emailService = emailService;
+    _configuration = configuration;
+}
+
 
         [HttpGet("dashboard-info")]
         public async Task<IActionResult> GetDashboardInfo()
@@ -139,71 +145,101 @@ namespace server.Controllers
             return Ok(users);
         }
 
-        [HttpPost("users")]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+[HttpPost("users")]
+public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+{
+    // Check if user is a SubscriptionManager
+    var userRole = HttpContext.Session.GetString("UserRole");
+    if (userRole != "SubscriptionManager")
+    {
+        return Forbid();
+    }
+
+    // Get companyId from session
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    if (!companyId.HasValue)
+    {
+        return BadRequest(new { message = "Invalid company ID" });
+    }
+
+    // Validate request
+    if (string.IsNullOrEmpty(request.Name) ||
+        string.IsNullOrEmpty(request.Email) ||
+        string.IsNullOrEmpty(request.Password) ||
+        string.IsNullOrEmpty(request.Role))
+    {
+        return BadRequest(new { message = "All fields are required" });
+    }
+
+    // Check if email is already registered
+    if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+    {
+        return BadRequest(new { message = "Email is already registered" });
+    }
+
+    // Check if role is valid
+    var validRoles = new[] { "User", "Auditor", "Manager" };
+    if (!validRoles.Contains(request.Role))
+    {
+        return BadRequest(new { message = "Invalid role" });
+    }
+
+    try
+    {
+        // Generate verification token
+        var verificationToken = GenerateEmailVerificationToken();
+        var tokenExpiry = DateTime.Now.AddHours(24);
+
+        // Create user with pending status
+        var user = new User
         {
-            // Check if user is a SubscriptionManager
-            var userRole = HttpContext.Session.GetString("UserRole");
-            if (userRole != "SubscriptionManager")
-            {
-                return Forbid();
-            }
+            CompanyId = companyId.Value,
+            Name = request.Name,
+            Email = request.Email,
+            PhoneNumber = request.PhoneNumber ?? "",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            Role = request.Role,
+            CreatedAt = null, // Will be set when email is verified
+            IsEmailVerified = false,
+            EmailVerificationToken = verificationToken,
+            EmailVerificationTokenExpiry = tokenExpiry,
+            Status = "Pending"
+        };
 
-            // Get companyId from session
-            var companyId = HttpContext.Session.GetInt32("CompanyId");
-            if (!companyId.HasValue)
-            {
-                return BadRequest(new { message = "Invalid company ID" });
-            }
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
 
-            // Validate request
-            if (string.IsNullOrEmpty(request.Name) ||
-                string.IsNullOrEmpty(request.Email) ||
-                string.IsNullOrEmpty(request.Password) ||
-                string.IsNullOrEmpty(request.Role))
-            {
-                return BadRequest(new { message = "All fields are required" });
-            }
+        // Send verification email
+        var baseUrl = _configuration["App:BaseUrl"];
+        var verificationLink = $"{baseUrl}/verify-email?token={verificationToken}&type=user";
+        
+        await _emailService.SendUserWelcomeEmailAsync(request.Email, request.Name, verificationLink);
 
-            // Check if email is already registered
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-            {
-                return BadRequest(new { message = "Email is already registered" });
-            }
+        return Ok(new
+        {
+            userId = user.UserId,
+            name = user.Name,
+            email = user.Email,
+            phoneNumber = user.PhoneNumber,
+            role = user.Role,
+            status = user.Status,
+            createdAt = user.CreatedAt,
+            message = "User created successfully. Verification email sent."
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Failed to create user and send verification email" });
+    }
+}
 
-            // Check if role is valid
-            var validRoles = new[] { "User", "Auditor", "Manager" };
-            if (!validRoles.Contains(request.Role))
-            {
-                return BadRequest(new { message = "Invalid role" });
-            }
-
-            // Create user
-            var user = new User
-            {
-                CompanyId = companyId.Value,
-                Name = request.Name,
-                Email = request.Email,
-                PhoneNumber = request.PhoneNumber ?? "",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                Role = request.Role,
-                CreatedAt = DateTime.Now
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                userId = user.UserId,
-                name = user.Name,
-                email = user.Email,
-                phoneNumber = user.PhoneNumber,
-                role = user.Role,
-                createdAt = user.CreatedAt
-            });
-        }
-
+private string GenerateEmailVerificationToken()
+{
+    using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+    var bytes = new byte[32];
+    rng.GetBytes(bytes);
+    return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
+}
         [HttpPut("users/{userId}")]
         public async Task<IActionResult> UpdateUser(int userId, [FromBody] UpdateUserRequest request)
         {

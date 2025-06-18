@@ -9,7 +9,11 @@
         public string PhoneNumber { get; set; }
         public string PasswordHash { get; set; }
         public string Role { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } // Now nullable
+        public bool IsEmailVerified { get; set; } = false;
+        public string EmailVerificationToken { get; set; }
+        public DateTime? EmailVerificationTokenExpiry { get; set; }
+        public string Status { get; set; } = "Pending"; // Pending, Active
 
         public virtual Company Company { get; set; }
     }

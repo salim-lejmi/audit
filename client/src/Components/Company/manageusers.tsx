@@ -224,8 +224,10 @@ const ManageUsers: React.FC = () => {
                         {user.role}
                       </span>
                     </td>
-                    <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td className="actions-cell">
+<td>
+  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 
+   <span className="status-pending">Email Verification Pending</span>}
+</td>                    <td className="actions-cell">
                       <button 
                         className="action-btn edit"
                         onClick={() => openEditModal(user)}

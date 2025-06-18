@@ -17,6 +17,7 @@ import UserDashboard from "./Components/Company/UserDashboard";
 import StatisticsPage from './Components/Company/StatisticsPage';
 import RevueDeDirectionPage from './Components/Revue/RevueDeDirectionPage';
 import RevueDetailPage from './Components/Revue/RevueDetailPage';
+import EmailVerification from './Components/Authentification/EmailVerification';
 
 const AppRoutes = () => {
   return (
@@ -24,7 +25,7 @@ const AppRoutes = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Auth />} />
-
+<Route path="/verify-email" element={<EmailVerification />} />
         {/* Super Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute role="SuperAdmin" />}>
           <Route path="dashboard" element={<SuperAdminDashboard />} />
