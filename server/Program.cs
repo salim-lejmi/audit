@@ -4,7 +4,6 @@ using server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add session services
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -13,13 +12,12 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Add controllers
 builder.Services.AddControllers();
 
-// Register Email Service
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
-// Add CORS services
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>

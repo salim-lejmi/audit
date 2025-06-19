@@ -39,8 +39,9 @@ public async Task<IActionResult> GetTexts(
 {
     var userId = HttpContext.Session.GetInt32("UserId");
     var companyId = HttpContext.Session.GetInt32("CompanyId");
+    var userRole = HttpContext.Session.GetString("UserRole");
     
-    if (!userId.HasValue || !companyId.HasValue)
+    if (!userId.HasValue)
     {
         return Unauthorized(new { message = "Not authenticated" });
     }
@@ -50,7 +51,17 @@ public async Task<IActionResult> GetTexts(
         .Include(t => t.DomainObject)
         .Include(t => t.ThemeObject)
         .Include(t => t.SubThemeObject)
-        .Where(t => t.CompanyId == companyId.Value);
+        .Include(t => t.Company); // Add company include for Super Admin
+
+    // Filter by company only if not Super Admin
+    if (userRole != "SuperAdmin")
+    {
+        if (!companyId.HasValue)
+        {
+            return Unauthorized(new { message = "Not authenticated" });
+        }
+        query = query.Where(t => t.CompanyId == companyId.Value);
+    }
 
     // Apply your existing filters...
     if (domainId.HasValue)
@@ -93,13 +104,16 @@ public async Task<IActionResult> GetTexts(
             domain = t.DomainObject != null ? t.DomainObject.Name : "",
             theme = t.ThemeObject != null ? t.ThemeObject.Name : "",
             subTheme = t.SubThemeObject != null ? t.SubThemeObject.Name : "",
-            reference = t.Reference ?? "", // Ensure reference is never null
+            reference = t.Reference ?? "",
             nature = t.Nature,
             publicationYear = t.PublicationYear,
             status = t.Status,
             isConsulted = t.IsConsulted,
             createdAt = t.CreatedAt,
-            createdBy = t.CreatedBy != null ? t.CreatedBy.Name : null
+            createdBy = t.CreatedBy != null ? t.CreatedBy.Name : null,
+            // Include company information for Super Admin
+            companyId = t.CompanyId,
+            companyName = t.Company != null ? t.Company.CompanyName : ""
         })
         .ToListAsync();
 
@@ -110,8 +124,7 @@ public async Task<IActionResult> GetTexts(
         totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
         currentPage = page
     });
-}
-            [HttpGet("domains")]
+}            [HttpGet("domains")]
             public async Task<IActionResult> GetDomains()
             {
                 var userId = HttpContext.Session.GetInt32("UserId");

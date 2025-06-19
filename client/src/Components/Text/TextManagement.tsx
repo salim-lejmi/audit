@@ -17,7 +17,10 @@ interface Text {
   isConsulted: boolean;
   createdAt: string;
   createdBy: string;
+  companyId?: number; 
+  companyName?: string;
 }
+
 
 interface TextFilters {
   domainId: number | null;
@@ -383,56 +386,56 @@ const TextManagement: React.FC = () => {
         ) : (
           <>
             <table className="texts-table">
-              <thead>
-                <tr>
-                  <th>Domain</th>
-                  <th>Theme</th>
-                  <th>Reference</th>
-                  <th>Nature</th>
-                  <th>Year</th>
-                  <th>Status</th>
-                  <th>Created By</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {texts.map((text) => (
-                  <tr key={text.textId} className={text.isConsulted ? 'consulted' : ''}>
-                    <td>{text.domain}</td>
-                    <td>{text.theme}</td>
-                    <td>{text.reference}</td>
-                    <td>{text.nature}</td>
-                    <td>{text.publicationYear}</td>
-                    <td>
-                      <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                        {text.status}
-                      </span>
-                    </td>
-                    <td>{text.createdBy}</td>
-                    <td className="actions-cell">
-                      <button 
-                        className="btn-view" 
-                        onClick={() => openTextDetail(text.textId)}
-                        title="View text details"
-                      >
-                        Consult
-                      </button>
-                      
-                      {/* Only show Delete button for SuperAdmin */}
-                      {userRole === 'SuperAdmin' && (
-                        <button 
-                          className="btn-delete" 
-                          onClick={() => handleDeleteText(text.textId)}
-                          title="Delete text"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+             <thead>
+  <tr>
+    {userRole === 'SuperAdmin' && <th>Company</th>}
+    <th>Domain</th>
+    <th>Theme</th>
+    <th>Reference</th>
+    <th>Nature</th>
+    <th>Year</th>
+    <th>Status</th>
+    <th>Created By</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+<tbody>
+  {texts.map((text) => (
+    <tr key={text.textId} className={text.isConsulted ? 'consulted' : ''}>
+      {userRole === 'SuperAdmin' && <td>{text.companyName}</td>}
+      <td>{text.domain}</td>
+      <td>{text.theme}</td>
+      <td>{text.reference}</td>
+      <td>{text.nature}</td>
+      <td>{text.publicationYear}</td>
+      <td>
+        <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
+          {text.status}
+        </span>
+      </td>
+      <td>{text.createdBy}</td>
+      <td className="actions-cell">
+        <button 
+          className="btn-view" 
+          onClick={() => openTextDetail(text.textId)}
+          title="View text details"
+        >
+          Consult
+        </button>
+        
+        {userRole === 'SuperAdmin' && (
+          <button 
+            className="btn-delete" 
+            onClick={() => handleDeleteText(text.textId)}
+            title="Delete text"
+          >
+            Delete
+          </button>
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>            </table>
             
             {/* Pagination */}
             <div className="pagination">

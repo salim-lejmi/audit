@@ -29,7 +29,7 @@ namespace server.Data
         public DbSet<RevueRequirement> RevueRequirements { get; set; }
         public DbSet<RevueAction> RevueActions { get; set; }
         public DbSet<RevueStakeholder> RevueStakeholders { get; set; }
-
+        public DbSet<Notification> Notifications { get; set; }
         private static readonly DateTime SeedCreatedAt = new DateTime(2025, 3, 10, 1, 2, 0, DateTimeKind.Utc);
         private const string AdminPasswordHash = "$2b$12$ovPPLXG.u1usgak7T7fnAeJEZjgdCOJ4GgIEpL1bM9QAbdUXNDib2";
 

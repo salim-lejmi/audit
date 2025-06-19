@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using server.Data;
 using server.Models;
+using server.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +17,14 @@ namespace server.Controllers
     {
         private readonly AuditDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly INotificationService _notificationService;
 
-        public ActionPlanController(AuditDbContext context, IWebHostEnvironment environment)
+        public ActionPlanController(AuditDbContext context, IWebHostEnvironment environment, INotificationService notificationService)
         {
             _context = context;
             _environment = environment;
+            _notificationService = notificationService;
+
         }
 
         [HttpGet]
@@ -287,13 +291,25 @@ namespace server.Controllers
                 Progress = request.Progress,
                 Effectiveness = request.Effectiveness,
                 Status = request.Status ?? "active",
-                CompanyId = companyId.Value, // Set company ID
+                CompanyId = companyId.Value,
                 CreatedAt = DateTime.Now,
                 CreatedById = userId.Value
             };
 
             _context.Actions.Add(action);
             await _context.SaveChangesAsync();
+
+            // Create notification if action is assigned to someone else
+            if (request.ResponsibleId.HasValue && request.ResponsibleId.Value != userId.Value)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    request.ResponsibleId.Value,
+                    "New Action Assigned",
+                    $"You have been assigned a new action: {request.Description}",
+                    "ActionAssigned",
+                    action.ActionId
+                );
+            }
 
             return CreatedAtAction(nameof(GetAction), new { actionId = action.ActionId },
                 new { actionId = action.ActionId, message = "Action created successfully" });
@@ -313,6 +329,7 @@ namespace server.Controllers
 
             // Find action and ensure it belongs to the user's company
             var action = await _context.Actions
+                .Include(a => a.CreatedBy)
                 .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
                 
             if (action == null)
@@ -328,6 +345,10 @@ namespace server.Controllers
             {
                 return StatusCode(403, new { message = "You don't have permission to update this action" });
             }
+
+            var oldStatus = action.Status;
+            var wasAssignedToSomeoneElse = false;
+            var oldResponsibleId = action.ResponsibleId;
 
             // If user is not SubscriptionManager, they can only update progress and effectiveness
             if (currentUser.Role != "SubscriptionManager")
@@ -362,6 +383,12 @@ namespace server.Controllers
                         {
                             return StatusCode(403, new { message = "You can only assign actions to users in your company" });
                         }
+
+                        // Check if action is being assigned to someone else
+                        if (request.ResponsibleId.Value != oldResponsibleId && request.ResponsibleId.Value != userId.Value)
+                        {
+                            wasAssignedToSomeoneElse = true;
+                        }
                     }
                     action.ResponsibleId = request.ResponsibleId;
                 }
@@ -382,6 +409,32 @@ namespace server.Controllers
             action.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
+
+            // Create notifications based on what changed
+            
+            // Notification for action assignment (only if SubscriptionManager assigns to someone else)
+            if (wasAssignedToSomeoneElse && action.ResponsibleId.HasValue)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    action.ResponsibleId.Value,
+                    "Action Assigned to You",
+                    $"You have been assigned an action: {action.Description}",
+                    "ActionAssigned",
+                    action.ActionId
+                );
+            }
+
+            // Notification for action completion (when responsible user marks as completed)
+            if (oldStatus != "completed" && action.Status == "completed" && action.CreatedById != userId.Value)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    action.CreatedById,
+                    "Action Completed",
+                    $"Action has been completed: {action.Description}",
+                    "ActionCompleted",
+                    action.ActionId
+                );
+            }
 
             return Ok(new { message = "Action updated successfully" });
         }
@@ -520,7 +573,7 @@ namespace server.Controllers
             return Ok(exportData);
         }
 
-        public class CreateActionRequest
+       public class CreateActionRequest
         {
             public int TextId { get; set; }
             public int? RequirementId { get; set; }
@@ -530,8 +583,8 @@ namespace server.Controllers
             public int Progress { get; set; } = 0;
             public string Effectiveness { get; set; }
             public string Status { get; set; } = "active";
-        }
-
+        }       
+        
         public class UpdateActionRequest
         {
             public string Description { get; set; }
