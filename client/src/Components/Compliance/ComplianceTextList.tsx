@@ -9,7 +9,7 @@ import {
 import axios from 'axios';
 import { 
   TextListItem, Domain, Theme, SubTheme, FilterState, RequirementStatus 
-} from './types';
+} from '../shared/types';
 
 interface ComplianceTextListProps {
   onSelectText: (text: TextListItem) => void;

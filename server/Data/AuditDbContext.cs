@@ -30,6 +30,8 @@ namespace server.Data
         public DbSet<RevueAction> RevueActions { get; set; }
         public DbSet<RevueStakeholder> RevueStakeholders { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+
         private static readonly DateTime SeedCreatedAt = new DateTime(2025, 3, 10, 1, 2, 0, DateTimeKind.Utc);
         private const string AdminPasswordHash = "$2b$12$ovPPLXG.u1usgak7T7fnAeJEZjgdCOJ4GgIEpL1bM9QAbdUXNDib2";
 
@@ -211,7 +213,13 @@ namespace server.Data
                 .WithMany()
                 .HasForeignKey(r => r.CreatedById)
                 .OnDelete(DeleteBehavior.NoAction);
-
+modelBuilder.Entity<SubscriptionPlan>(entity =>
+{
+    entity.Property(e => e.IsActive).HasDefaultValue(true);
+    entity.Property(e => e.Discount).HasDefaultValue(0);
+    entity.Property(e => e.TaxRate).HasDefaultValue(20);
+    entity.Property(e => e.Features).IsRequired(false);
+});
             // Seed data - Updated to include new properties
             modelBuilder.Entity<User>().HasData(
                 new User

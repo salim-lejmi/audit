@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Typography, Box, Paper, Tabs, Tab, useTheme, useMediaQuery } from '@mui/material';
 import ComplianceTextList from './ComplianceTextList';
 import ComplianceRequirementEvaluation from './ComplianceRequirementEvaluation';
-import { TextListItem } from './types';
+import { TextListItem } from '../shared/types';
 import '../../styles/compliance.css';
 
 const ComplianceEvaluation: React.FC = () => {

@@ -12,7 +12,7 @@ import {
   PictureAsPdf, Save, Print, ArrowForward
 } from '@mui/icons-material';
 import axios from 'axios';
-import { TextWithRequirements, ObservationDialogState, MonitoringDialogState, FileDialogState } from './types';
+import { TextWithRequirements, ObservationDialogState, MonitoringDialogState, FileDialogState } from '../shared/types';
 import { useNavigate } from 'react-router-dom';
 
 interface ComplianceRequirementEvaluationProps {

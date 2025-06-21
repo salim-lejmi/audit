@@ -122,11 +122,11 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
         </div>
 
         <div className="navbar-right">
-          {/* Dashboard link */}
+          {/* Quotes link - replacing dashboard */}
           <div className="nav-item">
-            <Link to={`${getBasePath()}/dashboard`} className="nav-button">
-              <i className="fas fa-tachometer-alt"></i>
-              <span className="nav-label">Dashboard</span>
+            <Link to={`${getBasePath()}/quotes`} className="nav-button">
+              <i className="fas fa-file-invoice-dollar"></i>
+              <span className="nav-label">Quotes</span>
             </Link>
           </div>
 
@@ -246,10 +246,10 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
 
           {/* History button */}
           <div className="nav-item">
-            <Link to={`${getBasePath()}/history`} className="nav-button">
-              <i className="fas fa-history"></i>
-              <span className="nav-label">History</span>
-            </Link>
+              <Link to={`${getBasePath()}/history`} className="nav-button">
+                  <i className="fas fa-history"></i>
+                  <span className="nav-label">History</span>
+              </Link>
           </div>
 
           {/* Account dropdown */}

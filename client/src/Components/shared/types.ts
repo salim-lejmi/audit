@@ -192,3 +192,87 @@ export interface StatisticsData {
   actionProgressGroups: ActionProgressGroup[];
   actionsByResponsible: ActionByResponsible[];
 }
+export interface QuoteItem {
+  quoteItemId: number;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  taxRate: number;
+  totalPrice: number;
+  taxAmount: number;
+}
+
+export interface QuoteItemRequest {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  taxRate: number;
+}
+
+export interface Quote {
+  quoteId: number;
+  quoteNumber: string;
+  clientName: string;
+  createdAt: string;
+  validUntil: string;
+  totalAmount: number;
+  taxAmount: number;
+  status: 'Pending' | 'Accepted' | 'Rejected' | 'Expired';
+  emailSent: boolean;
+  itemCount: number;
+}
+
+export interface QuoteDetail {
+  quoteId: number;
+  quoteNumber: string;
+  client: {
+    userId: number;
+    name: string;
+    email: string;
+    phoneNumber: string;
+  };
+  createdBy: {
+    userId: number;
+    name: string;
+  };
+  createdAt: string;
+  validUntil: string;
+  totalAmount: number;
+  taxAmount: number;
+  status: 'Pending' | 'Accepted' | 'Rejected' | 'Expired';
+  notes: string;
+  emailSent: boolean;
+  items: QuoteItem[];
+}
+
+export interface CreateQuoteRequest {
+  clientUserId: number;
+  validUntil: string;
+  notes: string;
+  sendEmail: boolean;
+  items: QuoteItemRequest[];
+}
+
+export interface UpdateQuoteRequest {
+  clientUserId?: number;
+  validUntil?: string;
+  notes?: string;
+  status?: 'Pending' | 'Accepted' | 'Rejected' | 'Expired';
+  sendEmail: boolean;
+  items?: QuoteItemRequest[];
+}
+
+export interface Client {
+  userId: number;
+  name: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface QuoteFilterRequest {
+  clientUserId?: number;
+  keyword?: string;
+  status?: string;
+  page: number;
+  pageSize: number;
+}

@@ -16,7 +16,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Action, Domain, Theme, SubTheme, User, ActionDialogState, TextRequirement
-} from './types';
+} from '../shared/types';
 import dayjs from 'dayjs';
 import '../../styles/compliance.css';
 

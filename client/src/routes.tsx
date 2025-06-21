@@ -18,6 +18,8 @@ import StatisticsPage from './Components/Company/StatisticsPage';
 import RevueDeDirectionPage from './Components/Revue/RevueDeDirectionPage';
 import RevueDetailPage from './Components/Revue/RevueDetailPage';
 import EmailVerification from './Components/Authentification/EmailVerification';
+import HistoryPage from './Components/Company/history';
+import QuotesPage from './Components/Quotes/QuotesPage';
 
 const AppRoutes = () => {
   return (
@@ -25,7 +27,8 @@ const AppRoutes = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Auth />} />
-<Route path="/verify-email" element={<EmailVerification />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
+        
         {/* Super Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute role="SuperAdmin" />}>
           <Route path="dashboard" element={<SuperAdminDashboard />} />
@@ -36,10 +39,12 @@ const AppRoutes = () => {
           <Route path="texts" element={<TextManagement />} />
           <Route path="taxonomy" element={<TaxonomyManager />} />
           <Route path="profile" element={<ProfilePage />} />
+  <Route path="quotes" element={<QuotesPage />} />
         </Route>
 
         {/* Subscription Manager Routes */}
         <Route path="/company" element={<ProtectedRoute role="SubscriptionManager" />}>
+          <Route path="history" element={<HistoryPage />} />
           <Route path="dashboard" element={<SubscriptionManagerDashboard />} />
           <Route path="users" element={<ManageUsers/>} />
           <Route path="roles" element={<ManageRoles/>} />
@@ -51,11 +56,12 @@ const AppRoutes = () => {
           <Route path="statistics" element={<StatisticsPage />} />
           <Route path="revue" element={<RevueDeDirectionPage />} />
           <Route path="revue/:id" element={<RevueDetailPage />} />
-          <Route path="revue/:id/edit" element={<RevueDetailPage />} /> {/* Added for Modify */}
+          <Route path="revue/:id/edit" element={<RevueDetailPage />} />
         </Route>
 
         {/* User Routes (for roles like 'User', 'Auditor', 'Manager') */}
         <Route path="/user" element={<ProtectedRoute role="User" />}>
+          <Route path="history" element={<HistoryPage />} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="compliance" element={<ComplianceEvaluation />} />
           <Route path="statistics" element={<StatisticsPage />} />
@@ -63,7 +69,7 @@ const AppRoutes = () => {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="revue" element={<RevueDeDirectionPage />} />
           <Route path="revue/:id" element={<RevueDetailPage />} />
-          <Route path="revue/:id/edit" element={<RevueDetailPage />} /> {/* Added for Modify */}
+          <Route path="revue/:id/edit" element={<RevueDetailPage />} />
         </Route>
 
         {/* Fallback */}

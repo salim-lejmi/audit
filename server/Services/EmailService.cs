@@ -54,7 +54,29 @@ namespace server.Services
             await SendEmailAsync(email, subject, body);
         }
 
-        private async Task SendEmailAsync(string email, string subject, string body)
+        public async Task SendQuoteEmailAsync(string to, string clientName, string quoteNumber, string message)
+        {
+            string subject = $"Quote #{quoteNumber} - Prevention Plus";
+            
+            string htmlContent = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <div style='background-color: #4c75a0; padding: 20px; text-align: center; color: white;'>
+                    <h1>Prevention Plus</h1>
+                </div>
+                <div style='padding: 20px; background-color: #f5f5f5; border: 1px solid #ddd;'>
+                    <p>Hello {clientName},</p>
+                    <p>{message}</p>
+                    <p>Quote Number: <strong>{quoteNumber}</strong></p>
+                    <p>Please contact us if you have any questions regarding this quote.</p>
+                    <p>Best regards,</p>
+                    <p>Prevention Plus Team</p>
+                </div>
+            </div>";
+
+            await SendEmailAsync(to, subject, htmlContent);
+        }
+
+        public async Task SendEmailAsync(string email, string subject, string body)
         {
             try
             {
