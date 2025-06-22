@@ -16,7 +16,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 builder.Services.AddCors(options =>
 {

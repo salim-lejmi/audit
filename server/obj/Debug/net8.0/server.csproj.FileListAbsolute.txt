@@ -798,7 +798,6 @@ C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.IdentityModel.P
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.OpenApi.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Mono.TextTemplating.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
@@ -812,7 +811,6 @@ C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Composition.Runtim
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Composition.TypedParts.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Drawing.Common.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Formats.Asn1.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.IO.Pipelines.dll
@@ -821,10 +819,8 @@ C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Runtime.Caching.dl
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Security.Cryptography.Pkcs.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Security.Cryptography.Xml.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Security.Permissions.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Text.Encodings.Web.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Text.Json.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\System.Windows.Extensions.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
@@ -896,14 +892,9 @@ C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win-arm\native\M
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
-C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.csproj.AssemblyReference.cache
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\salim\Documents\audit\server\obj\Debug\net8.0\server.AssemblyInfoInputs.cache
@@ -945,3 +936,4 @@ C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Microsoft.DotNet.Platform
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Newtonsoft.Json.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\BouncyCastle.Cryptography.dll
 C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\itext.bouncy-castle-adapter.dll
+C:\Users\salim\Documents\audit\server\bin\Debug\net8.0\Stripe.net.dll

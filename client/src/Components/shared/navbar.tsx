@@ -123,13 +123,24 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
 
         <div className="navbar-right">
           {/* Quotes link - replacing dashboard */}
+                    {(userRole === 'SuperAdmin' ) && (
+
           <div className="nav-item">
             <Link to={`${getBasePath()}/quotes`} className="nav-button">
               <i className="fas fa-file-invoice-dollar"></i>
               <span className="nav-label">Quotes</span>
             </Link>
           </div>
+ )}
+      {(userRole === 'SubscriptionManager' ) && (
 
+          <div className="nav-item">
+            <Link to={`${getBasePath()}/payments`} className="nav-button">
+              <i className="fas fa-credit-card"></i>
+              <span className="nav-label">payment</span>
+            </Link>
+          </div>
+ )}
           {/* Text Management link */}
           {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
             <div className="nav-item">

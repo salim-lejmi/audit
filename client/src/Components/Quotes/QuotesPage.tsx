@@ -53,9 +53,6 @@ const QuotesPage: React.FC = () => {
     'Action Plans',
     'Management Review (Revue)',
     'Statistics & Analytics',
-    'Email Support',
-    'Priority Support',
-    'Custom Integrations'
   ];
 
   useEffect(() => {

@@ -162,6 +162,12 @@ public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request
         return BadRequest(new { message = "Invalid company ID" });
     }
 
+    // Check subscription limits
+    var subscriptionService = HttpContext.RequestServices.GetRequiredService<ISubscriptionService>();
+    if (!await subscriptionService.CanCreateUser(companyId.Value))
+    {
+        return BadRequest(new { message = "User limit reached for your subscription plan. Please upgrade to add more users." });
+    }
     // Validate request
     if (string.IsNullOrEmpty(request.Name) ||
         string.IsNullOrEmpty(request.Email) ||

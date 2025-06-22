@@ -21,16 +21,25 @@ namespace server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSubscriptionPlans()
         {
-            // Check if user is SuperAdmin
             var userRole = HttpContext.Session.GetString("UserRole");
-            if (userRole != "SuperAdmin")
+            
+            // SuperAdmin gets all plans, SubscriptionManager gets only active plans
+            if (userRole != "SuperAdmin" && userRole != "SubscriptionManager")
             {
-                return StatusCode(403, new { message = "Access denied. Super Admin only." });
+                return StatusCode(403, new { message = "Access denied. Super Admin or Subscription Manager only." });
             }
 
             try
             {
-                var plans = await _context.SubscriptionPlans
+                var query = _context.SubscriptionPlans.AsQueryable();
+                
+                // If SubscriptionManager, only show active plans
+                if (userRole == "SubscriptionManager")
+                {
+                    query = query.Where(p => p.IsActive);
+                }
+
+                var plans = await query
                     .OrderByDescending(p => p.CreatedAt)
                     .ToListAsync();
 
