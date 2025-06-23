@@ -293,6 +293,169 @@ namespace server.Controllers
 
             return Ok(new { message = "User deleted successfully" });
         }
+[HttpGet("companies/detailed")]
+public async Task<IActionResult> GetAllCompaniesDetailed()
+{
+    // Check if user is a SuperAdmin
+    var userRole = HttpContext.Session.GetString("UserRole");
+    if (userRole != "SuperAdmin")
+    {
+        return Forbid();
+    }
+
+    // Get all companies with detailed information
+    var companies = await _context.Companies
+        .Select(c => new
+        {
+            companyId = c.CompanyId,
+            companyName = c.CompanyName,
+            industry = c.Industry,
+            status = c.Status,
+            createdAt = c.CreatedAt,
+            isEmailVerified = c.IsEmailVerified,
+            totalUsers = c.Users.Count(),
+            totalTexts = c.Texts.Count(),
+            totalActions = c.Actions.Count(),
+            subscriptionManagerName = c.Users
+                .Where(u => u.Role == "SubscriptionManager")
+                .Select(u => u.Name)
+                .FirstOrDefault(),
+            subscriptionManagerEmail = c.Users
+                .Where(u => u.Role == "SubscriptionManager")
+                .Select(u => u.Email)
+                .FirstOrDefault()
+        })
+        .OrderByDescending(c => c.createdAt)
+        .ToListAsync();
+
+    return Ok(companies);
+}
+
+[HttpPut("companies/{companyId}")]
+public async Task<IActionResult> UpdateCompany(int companyId, [FromBody] UpdateCompanyRequest request)
+{
+    // Check if user is a SuperAdmin
+    var userRole = HttpContext.Session.GetString("UserRole");
+    if (userRole != "SuperAdmin")
+    {
+        return Forbid();
+    }
+
+    // Find company
+    var company = await _context.Companies.FindAsync(companyId);
+    if (company == null)
+    {
+        return NotFound(new { message = "Company not found" });
+    }
+
+    // Validate request
+    if (string.IsNullOrEmpty(request.CompanyName) || string.IsNullOrEmpty(request.Industry))
+    {
+        return BadRequest(new { message = "Company name and industry are required" });
+    }
+
+    // Check if status is valid
+    var validStatuses = new[] { "Pending", "Approved", "Rejected" };
+    if (!string.IsNullOrEmpty(request.Status) && !validStatuses.Contains(request.Status))
+    {
+        return BadRequest(new { message = "Invalid status" });
+    }
+
+    try
+    {
+        // Update company
+        company.CompanyName = request.CompanyName.Trim();
+        company.Industry = request.Industry.Trim();
+        
+        if (!string.IsNullOrEmpty(request.Status))
+        {
+            company.Status = request.Status;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            companyId = company.CompanyId,
+            companyName = company.CompanyName,
+            industry = company.Industry,
+            status = company.Status,
+            createdAt = company.CreatedAt,
+            message = "Company updated successfully"
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Failed to update company" });
+    }
+}
+
+        [HttpDelete("companies/{companyId}")]
+        public async Task<IActionResult> DeleteCompany(int companyId)
+        {
+            try
+            {
+                // Check if user is a SuperAdmin
+                var userRole = HttpContext.Session.GetString("UserRole");
+                if (userRole != "SuperAdmin")
+                {
+                    return Forbid();
+                }
+
+                // Find company
+                var company = await _context.Companies.FindAsync(companyId);
+                if (company == null)
+                {
+                    return NotFound(new { message = "Company not found" });
+                }
+
+                // Get counts for all related data that will be deleted
+                var userCount = await _context.Users.CountAsync(u => u.CompanyId == companyId);
+                var textCount = await _context.Texts.CountAsync(t => t.CompanyId == companyId);
+                var actionCount = await _context.Actions.CountAsync(a => a.CompanyId == companyId);
+                var subscriptionCount = await _context.CompanySubscriptions.CountAsync(cs => cs.CompanyId == companyId);
+                var paymentCount = await _context.Payments.CountAsync(p => p.CompanyId == companyId);
+
+                // Count compliance evaluations (through users)
+                var evaluationCount = await _context.ComplianceEvaluations
+                    .Where(ce => _context.Users.Any(u => u.UserId == ce.UserId && u.CompanyId == companyId))
+                    .CountAsync();
+
+                // Count revues (through users who created them)
+                var revueCount = await _context.RevueDeDirections
+                    .Where(r => _context.Users.Any(u => u.UserId == r.CreatedById && u.CompanyId == companyId))
+                    .CountAsync();
+
+                // Delete company (this will cascade to delete all related data)
+                _context.Companies.Remove(company);
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Company deleted successfully",
+                    deletedCounts = new
+                    {
+                        users = userCount,
+                        texts = textCount,
+                        actions = actionCount,
+                        subscriptions = subscriptionCount,
+                        payments = paymentCount,
+                        evaluations = evaluationCount,
+                        revues = revueCount
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while deleting the company", details = ex.Message });
+            }
+        }
+public class UpdateCompanyRequest
+{
+    public string CompanyName { get; set; }
+    public string Industry { get; set; }
+    public string Status { get; set; }
+}
 
         public class UpdateUserRequest
         {

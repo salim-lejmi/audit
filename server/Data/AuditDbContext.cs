@@ -37,240 +37,240 @@
             private static readonly DateTime SeedCreatedAt = new DateTime(2025, 3, 10, 1, 2, 0, DateTimeKind.Utc);
             private const string AdminPasswordHash = "$2b$12$ovPPLXG.u1usgak7T7fnAeJEZjgdCOJ4GgIEpL1bM9QAbdUXNDib2";
 
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
-            {
-                // Configure the new properties as nullable or with default values
-                modelBuilder.Entity<User>(entity =>
-                {
-                    entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
-                    entity.Property(e => e.Status).HasDefaultValue("Pending");
-                    entity.Property(e => e.EmailVerificationToken).IsRequired(false);
-                    entity.Property(e => e.EmailVerificationTokenExpiry).IsRequired(false);
-                    entity.Property(e => e.CreatedAt).IsRequired(false);
-                });
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    // Configure the new properties as nullable or with default values
+    modelBuilder.Entity<User>(entity =>
+    {
+        entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
+        entity.Property(e => e.Status).HasDefaultValue("Pending");
+        entity.Property(e => e.EmailVerificationToken).IsRequired(false);
+        entity.Property(e => e.EmailVerificationTokenExpiry).IsRequired(false);
+        entity.Property(e => e.CreatedAt).IsRequired(false);
+    });
 
-                modelBuilder.Entity<Company>(entity =>
-                {
-                    entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
-                    entity.Property(e => e.Status).HasDefaultValue("Pending");
-                });
+    modelBuilder.Entity<Company>(entity =>
+    {
+        entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
+        entity.Property(e => e.Status).HasDefaultValue("Pending");
+    });
 
-                // ONLY these relationships can cascade - everything else is NoAction
+    // ALL COMPANY RELATIONSHIPS WITH CASCADE DELETE
+    
+    // Company → Users (CASCADE)
+    modelBuilder.Entity<User>()
+        .HasOne(u => u.Company)
+        .WithMany(c => c.Users)
+        .HasForeignKey(u => u.CompanyId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                // Company → Users (CASCADE)
-                modelBuilder.Entity<User>()
-                    .HasOne(u => u.Company)
-                    .WithMany(c => c.Users)
-                    .HasForeignKey(u => u.CompanyId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    // Company → Texts (CASCADE)
+    modelBuilder.Entity<Text>()
+        .HasOne(t => t.Company)
+        .WithMany(c => c.Texts)
+        .HasForeignKey(t => t.CompanyId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                // Company → Texts (CASCADE)
-                modelBuilder.Entity<Text>()
-                    .HasOne(t => t.Company)
-                    .WithMany(c => c.Texts)
-                    .HasForeignKey(t => t.CompanyId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    // Company → Actions (CASCADE) - CHANGED FROM NOACTION TO CASCADE
+    modelBuilder.Entity<Models.Action>()
+        .HasOne(a => a.Company)
+        .WithMany(c => c.Actions)
+        .HasForeignKey(a => a.CompanyId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                // Text → TextRequirements (CASCADE)
-                modelBuilder.Entity<TextRequirement>()
-                    .HasOne(tr => tr.Text)
-                    .WithMany(t => t.Requirements)
-                    .HasForeignKey(tr => tr.TextId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    // Company → CompanySubscriptions (CASCADE) - CHANGED FROM NOACTION TO CASCADE
+    modelBuilder.Entity<CompanySubscription>()
+        .HasOne(cs => cs.Company)
+        .WithMany()
+        .HasForeignKey(cs => cs.CompanyId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                // Evaluation hierarchy cascades
-                modelBuilder.Entity<Observation>()
-                    .HasOne(o => o.Evaluation)
-                    .WithMany(ce => ce.Observations)
-                    .HasForeignKey(o => o.EvaluationId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    // Company → Payments (CASCADE) - CHANGED FROM NOACTION TO CASCADE
+    modelBuilder.Entity<Payment>()
+        .HasOne(p => p.Company)
+        .WithMany()
+        .HasForeignKey(p => p.CompanyId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                modelBuilder.Entity<MonitoringParameter>()
-                    .HasOne(mp => mp.Evaluation)
-                    .WithMany(ce => ce.MonitoringParameters)
-                    .HasForeignKey(mp => mp.EvaluationId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    // Text → TextRequirements (CASCADE)
+    modelBuilder.Entity<TextRequirement>()
+        .HasOne(tr => tr.Text)
+        .WithMany(t => t.Requirements)
+        .HasForeignKey(tr => tr.TextId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                modelBuilder.Entity<EvaluationAttachment>()
-                    .HasOne(ea => ea.Evaluation)
-                    .WithMany(ce => ce.Attachments)
-                    .HasForeignKey(ea => ea.EvaluationId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    // Evaluation hierarchy cascades
+    modelBuilder.Entity<Observation>()
+        .HasOne(o => o.Evaluation)
+        .WithMany(ce => ce.Observations)
+        .HasForeignKey(o => o.EvaluationId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                // EVERYTHING ELSE IS NO ACTION - NO EXCEPTIONS!
+    modelBuilder.Entity<MonitoringParameter>()
+        .HasOne(mp => mp.Evaluation)
+        .WithMany(ce => ce.MonitoringParameters)
+        .HasForeignKey(mp => mp.EvaluationId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                // All Action relationships = NO ACTION
-                modelBuilder.Entity<Models.Action>()
-                    .HasOne(a => a.Company)
-                    .WithMany(c => c.Actions)
-                    .HasForeignKey(a => a.CompanyId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<EvaluationAttachment>()
+        .HasOne(ea => ea.Evaluation)
+        .WithMany(ce => ce.Attachments)
+        .HasForeignKey(ea => ea.EvaluationId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                modelBuilder.Entity<Models.Action>()
-                    .HasOne(a => a.Text)
-                    .WithMany()
-                    .HasForeignKey(a => a.TextId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    // RevueDeDirection → Related entities (CASCADE)
+    modelBuilder.Entity<RevueLegalText>()
+        .HasOne(rlt => rlt.Revue)
+        .WithMany(r => r.LegalTexts)
+        .HasForeignKey(rlt => rlt.RevueId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                modelBuilder.Entity<Models.Action>()
-                    .HasOne(a => a.Requirement)
-                    .WithMany()
-                    .HasForeignKey(a => a.RequirementId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<RevueRequirement>()
+        .HasOne(rr => rr.Revue)
+        .WithMany(r => r.Requirements)
+        .HasForeignKey(rr => rr.RevueId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                modelBuilder.Entity<Models.Action>()
-                    .HasOne(a => a.Responsible)
-                    .WithMany()
-                    .HasForeignKey(a => a.ResponsibleId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<RevueAction>()
+        .HasOne(ra => ra.Revue)
+        .WithMany(r => r.Actions)
+        .HasForeignKey(ra => ra.RevueId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                modelBuilder.Entity<Models.Action>()
-                    .HasOne(a => a.CreatedBy)
-                    .WithMany()
-                    .HasForeignKey(a => a.CreatedById)
-                    .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<RevueStakeholder>()
+        .HasOne(rs => rs.Revue)
+        .WithMany(r => r.Stakeholders)
+        .HasForeignKey(rs => rs.RevueId)
+        .OnDelete(DeleteBehavior.Cascade);
 
-                // All other relationships = NO ACTION
-                modelBuilder.Entity<Text>()
-                    .HasOne(t => t.CreatedBy)
-                    .WithMany()
-                    .HasForeignKey(t => t.CreatedById)
-                    .OnDelete(DeleteBehavior.NoAction);
+    // ALL OTHER RELATIONSHIPS = NO ACTION
 
-                modelBuilder.Entity<Domain>()
-                    .HasMany(d => d.Themes)
-                    .WithOne(t => t.Domain)
-                    .HasForeignKey(t => t.DomainId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    // All other Action relationships = NO ACTION
+    modelBuilder.Entity<Models.Action>()
+        .HasOne(a => a.Text)
+        .WithMany()
+        .HasForeignKey(a => a.TextId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                modelBuilder.Entity<Theme>()
-                    .HasMany(t => t.SubThemes)
-                    .WithOne(s => s.Theme)
-                    .HasForeignKey(s => s.ThemeId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<Models.Action>()
+        .HasOne(a => a.Requirement)
+        .WithMany()
+        .HasForeignKey(a => a.RequirementId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                modelBuilder.Entity<ComplianceEvaluation>()
-                    .HasOne(ce => ce.Text)
-                    .WithMany()
-                    .HasForeignKey(ce => ce.TextId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<Models.Action>()
+        .HasOne(a => a.Responsible)
+        .WithMany()
+        .HasForeignKey(a => a.ResponsibleId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                modelBuilder.Entity<ComplianceEvaluation>()
-                    .HasOne(ce => ce.Requirement)
-                    .WithMany()
-                    .HasForeignKey(ce => ce.RequirementId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<Models.Action>()
+        .HasOne(a => a.CreatedBy)
+        .WithMany()
+        .HasForeignKey(a => a.CreatedById)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                modelBuilder.Entity<ComplianceEvaluation>()
-                    .HasOne(ce => ce.EvaluatedBy)
-                    .WithMany()
-                    .HasForeignKey(ce => ce.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    // All other Text relationships = NO ACTION
+    modelBuilder.Entity<Text>()
+        .HasOne(t => t.CreatedBy)
+        .WithMany()
+        .HasForeignKey(t => t.CreatedById)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                // RevueDeDirection → RevueLegalText (CASCADE)
-                modelBuilder.Entity<RevueLegalText>()
-                    .HasOne(rlt => rlt.Revue)
-                    .WithMany(r => r.LegalTexts)
-                    .HasForeignKey(rlt => rlt.RevueId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    modelBuilder.Entity<Domain>()
+        .HasMany(d => d.Themes)
+        .WithOne(t => t.Domain)
+        .HasForeignKey(t => t.DomainId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                // RevueDeDirection → RevueRequirement (CASCADE)
-                modelBuilder.Entity<RevueRequirement>()
-                    .HasOne(rr => rr.Revue)
-                    .WithMany(r => r.Requirements)
-                    .HasForeignKey(rr => rr.RevueId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    modelBuilder.Entity<Theme>()
+        .HasMany(t => t.SubThemes)
+        .WithOne(s => s.Theme)
+        .HasForeignKey(s => s.ThemeId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                // RevueDeDirection → RevueAction (CASCADE)
-                modelBuilder.Entity<RevueAction>()
-                    .HasOne(ra => ra.Revue)
-                    .WithMany(r => r.Actions)
-                    .HasForeignKey(ra => ra.RevueId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    modelBuilder.Entity<ComplianceEvaluation>()
+        .HasOne(ce => ce.Text)
+        .WithMany()
+        .HasForeignKey(ce => ce.TextId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                // RevueDeDirection → RevueStakeholder (CASCADE)
-                modelBuilder.Entity<RevueStakeholder>()
-                    .HasOne(rs => rs.Revue)
-                    .WithMany(r => r.Stakeholders)
-                    .HasForeignKey(rs => rs.RevueId)
-                    .OnDelete(DeleteBehavior.Cascade);
+    modelBuilder.Entity<ComplianceEvaluation>()
+        .HasOne(ce => ce.Requirement)
+        .WithMany()
+        .HasForeignKey(ce => ce.RequirementId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                // RevueRequirement → TextRequirement (NO ACTION)
-                modelBuilder.Entity<RevueRequirement>()
-                    .HasOne(rr => rr.TextRequirement)
-                    .WithMany()
-                    .HasForeignKey(rr => rr.TextRequirementId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<ComplianceEvaluation>()
+        .HasOne(ce => ce.EvaluatedBy)
+        .WithMany()
+        .HasForeignKey(ce => ce.UserId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                // RevueLegalText → Text (NO ACTION)
-                modelBuilder.Entity<RevueLegalText>()
-                    .HasOne(rlt => rlt.Text)
-                    .WithMany()
-                    .HasForeignKey(rlt => rlt.TextId)
-                    .OnDelete(DeleteBehavior.NoAction);
+    // RevueRequirement → TextRequirement (NO ACTION)
+    modelBuilder.Entity<RevueRequirement>()
+        .HasOne(rr => rr.TextRequirement)
+        .WithMany()
+        .HasForeignKey(rr => rr.TextRequirementId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                // RevueDeDirection → User (NO ACTION for CreatedById)
-                modelBuilder.Entity<RevueDeDirection>()
-                    .HasOne(r => r.CreatedBy)
-                    .WithMany()
-                    .HasForeignKey(r => r.CreatedById)
-                    .OnDelete(DeleteBehavior.NoAction);
+    // RevueLegalText → Text (NO ACTION)
+    modelBuilder.Entity<RevueLegalText>()
+        .HasOne(rlt => rlt.Text)
+        .WithMany()
+        .HasForeignKey(rlt => rlt.TextId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                modelBuilder.Entity<SubscriptionPlan>(entity =>
-                {
-                    entity.Property(e => e.IsActive).HasDefaultValue(true);
-                    entity.Property(e => e.Discount).HasDefaultValue(0);
-                    entity.Property(e => e.TaxRate).HasDefaultValue(20);
-                    entity.Property(e => e.Features).IsRequired(false);
-                });
-    // Payment relationships
-        modelBuilder.Entity<Payment>()
-            .HasOne(p => p.Company)
-            .WithMany()
-            .HasForeignKey(p => p.CompanyId)
-            .OnDelete(DeleteBehavior.NoAction);
+    // RevueDeDirection → User (NO ACTION for CreatedById)
+    modelBuilder.Entity<RevueDeDirection>()
+        .HasOne(r => r.CreatedBy)
+        .WithMany()
+        .HasForeignKey(r => r.CreatedById)
+        .OnDelete(DeleteBehavior.NoAction);
 
-        modelBuilder.Entity<Payment>()
-            .HasOne(p => p.Plan)
-            .WithMany()
-            .HasForeignKey(p => p.PlanId)
-            .OnDelete(DeleteBehavior.NoAction);
+    // Subscription Plan relationships (NO ACTION)
+    modelBuilder.Entity<SubscriptionPlan>(entity =>
+    {
+        entity.Property(e => e.IsActive).HasDefaultValue(true);
+        entity.Property(e => e.Discount).HasDefaultValue(0);
+        entity.Property(e => e.TaxRate).HasDefaultValue(20);
+        entity.Property(e => e.Features).IsRequired(false);
+    });
 
-        // CompanySubscription relationships
-        modelBuilder.Entity<CompanySubscription>()
-            .HasOne(cs => cs.Company)
-            .WithMany()
-            .HasForeignKey(cs => cs.CompanyId)
-            .OnDelete(DeleteBehavior.NoAction);
+    modelBuilder.Entity<CompanySubscription>()
+        .HasOne(cs => cs.Plan)
+        .WithMany()
+        .HasForeignKey(cs => cs.PlanId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-        modelBuilder.Entity<CompanySubscription>()
-            .HasOne(cs => cs.Plan)
-            .WithMany()
-            .HasForeignKey(cs => cs.PlanId)
-            .OnDelete(DeleteBehavior.NoAction);
-                // Seed data - Updated to include new properties
-                modelBuilder.Entity<User>().HasData(
-                    new User
-                    {
-                        UserId = 1,
-                        Name = "Super Admin",
-                        Email = "admin@gmail.com",
-                        PasswordHash = AdminPasswordHash,
-                        Role = "SuperAdmin",
-                        PhoneNumber = "99999999",
-                        CreatedAt = SeedCreatedAt,
-                        IsEmailVerified = true,
-                        EmailVerificationToken = null,
-                        EmailVerificationTokenExpiry = null,
-                        Status = "Active"
-                    }
-                );
+    modelBuilder.Entity<Payment>()
+        .HasOne(p => p.Plan)
+        .WithMany()
+        .HasForeignKey(p => p.PlanId)
+        .OnDelete(DeleteBehavior.NoAction);
 
-                modelBuilder.Entity<Domain>().HasData(
-                    new Domain { DomainId = 1, Name = "Santé et sécurité au travail", CreatedAt = SeedCreatedAt },
-                    new Domain { DomainId = 2, Name = "Environnement", CreatedAt = SeedCreatedAt },
-                    new Domain { DomainId = 3, Name = "Qualité", CreatedAt = SeedCreatedAt }
-                );
-            }
+    // Seed data - Updated to include new properties
+    modelBuilder.Entity<User>().HasData(
+        new User
+        {
+            UserId = 1,
+            Name = "Super Admin",
+            Email = "admin@gmail.com",
+            PasswordHash = AdminPasswordHash,
+            Role = "SuperAdmin",
+            PhoneNumber = "99999999",
+            CreatedAt = SeedCreatedAt,
+            IsEmailVerified = true,
+            EmailVerificationToken = null,
+            EmailVerificationTokenExpiry = null,
+            Status = "Active"
         }
+    );
+
+    modelBuilder.Entity<Domain>().HasData(
+        new Domain { DomainId = 1, Name = "Santé et sécurité au travail", CreatedAt = SeedCreatedAt },
+        new Domain { DomainId = 2, Name = "Environnement", CreatedAt = SeedCreatedAt },
+        new Domain { DomainId = 3, Name = "Qualité", CreatedAt = SeedCreatedAt }
+    );
+}        }
     }

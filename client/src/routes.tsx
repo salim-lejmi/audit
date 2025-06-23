@@ -23,6 +23,7 @@ import HistoryPage from './Components/Company/history';
 import QuotesPage from './Components/Quotes/QuotesPage';
 import PaymentPage from './Components/Payments/PaymentPage';
 import CompanySettings from './Components/Company/CompanySettings';
+import AdminCompanyManagement from './Components/Admin/admincompanymanagement';
 
 const AppRoutes = () => {
   return (
@@ -36,7 +37,7 @@ const AppRoutes = () => {
         <Route path="/admin" element={<ProtectedRoute role="SuperAdmin" />}>
           <Route path="dashboard" element={<SuperAdminDashboard />} />
           <Route path="pending-requests" element={<PendingRequests />} />
-          <Route path="companies" element={<div>Company Management (To be implemented)</div>} />
+<Route path="companies" element={<AdminCompanyManagement />} />
           <Route path="users" element={<SuperAdminManageUsers/>} />
           <Route path="roles" element={<SuperAdminManageRoles/>} />
           <Route path="texts" element={<TextManagement />} />
