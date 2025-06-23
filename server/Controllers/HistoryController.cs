@@ -2,15 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Data;
 using server.Models;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace server.Controllers
 {
     [ApiController]
-    [Route("api/history")]
+    [Route("api/[controller]")]
     public class HistoryController : ControllerBase
     {
         private readonly AuditDbContext _context;
@@ -22,117 +19,470 @@ namespace server.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetHistory(
-            [FromQuery] int? userId = null,
-            [FromQuery] string actionType = null,
-            [FromQuery] DateTime? startDate = null,
-            [FromQuery] DateTime? endDate = null,
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string search = "",
+            [FromQuery] string source = "all",
+            [FromQuery] string user = "all",
+            [FromQuery] string dateFrom = "",
+            [FromQuery] string dateTo = "")
         {
-            // Check authentication
-            var sessionUserId = HttpContext.Session.GetInt32("UserId");
-            var companyId = HttpContext.Session.GetInt32("CompanyId");
-
-            if (!sessionUserId.HasValue || !companyId.HasValue)
+            try
             {
-                return Unauthorized(new { message = "Not authenticated" });
-            }
-
-            // Validate page and pageSize
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 10;
-
-            // Fetch evaluation history
-            var evaluationHistoryQuery = _context.EvaluationHistory
-                .Include(eh => eh.Evaluation)
-                .ThenInclude(e => e.Text)
-                .Include(eh => eh.ChangedBy)
-                .Where(eh => eh.Evaluation.Text.CompanyId == companyId.Value);
-
-            // Fetch action history
-            var actionQuery = _context.Actions
-                .Include(a => a.Text)
-                .Include(a => a.CreatedBy)
-                .Where(a => a.CompanyId == companyId.Value);
-
-            // Apply filters
-            if (userId.HasValue)
-            {
-                evaluationHistoryQuery = evaluationHistoryQuery.Where(eh => eh.ChangedById == userId.Value);
-                actionQuery = actionQuery.Where(a => a.CreatedById == userId.Value);
-            }
-            if (!string.IsNullOrEmpty(actionType))
-            {
-                if (actionType.ToLower() == "evaluation")
+                // Get user ID from session
+                var userId = HttpContext.Session.GetInt32("UserId");
+                if (!userId.HasValue)
                 {
-                    actionQuery = actionQuery.Where(a => false); // Exclude actions
+                    return Unauthorized(new { message = "Not authenticated" });
                 }
-                else if (actionType.ToLower() == "action")
+
+                var currentUser = await _context.Users
+                    .Include(u => u.Company)
+                    .FirstOrDefaultAsync(u => u.UserId == userId.Value);
+
+                if (currentUser == null)
                 {
-                    evaluationHistoryQuery = evaluationHistoryQuery.Where(eh => false); // Exclude evaluations
+                    return NotFound(new { message = "User not found" });
                 }
-            }
-            if (startDate.HasValue)
-            {
-                evaluationHistoryQuery = evaluationHistoryQuery.Where(eh => eh.ChangedAt >= startDate.Value);
-                actionQuery = actionQuery.Where(a => a.CreatedAt >= startDate.Value);
-            }
-            if (endDate.HasValue)
-            {
-                evaluationHistoryQuery = evaluationHistoryQuery.Where(eh => eh.ChangedAt <= endDate.Value);
-                actionQuery = actionQuery.Where(a => a.CreatedAt <= endDate.Value);
-            }
 
-            // Combine and project to HistoryItem
-            var evaluationItems = await evaluationHistoryQuery
-                .Select(eh => new HistoryItem
+                var historyItems = new List<HistoryItemDto>();
+
+                // Parse date filters
+                DateTime? fromDate = null;
+                DateTime? toDate = null;
+                
+                if (!string.IsNullOrEmpty(dateFrom) && DateTime.TryParse(dateFrom, out var parsedFromDate))
+                    fromDate = parsedFromDate;
+                
+                if (!string.IsNullOrEmpty(dateTo) && DateTime.TryParse(dateTo, out var parsedToDate))
+                    toDate = parsedToDate.AddDays(1);
+
+                // Super Admin sees all data
+                if (currentUser.Role == "SuperAdmin")
                 {
-                    Id = eh.HistoryId,
-                    ActionType = "Evaluation",
-                    Description = $"Changed status from {eh.PreviousStatus} to {eh.NewStatus} for requirement {eh.Evaluation.RequirementId}",
-                    Timestamp = eh.ChangedAt,
-                    PerformedBy = eh.ChangedBy.Name
-                })
-                .ToListAsync();
+                    // Get compliance evaluations
+                    if (source == "all" || source == "compliance")
+                    {
+                        var evaluations = await _context.ComplianceEvaluations
+                            .Include(e => e.EvaluatedBy)
+                            .Include(e => e.Text)
+                            .Include(e => e.Requirement)
+                            .Where(e => e.IsSavedToHistory)
+                            .ToListAsync();
 
-            var actionItems = await actionQuery
-                .Select(a => new HistoryItem
+                        foreach (var eval in evaluations)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = eval.EvaluationId,
+                                User = eval.EvaluatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Évaluation: {eval.Text?.Reference} - {eval.Requirement?.Title}",
+                                Source = "compliance",
+                                CreatedAt = eval.EvaluatedAt,
+                                ModifiedAt = eval.EvaluatedAt,
+                                Type = "compliance"
+                            });
+                        }
+                    }
+
+                    // Get actions
+                    if (source == "all" || source == "action")
+                    {
+                        var actions = await _context.Actions
+                            .Include(a => a.CreatedBy)
+                            .ToListAsync();
+
+                        foreach (var action in actions)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = action.ActionId,
+                                User = action.CreatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Action: {action.Description}",
+                                Source = "action",
+                                CreatedAt = action.CreatedAt,
+                                ModifiedAt = action.UpdatedAt ?? action.CreatedAt,
+                                Type = "action"
+                            });
+                        }
+                    }
+
+                    // Get revues
+                    if (source == "all" || source == "revue")
+                    {
+                        var revues = await _context.RevueDeDirections
+                            .Include(r => r.CreatedBy)
+                            .Include(r => r.Domain)
+                            .ToListAsync();
+
+                        foreach (var revue in revues)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = revue.RevueId,
+                                User = revue.CreatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Revue de direction - {revue.Domain?.Name}",
+                                Source = "revue",
+                                CreatedAt = revue.CreatedAt,
+                                ModifiedAt = revue.CreatedAt,
+                                Type = "revue",
+                                PdfPath = revue.PdfFilePath
+                            });
+                        }
+                    }
+
+                    // Get texts
+                    if (source == "all" || source == "text")
+                    {
+                        var texts = await _context.Texts
+                            .Include(t => t.CreatedBy)
+                            .ToListAsync();
+
+                        foreach (var text in texts)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = text.TextId,
+                                User = text.CreatedBy?.Name ?? "Système",
+                                Document = $"Texte: {text.Reference}",
+                                Source = "text",
+                                CreatedAt = text.CreatedAt,
+                                ModifiedAt = text.CreatedAt,
+                                Type = "text",
+                                PdfPath = text.FilePath
+                            });
+                        }
+                    }
+                }
+                else if (currentUser.Role == "SubscriptionManager")
                 {
-                    Id = a.ActionId,
-                    ActionType = "Action",
-                    Description = a.Description,
-                    Timestamp = a.CreatedAt,
-                    PerformedBy = a.CreatedBy.Name
-                })
-                .ToListAsync();
+                    // Subscription Manager sees all company data
+                    var companyId = currentUser.CompanyId;
+                    if (!companyId.HasValue)
+                    {
+                        return BadRequest(new { message = "User not associated with a company" });
+                    }
 
-            var allItems = evaluationItems.Concat(actionItems)
-                .OrderByDescending(item => item.Timestamp)
-                .ToList();
+                    // Get compliance evaluations for the company
+                    if (source == "all" || source == "compliance")
+                    {
+                        var evaluations = await _context.ComplianceEvaluations
+                            .Include(e => e.EvaluatedBy)
+                            .Include(e => e.Text)
+                            .Include(e => e.Requirement)
+                            .Where(e => e.IsSavedToHistory && e.EvaluatedBy.CompanyId == companyId)
+                            .ToListAsync();
 
-            // Pagination
-            var totalCount = allItems.Count;
-            var paginatedItems = allItems
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+                        foreach (var eval in evaluations)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = eval.EvaluationId,
+                                User = eval.EvaluatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Évaluation: {eval.Text?.Reference} - {eval.Requirement?.Title}",
+                                Source = "compliance",
+                                CreatedAt = eval.EvaluatedAt,
+                                ModifiedAt = eval.EvaluatedAt,
+                                Type = "compliance"
+                            });
+                        }
+                    }
 
-            return Ok(new
+                    // Get actions for the company
+                    if (source == "all" || source == "action")
+                    {
+                        var actions = await _context.Actions
+                            .Include(a => a.CreatedBy)
+                            .Where(a => a.CompanyId == companyId)
+                            .ToListAsync();
+
+                        foreach (var action in actions)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = action.ActionId,
+                                User = action.CreatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Action: {action.Description}",
+                                Source = "action",
+                                CreatedAt = action.CreatedAt,
+                                ModifiedAt = action.UpdatedAt ?? action.CreatedAt,
+                                Type = "action"
+                            });
+                        }
+                    }
+
+                    // Get revues for the company
+                    if (source == "all" || source == "revue")
+                    {
+                        var revues = await _context.RevueDeDirections
+                            .Include(r => r.CreatedBy)
+                            .Include(r => r.Domain)
+                            .Where(r => r.CompanyId == companyId)
+                            .ToListAsync();
+
+                        foreach (var revue in revues)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = revue.RevueId,
+                                User = revue.CreatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Revue de direction - {revue.Domain?.Name}",
+                                Source = "revue",
+                                CreatedAt = revue.CreatedAt,
+                                ModifiedAt = revue.CreatedAt,
+                                Type = "revue",
+                                PdfPath = revue.PdfFilePath
+                            });
+                        }
+                    }
+
+                    // Get texts for the company
+                    if (source == "all" || source == "text")
+                    {
+                        var texts = await _context.Texts
+                            .Include(t => t.CreatedBy)
+                            .Where(t => t.CompanyId == companyId)
+                            .ToListAsync();
+
+                        foreach (var text in texts)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = text.TextId,
+                                User = text.CreatedBy?.Name ?? "Système",
+                                Document = $"Texte: {text.Reference}",
+                                Source = "text",
+                                CreatedAt = text.CreatedAt,
+                                ModifiedAt = text.CreatedAt,
+                                Type = "text",
+                                PdfPath = text.FilePath
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    // Auditors/Users see only THEIR OWN data
+                    var companyId = currentUser.CompanyId;
+                    if (!companyId.HasValue)
+                    {
+                        return BadRequest(new { message = "User not associated with a company" });
+                    }
+
+                    // Get compliance evaluations created BY THIS USER only
+                    if (source == "all" || source == "compliance")
+                    {
+                        var evaluations = await _context.ComplianceEvaluations
+                            .Include(e => e.EvaluatedBy)
+                            .Include(e => e.Text)
+                            .Include(e => e.Requirement)
+                            .Where(e => e.IsSavedToHistory && e.UserId == userId.Value)
+                            .ToListAsync();
+
+                        foreach (var eval in evaluations)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = eval.EvaluationId,
+                                User = eval.EvaluatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Évaluation: {eval.Text?.Reference} - {eval.Requirement?.Title}",
+                                Source = "compliance",
+                                CreatedAt = eval.EvaluatedAt,
+                                ModifiedAt = eval.EvaluatedAt,
+                                Type = "compliance"
+                            });
+                        }
+                    }
+
+                    // Get actions created BY THIS USER only
+                    if (source == "all" || source == "action")
+                    {
+                        var actions = await _context.Actions
+                            .Include(a => a.CreatedBy)
+                            .Where(a => a.CreatedById == userId.Value)
+                            .ToListAsync();
+
+                        foreach (var action in actions)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = action.ActionId,
+                                User = action.CreatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Action: {action.Description}",
+                                Source = "action",
+                                CreatedAt = action.CreatedAt,
+                                ModifiedAt = action.UpdatedAt ?? action.CreatedAt,
+                                Type = "action"
+                            });
+                        }
+                    }
+
+                    // Get revues created BY THIS USER only
+                    if (source == "all" || source == "revue")
+                    {
+                        var revues = await _context.RevueDeDirections
+                            .Include(r => r.CreatedBy)
+                            .Include(r => r.Domain)
+                            .Where(r => r.CreatedById == userId.Value)
+                            .ToListAsync();
+
+                        foreach (var revue in revues)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = revue.RevueId,
+                                User = revue.CreatedBy?.Name ?? "Utilisateur inconnu",
+                                Document = $"Revue de direction - {revue.Domain?.Name}",
+                                Source = "revue",
+                                CreatedAt = revue.CreatedAt,
+                                ModifiedAt = revue.CreatedAt,
+                                Type = "revue",
+                                PdfPath = revue.PdfFilePath
+                            });
+                        }
+                    }
+
+                    // Get texts created BY THIS USER only (if any)
+                    if (source == "all" || source == "text")
+                    {
+                        var texts = await _context.Texts
+                            .Include(t => t.CreatedBy)
+                            .Where(t => t.CreatedById == userId.Value)
+                            .ToListAsync();
+
+                        foreach (var text in texts)
+                        {
+                            historyItems.Add(new HistoryItemDto
+                            {
+                                Id = text.TextId,
+                                User = text.CreatedBy?.Name ?? "Système",
+                                Document = $"Texte: {text.Reference}",
+                                Source = "text",
+                                CreatedAt = text.CreatedAt,
+                                ModifiedAt = text.CreatedAt,
+                                Type = "text",
+                                PdfPath = text.FilePath
+                            });
+                        }
+                    }
+                }
+
+                // Apply filters
+                var query = historyItems.AsQueryable();
+
+                if (!string.IsNullOrEmpty(search))
+                {
+                    query = query.Where(h => h.Document.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                                           h.User.Contains(search, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (user != "all")
+                {
+                    query = query.Where(h => h.User.Equals(user, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (fromDate.HasValue)
+                {
+                    query = query.Where(h => h.CreatedAt >= fromDate.Value);
+                }
+
+                if (toDate.HasValue)
+                {
+                    query = query.Where(h => h.CreatedAt < toDate.Value);
+                }
+
+                // Get available users for filter
+                var availableUsers = historyItems.Select(h => h.User).Distinct().OrderBy(u => u).ToList();
+
+                // Sort by creation date (newest first)
+                var sortedItems = query.OrderByDescending(h => h.CreatedAt).ToList();
+
+                // Apply pagination
+                var totalItems = sortedItems.Count;
+                var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+                var startIndex = (page - 1) * pageSize;
+                var pagedItems = sortedItems.Skip(startIndex).Take(pageSize).ToList();
+
+                return Ok(new
+                {
+                    Items = pagedItems,
+                    Pagination = new
+                    {
+                        CurrentPage = page,
+                        TotalPages = totalPages,
+                        TotalItems = totalItems,
+                        PageSize = pageSize
+                    },
+                    AvailableUsers = availableUsers
+                });
+            }
+            catch (Exception ex)
             {
-                items = paginatedItems,
-                totalCount,
-                totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
-                currentPage = page
-            });
+                return StatusCode(500, new { message = $"Internal server error: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("download-pdf/{id}")]
+        public async Task<IActionResult> DownloadPdf(int id, [FromQuery] string type)
+        {
+            try
+            {
+                // Check authentication
+                var userId = HttpContext.Session.GetInt32("UserId");
+                if (!userId.HasValue)
+                {
+                    return Unauthorized(new { message = "Not authenticated" });
+                }
+
+                string filePath = null;
+                string fileName = null;
+
+                switch (type)
+                {
+                    case "revue":
+                        var revue = await _context.RevueDeDirections.FindAsync(id);
+                        if (revue?.PdfFilePath != null)
+                        {
+                            filePath = revue.PdfFilePath;
+                            fileName = $"Revue_{revue.RevueId}.pdf";
+                        }
+                        break;
+                    case "text":
+                        var text = await _context.Texts.FindAsync(id);
+                        if (text?.FilePath != null)
+                        {
+                            filePath = text.FilePath;
+                            fileName = $"Texte_{text.Reference}.pdf";
+                        }
+                        break;
+                    default:
+                        return BadRequest(new { message = "Type not supported for PDF download" });
+                }
+
+                if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
+                {
+                    return NotFound(new { message = "PDF file not found" });
+                }
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                return File(fileBytes, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Error downloading PDF: {ex.Message}" });
+            }
         }
     }
 
-    public class HistoryItem
+    public class HistoryItemDto
     {
         public int Id { get; set; }
-        public string ActionType { get; set; }
-        public string Description { get; set; }
-        public DateTime Timestamp { get; set; }
-        public string PerformedBy { get; set; }
+        public string User { get; set; } = string.Empty;
+        public string Document { get; set; } = string.Empty;
+        public string Source { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public DateTime ModifiedAt { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public string? PdfPath { get; set; }
     }
 }

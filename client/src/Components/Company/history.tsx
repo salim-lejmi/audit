@@ -1,162 +1,455 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Table, Pagination, Form, Button } from 'react-bootstrap';
-import '../../styles/HistoryPage.css';
+import '../../styles/history.css'; 
 
-const HistoryPage = () => {
-    const [historyItems, setHistoryItems] = useState([]);
-    const [totalPages, setTotalPages] = useState(1);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [filters, setFilters] = useState({
-        userId: '',
-        actionType: '',
-        startDate: '',
-        endDate: ''
+interface HistoryItem {
+  id: number;
+  user: string;
+  document: string;
+  source: string;
+  createdAt: string;
+  modifiedAt: string;
+  pdfPath?: string;
+  type: 'compliance' | 'action' | 'revue' | 'text';
+}
+
+interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+}
+
+const HistoryPage: React.FC = () => {
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('all');
+  const [userFilter, setUserFilter] = useState('all');
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    pageSize: 10
+  });
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<string[]>([]);
+
+  const sources = [
+    { value: 'all', label: 'Toutes les sources' },
+    { value: 'compliance', label: 'Évaluation de conformité' },
+    { value: 'action', label: 'Plan d\'action' },
+    { value: 'revue', label: 'Revue de direction' },
+    { value: 'text', label: 'Textes réglementaires' }
+  ];
+
+  useEffect(() => {
+    fetchHistoryData();
+  }, [pagination.currentPage, searchTerm, sourceFilter, userFilter, dateFromFilter, dateToFilter]);
+
+  const fetchHistoryData = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: pagination.currentPage.toString(),
+        pageSize: pagination.pageSize.toString(),
+        search: searchTerm,
+        source: sourceFilter,
+        user: userFilter,
+        dateFrom: dateFromFilter,
+        dateTo: dateToFilter
+      });
+
+      const response = await axios.get(`/api/history?${params}`);
+      setHistoryItems(response.data.items);
+      setPagination(response.data.pagination);
+      setAvailableUsers(response.data.availableUsers);
+      setError(null);
+    } catch (err: any) {
+      setError('Erreur lors du chargement de l\'historique');
+      console.error('Error fetching history:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  const handleFilterChange = (filterType: string, value: string) => {
+    switch (filterType) {
+      case 'source':
+        setSourceFilter(value);
+        break;
+      case 'user':
+        setUserFilter(value);
+        break;
+      case 'dateFrom':
+        setDateFromFilter(value);
+        break;
+      case 'dateTo':
+        setDateToFilter(value);
+        break;
+    }
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSourceFilter('all');
+    setUserFilter('all');
+    setDateFromFilter('');
+    setDateToFilter('');
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  const openGoogleSearch = () => {
+    const searchQuery = searchTerm || 'prévention sécurité environnement';
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+  };
+
+  const downloadPDF = async (item: HistoryItem) => {
+    if (!item.pdfPath) {
+      alert('Aucun PDF disponible pour cet élément');
+      return;
+    }
+
+    try {
+      const response = await axios.get(`/api/history/download-pdf/${item.id}?type=${item.type}`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${item.document}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading PDF:', err);
+      alert('Erreur lors du téléchargement du PDF');
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-    const [loading, setLoading] = useState(false);
+  };
 
-    useEffect(() => {
-        fetchHistory();
-    }, [filters, currentPage]);
-
-    const fetchHistory = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get('/api/history', {
-                params: {
-                    ...filters,
-                    page: currentPage,
-                    pageSize: 10
-                }
-            });
-            setHistoryItems(response.data.items);
-            setTotalPages(response.data.totalPages);
-        } catch (error) {
-            console.error('Failed to fetch history', error);
-            alert('An error occurred while fetching history data.');
-        } finally {
-            setLoading(false);
-        }
+  const getSourceBadge = (source: string) => {
+    const badges = {
+      compliance: { label: 'Conformité', className: 'badge-compliance' },
+      action: { label: 'Action', className: 'badge-action' },
+      revue: { label: 'Revue', className: 'badge-revue' },
+      text: { label: 'Texte', className: 'badge-text' }
     };
+    
+    const badge = badges[source as keyof typeof badges] || { label: source, className: 'badge-default' };
+    return <span className={`source-badge ${badge.className}`}>{badge.label}</span>;
+  };
 
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-        setCurrentPage(1); // Reset to first page on filter change
-    };
-
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-    };
-
+  if (loading) {
     return (
-        <div className="history-page container mt-4">
-            <h2 className="mb-4">Activity History</h2>
-
-            {/* Filters */}
-            <Form className="history-filters mb-4">
-                <div className="row">
-                    <div className="col-md-3">
-                        <Form.Group controlId="userId">
-                            <Form.Label>User ID</Form.Label>
-                            <Form.Control
-                                type="number"
-                                name="userId"
-                                value={filters.userId}
-                                onChange={handleFilterChange}
-                                placeholder="Enter User ID"
-                            />
-                        </Form.Group>
-                    </div>
-                    <div className="col-md-3">
-                        <Form.Group controlId="actionType">
-                            <Form.Label>Action Type</Form.Label>
-                            <Form.Control
-                                as="select"
-                                name="actionType"
-                                value={filters.actionType}
-                                onChange={handleFilterChange}
-                            >
-                                <option value="">All</option>
-                                <option value="Evaluation">Evaluation</option>
-                                <option value="Action">Action</option>
-                            </Form.Control>
-                        </Form.Group>
-                    </div>
-                    <div className="col-md-3">
-                        <Form.Group controlId="startDate">
-                            <Form.Label>Start Date</Form.Label>
-                            <Form.Control
-                                type="date"
-                                name="startDate"    
-                                value={filters.startDate}
-                                onChange={handleFilterChange}
-                            />
-                        </Form.Group>
-                    </div>
-                    <div className="col-md-3">
-                        <Form.Group controlId="endDate">
-                            <Form.Label>End Date</Form.Label>
-                            <Form.Control
-                                type="date"
-                                name="endDate"
-                                value={filters.endDate}
-                                onChange={handleFilterChange}
-                            />
-                        </Form.Group>
-                    </div>
-                </div>
-                <Button variant="primary" onClick={fetchHistory} className="mt-3">
-                    Apply Filters
-                </Button>
-            </Form>
-
-            {/* History Table */}
-            {loading ? (
-                <div className="text-center">Loading...</div>
-            ) : historyItems.length === 0 ? (
-                <div className="text-center">No history items found.</div>
-            ) : (
-                <Table striped bordered hover responsive className="history-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Action Type</th>
-                            <th>Description</th>
-                            <th>Timestamp</th>
-                            <th>Performed By</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {historyItems.map(item => (
-                            <tr key={item.id}>
-                                <td>{item.id}</td>
-                                <td>{item.actionType}</td>
-                                <td>{item.description}</td>
-                                <td>{new Date(item.timestamp).toLocaleString()}</td>
-                                <td>{item.performedBy}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <Pagination className="justify-content-center mt-4">
-                    {[...Array(totalPages).keys()].map(page => (
-                        <Pagination.Item
-                            key={page + 1}
-                            active={page + 1 === currentPage}
-                            onClick={() => handlePageChange(page + 1)}
-                        >
-                            {page + 1}
-                        </Pagination.Item>
-                    ))}
-                </Pagination>
-            )}
+      <div className="history-page">
+        <div className="container">
+          <div className="loading-state">
+            <div className="loading-spinner"></div>
+            <p>Chargement de l'historique...</p>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="history-page">
+        <div className="container">
+          <div className="error-state">
+            <p>{error}</p>
+            <button onClick={fetchHistoryData} className="retry-btn">
+              Réessayer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`history-page ${isFullscreen ? 'fullscreen' : ''}`}>
+      <div className="container">
+        {/* Header */}
+        <div className="page-header">
+          <h1>📋 Historique des Documents</h1>
+          <div className="header-actions">
+            <button onClick={openGoogleSearch} className="google-search-btn">
+              🔍 Recherche Google
+            </button>
+            <button onClick={toggleFullscreen} className="fullscreen-btn">
+              {isFullscreen ? '🗗' : '🗖'} Plein écran
+            </button>
+          </div>
+        </div>
+
+        {/* Account Info */}
+        <div className="account-info-card">
+          <div className="account-details">
+            <p><strong>📧 Compte:</strong> user@example.com</p>
+            <p><strong>📅 Expiration:</strong> 31/12/2024</p>
+          </div>
+        </div>
+
+        {/* Filters Section */}
+        <div className="filters-section">
+          <div className="filters-grid">
+            <div className="filter-group">
+              <label>🔍 Recherche</label>
+              <input
+                type="text"
+                placeholder="Rechercher dans les documents..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="search-input"
+              />
+            </div>
+
+            <div className="filter-group">
+              <label>📂 Source</label>
+              <select
+                value={sourceFilter}
+                onChange={(e) => handleFilterChange('source', e.target.value)}
+                className="filter-select"
+              >
+                {sources.map(source => (
+                  <option key={source.value} value={source.value}>
+                    {source.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label>👤 Utilisateur</label>
+              <select
+                value={userFilter}
+                onChange={(e) => handleFilterChange('user', e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">Tous les utilisateurs</option>
+                {availableUsers.map(user => (
+                  <option key={user} value={user}>{user}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label>📅 Date début</label>
+              <input
+                type="date"
+                value={dateFromFilter}
+                onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                className="date-input"
+              />
+            </div>
+
+            <div className="filter-group">
+              <label>📅 Date fin</label>
+              <input
+                type="date"
+                value={dateToFilter}
+                onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                className="date-input"
+              />
+            </div>
+
+            <div className="filter-actions">
+              <button onClick={clearFilters} className="clear-filters-btn">
+                🗑️ Effacer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Results Summary */}
+        <div className="results-summary">
+          <p>
+            <strong>{pagination.totalItems}</strong> document{pagination.totalItems > 1 ? 's' : ''} trouvé{pagination.totalItems > 1 ? 's' : ''}
+            {searchTerm && ` pour "${searchTerm}"`}
+          </p>
+        </div>
+
+        {/* History Table */}
+        <div className="table-section">
+          {historyItems.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">📄</div>
+              <div className="empty-state-text">Aucun document trouvé</div>
+              <div className="empty-state-subtext">
+                Essayez de modifier vos critères de recherche
+              </div>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th>N°</th>
+                    <th>👤 Utilisateur</th>
+                    <th>📄 Document</th>
+                    <th>📂 Source</th>
+                    <th>📅 Date création</th>
+                    <th>📝 Date modification</th>
+                    <th>🎯 Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyItems.map((item, index) => (
+                    <tr key={item.id}>
+                      <td className="row-number">
+                        {(pagination.currentPage - 1) * pagination.pageSize + index + 1}
+                      </td>
+                      <td className="user-cell">
+                        <div className="user-info">
+                          <span className="user-name">{item.user}</span>
+                        </div>
+                      </td>
+                      <td className="document-cell">
+                        <div className="document-info">
+                          <span className="document-title">{item.document}</span>
+                        </div>
+                      </td>
+                      <td className="source-cell">
+                        {getSourceBadge(item.source)}
+                      </td>
+                      <td className="date-cell">
+                        {formatDate(item.createdAt)}
+                      </td>
+                      <td className="date-cell">
+                        {formatDate(item.modifiedAt)}
+                      </td>
+                      <td className="actions-cell">
+                        <div className="action-buttons">
+                          {item.pdfPath && (
+                            <button
+                              onClick={() => downloadPDF(item)}
+                              className="action-btn pdf-btn"
+                              title="Télécharger PDF"
+                            >
+                              📥 PDF
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {/* Add view details logic */}}
+                            className="action-btn view-btn"
+                            title="Voir détails"
+                          >
+                            👁️ Voir
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="pagination-section">
+            <div className="pagination-info">
+              Page {pagination.currentPage} sur {pagination.totalPages}
+              ({pagination.totalItems} éléments au total)
+            </div>
+            <div className="pagination-controls">
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={pagination.currentPage === 1}
+                className="pagination-btn"
+              >
+                ⏮️ Premier
+              </button>
+              <button
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1}
+                className="pagination-btn"
+              >
+                ⬅️ Précédent
+              </button>
+              
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (pagination.currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = pagination.currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`pagination-btn ${pagination.currentPage === pageNum ? 'active' : ''}`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === pagination.totalPages}
+                className="pagination-btn"
+              >
+                Suivant ➡️
+              </button>
+              <button
+                onClick={() => handlePageChange(pagination.totalPages)}
+                disabled={pagination.currentPage === pagination.totalPages}
+                className="pagination-btn"
+              >
+                Dernier ⏭️
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default HistoryPage;

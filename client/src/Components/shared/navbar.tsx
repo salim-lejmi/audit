@@ -106,20 +106,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
           )}
         </div>
 
-        <div className="navbar-center">
-          {isDashboard && (
-            <div className="dashboard-tabs">
-              <div className="domain-selector">
-                <span>Domains:</span>
-                <select className="domain-select">
-                  <option value="health-safety">Health & Safety</option>
-                  <option value="environment">Environment</option>
-                  <option value="quality">Quality</option>
-                </select>
-              </div>
-            </div>
-          )}
-        </div>
+    
 
         <div className="navbar-right">
           {/* Quotes link - replacing dashboard */}
@@ -226,29 +213,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             </div>
           )}
 
-          {/* Manual dropdown */}
-          <div className="nav-item" ref={manualRef}>
-            <button 
-              className="nav-button" 
-              onClick={() => setManualOpen(!manualOpen)}
-              aria-label="User Manual"
-            >
-              <i className="fas fa-book"></i>
-              <span className="nav-label">Manual</span>
-            </button>
-            {manualOpen && (
-              <div className="dropdown-menu">
-                <div className="dropdown-item">
-                  <i className="fas fa-video"></i>
-                  <span>Video Tutorial</span>
-                </div>
-                <div className="dropdown-item">
-                  <i className="fas fa-file-pdf"></i>
-                  <span>PDF Manual</span>
-                </div>
-              </div>
-            )}
-          </div>
+      
 
           {/* Notifications - NEW */}
           <div className="nav-item">

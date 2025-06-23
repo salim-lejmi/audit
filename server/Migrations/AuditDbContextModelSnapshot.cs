@@ -84,7 +84,7 @@ namespace server.Migrations
 
                     b.HasIndex("TextId");
 
-                    b.ToTable("Actions");
+                    b.ToTable("Actions", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Company", b =>
@@ -119,7 +119,7 @@ namespace server.Migrations
 
                     b.HasKey("CompanyId");
 
-                    b.ToTable("Companies");
+                    b.ToTable("Companies", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.CompanySubscription", b =>
@@ -159,7 +159,7 @@ namespace server.Migrations
 
                     b.HasIndex("PlanId");
 
-                    b.ToTable("CompanySubscriptions");
+                    b.ToTable("CompanySubscriptions", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.ComplianceEvaluation", b =>
@@ -197,7 +197,7 @@ namespace server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ComplianceEvaluations");
+                    b.ToTable("ComplianceEvaluations", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Domain", b =>
@@ -222,7 +222,7 @@ namespace server.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.ToTable("Domains");
+                    b.ToTable("Domains", (string)null);
 
                     b.HasData(
                         new
@@ -271,7 +271,7 @@ namespace server.Migrations
 
                     b.HasIndex("EvaluationId");
 
-                    b.ToTable("EvaluationAttachments");
+                    b.ToTable("EvaluationAttachments", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.EvaluationHistory", b =>
@@ -305,7 +305,7 @@ namespace server.Migrations
 
                     b.HasIndex("EvaluationId");
 
-                    b.ToTable("EvaluationHistory");
+                    b.ToTable("EvaluationHistory", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.MonitoringParameter", b =>
@@ -334,7 +334,7 @@ namespace server.Migrations
 
                     b.HasIndex("EvaluationId");
 
-                    b.ToTable("MonitoringParameters");
+                    b.ToTable("MonitoringParameters", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Notification", b =>
@@ -378,7 +378,7 @@ namespace server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Observation", b =>
@@ -408,7 +408,7 @@ namespace server.Migrations
 
                     b.HasIndex("EvaluationId");
 
-                    b.ToTable("Observations");
+                    b.ToTable("Observations", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Payment", b =>
@@ -463,7 +463,7 @@ namespace server.Migrations
 
                     b.HasIndex("PlanId");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.RevueAction", b =>
@@ -501,7 +501,7 @@ namespace server.Migrations
 
                     b.HasIndex("RevueId");
 
-                    b.ToTable("RevueActions");
+                    b.ToTable("RevueActions", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.RevueDeDirection", b =>
@@ -542,7 +542,7 @@ namespace server.Migrations
 
                     b.HasIndex("DomainId");
 
-                    b.ToTable("RevueDeDirections");
+                    b.ToTable("RevueDeDirections", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.RevueLegalText", b =>
@@ -585,7 +585,7 @@ namespace server.Migrations
 
                     b.HasIndex("TextId");
 
-                    b.ToTable("RevueLegalTexts");
+                    b.ToTable("RevueLegalTexts", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.RevueRequirement", b =>
@@ -620,7 +620,7 @@ namespace server.Migrations
 
                     b.HasIndex("TextRequirementId");
 
-                    b.ToTable("RevueRequirements");
+                    b.ToTable("RevueRequirements", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.RevueStakeholder", b =>
@@ -658,7 +658,7 @@ namespace server.Migrations
 
                     b.HasIndex("RevueId");
 
-                    b.ToTable("RevueStakeholders");
+                    b.ToTable("RevueStakeholders", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.SubTheme", b =>
@@ -688,7 +688,7 @@ namespace server.Migrations
 
                     b.HasIndex("ThemeId");
 
-                    b.ToTable("SubThemes");
+                    b.ToTable("SubThemes", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.SubscriptionPlan", b =>
@@ -742,7 +742,7 @@ namespace server.Migrations
 
                     b.HasKey("PlanId");
 
-                    b.ToTable("SubscriptionPlans");
+                    b.ToTable("SubscriptionPlans", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Text", b =>
@@ -820,7 +820,7 @@ namespace server.Migrations
 
                     b.HasIndex("ThemeId");
 
-                    b.ToTable("Texts");
+                    b.ToTable("Texts", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.TextRequirement", b =>
@@ -850,7 +850,7 @@ namespace server.Migrations
 
                     b.HasIndex("TextId");
 
-                    b.ToTable("TextRequirements");
+                    b.ToTable("TextRequirements", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.Theme", b =>
@@ -880,7 +880,7 @@ namespace server.Migrations
 
                     b.HasIndex("DomainId");
 
-                    b.ToTable("Themes");
+                    b.ToTable("Themes", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.User", b =>
@@ -938,7 +938,7 @@ namespace server.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
 
                     b.HasData(
                         new

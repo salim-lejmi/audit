@@ -42,6 +42,7 @@ const AppRoutes = () => {
           <Route path="taxonomy" element={<TaxonomyManager />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="quotes" element={<QuotesPage />} />
+          <Route path="history" element={<HistoryPage />} />
         </Route>
 
         {/* Subscription Manager Routes */}
@@ -51,11 +52,7 @@ const AppRoutes = () => {
           <Route path="users" element={<ManageUsers/>} />
           <Route path="roles" element={<ManageRoles/>} />
           <Route path="profile" element={<ProfilePage />} />
-          
-          {/* Feature-protected routes */}
-          <Route path="history" element={
-              <HistoryPage />
-          } />
+          <Route path="history" element={<HistoryPage />} />
           <Route path="texts" element={
             <ProtectedFeatureRoute requiredFeature="Text Management">
               <TextManagement />
@@ -98,13 +95,7 @@ const AppRoutes = () => {
         <Route path="/user" element={<ProtectedRoute role="User" />}>
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="profile" element={<ProfilePage />} />
-          
-          {/* Feature-protected routes for users */}
-          <Route path="history" element={
-            <ProtectedFeatureRoute requiredFeature="Statistics & Analytics">
-              <HistoryPage />
-            </ProtectedFeatureRoute>
-          } />
+          <Route path="history" element={<HistoryPage />} />
           <Route path="compliance" element={
             <ProtectedFeatureRoute requiredFeature="Compliance Management">
               <ComplianceEvaluation />
