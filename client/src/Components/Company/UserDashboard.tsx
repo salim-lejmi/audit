@@ -174,36 +174,7 @@ const UserDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Features Overview for Auditor */}
-        <div className="overview-card">
-          <div className="card-header">
-            <h5>Available Features</h5>
-          </div>
-          <div className="card-body">
-            <div className="features-grid">
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <i className="fas fa-tasks"></i>
-                </div>
-                <div className="feature-content">
-                  <h6>Action Plans</h6>
-                  <p>View and update your assigned action plans. Track progress, add observations, assess efficacy, and mark actions as validated.</p>
-                  <Link to="/user/action-plan" className="feature-link">Go to Action Plans</Link>
-                </div>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <i className="fas fa-check-square"></i>
-                </div>
-                <div className="feature-content">
-                  <h6>Compliance Evaluation</h6>
-                  <p>View texts and requirements related to your assigned actions. Add findings and include monitoring data.</p>
-                  <Link to="/user/compliance" className="feature-link">Go to Compliance Evaluation</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+   
 
         {/* Action Progress */}
         {assignedActions > 0 && (

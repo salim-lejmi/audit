@@ -398,6 +398,99 @@ public async Task<IActionResult> DeleteUser(int userId)
 
             return Ok(new { message = "User role updated successfully" });
         }
+     
+
+[HttpGet("settings")]
+public async Task<IActionResult> GetCompanySettings()
+{
+    // Check if user is a SubscriptionManager
+    var userRole = HttpContext.Session.GetString("UserRole");
+    if (userRole != "SubscriptionManager")
+    {
+        return Forbid();
+    }
+
+    // Get companyId from session
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    if (!companyId.HasValue)
+    {
+        return BadRequest(new { message = "Invalid company ID" });
+    }
+
+    // Get company information
+    var company = await _context.Companies.FindAsync(companyId.Value);
+    if (company == null)
+    {
+        return NotFound(new { message = "Company not found" });
+    }
+
+    return Ok(new
+    {
+        companyId = company.CompanyId,
+        companyName = company.CompanyName,
+        industry = company.Industry,
+        status = company.Status,
+        createdAt = company.CreatedAt
+    });
+}
+
+[HttpPut("settings")]
+public async Task<IActionResult> UpdateCompanySettings([FromBody] UpdateCompanySettingsRequest request)
+{
+    // Check if user is a SubscriptionManager
+    var userRole = HttpContext.Session.GetString("UserRole");
+    if (userRole != "SubscriptionManager")
+    {
+        return Forbid();
+    }
+
+    // Get companyId from session
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    if (!companyId.HasValue)
+    {
+        return BadRequest(new { message = "Invalid company ID" });
+    }
+
+    // Validate request
+    if (string.IsNullOrEmpty(request.CompanyName) || string.IsNullOrEmpty(request.Industry))
+    {
+        return BadRequest(new { message = "Company name and industry are required" });
+    }
+
+    try
+    {
+        // Find and update company
+        var company = await _context.Companies.FindAsync(companyId.Value);
+        if (company == null)
+        {
+            return NotFound(new { message = "Company not found" });
+        }
+
+        company.CompanyName = request.CompanyName.Trim();
+        company.Industry = request.Industry.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            companyId = company.CompanyId,
+            companyName = company.CompanyName,
+            industry = company.Industry,
+            status = company.Status,
+            createdAt = company.CreatedAt
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Failed to update company settings" });
+    }
+}
+
+public class UpdateCompanySettingsRequest
+{
+    public string CompanyName { get; set; }
+    public string Industry { get; set; }
+}
 
         public class CreateUserRequest
         {

@@ -22,6 +22,7 @@ import EmailVerification from './Components/Authentification/EmailVerification';
 import HistoryPage from './Components/Company/history';
 import QuotesPage from './Components/Quotes/QuotesPage';
 import PaymentPage from './Components/Payments/PaymentPage';
+import CompanySettings from './Components/Company/CompanySettings';
 
 const AppRoutes = () => {
   return (
@@ -49,6 +50,7 @@ const AppRoutes = () => {
         <Route path="/company" element={<ProtectedRoute role="SubscriptionManager" />}>
           <Route path="dashboard" element={<SubscriptionManagerDashboard />} />
           <Route path="payments" element={<PaymentPage />} />
+          <Route path="settings" element={<CompanySettings />} />
           <Route path="users" element={<ManageUsers/>} />
           <Route path="roles" element={<ManageRoles/>} />
           <Route path="profile" element={<ProfilePage />} />
