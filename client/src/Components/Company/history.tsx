@@ -209,23 +209,10 @@ const HistoryPage: React.FC = () => {
         {/* Header */}
         <div className="page-header">
           <h1>📋 Historique des Documents</h1>
-          <div className="header-actions">
-            <button onClick={openGoogleSearch} className="google-search-btn">
-              🔍 Recherche Google
-            </button>
-            <button onClick={toggleFullscreen} className="fullscreen-btn">
-              {isFullscreen ? '🗗' : '🗖'} Plein écran
-            </button>
-          </div>
+          
         </div>
 
-        {/* Account Info */}
-        <div className="account-info-card">
-          <div className="account-details">
-            <p><strong>📧 Compte:</strong> user@example.com</p>
-            <p><strong>📅 Expiration:</strong> 31/12/2024</p>
-          </div>
-        </div>
+    
 
         {/* Filters Section */}
         <div className="filters-section">
@@ -327,7 +314,6 @@ const HistoryPage: React.FC = () => {
                     <th>📂 Source</th>
                     <th>📅 Date création</th>
                     <th>📝 Date modification</th>
-                    <th>🎯 Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -355,26 +341,7 @@ const HistoryPage: React.FC = () => {
                       <td className="date-cell">
                         {formatDate(item.modifiedAt)}
                       </td>
-                      <td className="actions-cell">
-                        <div className="action-buttons">
-                          {item.pdfPath && (
-                            <button
-                              onClick={() => downloadPDF(item)}
-                              className="action-btn pdf-btn"
-                              title="Télécharger PDF"
-                            >
-                              📥 PDF
-                            </button>
-                          )}
-                          <button
-                            onClick={() => {/* Add view details logic */}}
-                            className="action-btn view-btn"
-                            title="Voir détails"
-                          >
-                            👁️ Voir
-                          </button>
-                        </div>
-                      </td>
+                
                     </tr>
                   ))}
                 </tbody>

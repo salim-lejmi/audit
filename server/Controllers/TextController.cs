@@ -208,24 +208,37 @@ public async Task<IActionResult> GetTexts(
                 return Ok(subThemes);
             }
 
-            [HttpGet("{id}")]
-    public async Task<IActionResult> GetText(int id)
+[HttpGet("{id}")]
+public async Task<IActionResult> GetText(int id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    var userRole = HttpContext.Session.GetString("UserRole");
+    
+    if (!userId.HasValue)
     {
-        var userId = HttpContext.Session.GetInt32("UserId");
-        var companyId = HttpContext.Session.GetInt32("CompanyId");
-        
-        if (!userId.HasValue || !companyId.HasValue)
-        {
-            return Unauthorized(new { message = "Not authenticated" });
-        }
+        return Unauthorized(new { message = "Not authenticated" });
+    }
 
-        var text = await _context.Texts
+    var query = _context.Texts
         .Include(t => t.CreatedBy)
         .Include(t => t.Requirements)
         .Include(t => t.DomainObject)
         .Include(t => t.ThemeObject)
         .Include(t => t.SubThemeObject)
-        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value); // Filter by company
+        .Where(t => t.TextId == id);
+
+    // Filter by company only if not Super Admin
+    if (userRole != "SuperAdmin")
+    {
+        if (!companyId.HasValue)
+        {
+            return Unauthorized(new { message = "Not authenticated" });
+        }
+        query = query.Where(t => t.CompanyId == companyId.Value);
+    }
+
+    var text = await query.FirstOrDefaultAsync();
 
     if (text == null)
     {
@@ -269,20 +282,31 @@ public async Task<IActionResult> GetTexts(
         }).ToList()
     });
 }
-
-          [HttpGet("{id}/file")]
+[HttpGet("{id}/file")]
 public async Task<IActionResult> GetFile(int id)
 {
     var userId = HttpContext.Session.GetInt32("UserId");
     var companyId = HttpContext.Session.GetInt32("CompanyId");
+    var userRole = HttpContext.Session.GetString("UserRole");
     
-    if (!userId.HasValue || !companyId.HasValue)
+    if (!userId.HasValue)
     {
         return Unauthorized(new { message = "Not authenticated" });
     }
 
-    var text = await _context.Texts
-        .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value); // Filter by company
+    var query = _context.Texts.Where(t => t.TextId == id);
+
+    // Filter by company only if not Super Admin
+    if (userRole != "SuperAdmin")
+    {
+        if (!companyId.HasValue)
+        {
+            return Unauthorized(new { message = "Not authenticated" });
+        }
+        query = query.Where(t => t.CompanyId == companyId.Value);
+    }
+
+    var text = await query.FirstOrDefaultAsync();
         
     if (text == null || string.IsNullOrEmpty(text.FilePath))
     {
@@ -298,8 +322,6 @@ public async Task<IActionResult> GetFile(int id)
     var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
     return File(fileBytes, "application/pdf", Path.GetFileName(filePath));
 }
-
-
           [HttpPost]
 public async Task<IActionResult> CreateText([FromForm] CreateTextRequest request)
 {
@@ -691,42 +713,190 @@ public async Task<IActionResult> DeleteRequirement(int id, int requirementId)
     return Ok(new { message = "Requirement deleted successfully" });
 }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteText(int id)
+[HttpDelete("{id}")]
+public async Task<IActionResult> DeleteText(int id)
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+
+    if (!userId.HasValue || (userRole != "SuperAdmin" && userRole != "SubscriptionManager"))
+    {
+        return Unauthorized(new { message = "Access denied" });
+    }
+
+    var query = _context.Texts.Where(t => t.TextId == id);
+
+    // Filter by company only if not Super Admin
+    if (userRole != "SuperAdmin")
+    {
+        if (!companyId.HasValue)
         {
-            var userRole = HttpContext.Session.GetString("UserRole");
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var companyId = HttpContext.Session.GetInt32("CompanyId");
-
-            if (!userId.HasValue || !companyId.HasValue || userRole != "SuperAdmin")
-            {
-                return Forbid();
-            }
-
-            var text = await _context.Texts
-                .FirstOrDefaultAsync(t => t.TextId == id && t.CompanyId == companyId.Value);
-
-            if (text == null)
-            {
-                return NotFound(new { message = "Text not found" });
-            }
-
-            // Delete file if exists
-            if (!string.IsNullOrEmpty(text.FilePath))
-            {
-                var filePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
-            }
-
-            _context.Texts.Remove(text);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Text deleted successfully" });
+            return Unauthorized(new { message = "Not authenticated" });
         }
-[HttpPut("{id}/status")]
+        query = query.Where(t => t.CompanyId == companyId.Value);
+    }
+
+    var text = await query.FirstOrDefaultAsync();
+
+    if (text == null)
+    {
+        return NotFound(new { message = "Text not found" });
+    }
+
+    // Start a transaction to ensure data consistency
+    using var transaction = await _context.Database.BeginTransactionAsync();
+    
+    try
+    {
+        // Step 1: Get all actions that will be deleted (both direct and via requirements)
+        var textRequirementIds = await _context.TextRequirements
+            .Where(tr => tr.TextId == id)
+            .Select(tr => tr.RequirementId)
+            .ToListAsync();
+
+        var allActionIdsToDelete = new List<int>();
+
+        // Get actions that reference TextRequirements of this Text
+        if (textRequirementIds.Any())
+        {
+            var requirementActionIds = await _context.Actions
+                .Where(a => a.RequirementId.HasValue && textRequirementIds.Contains(a.RequirementId.Value))
+                .Select(a => a.ActionId)
+                .ToListAsync();
+            
+            allActionIdsToDelete.AddRange(requirementActionIds);
+        }
+
+        // Get actions that directly reference this Text
+        var directTextActionIds = await _context.Actions
+            .Where(a => a.TextId.HasValue && a.TextId.Value == id)
+            .Select(a => a.ActionId)
+            .ToListAsync();
+
+        allActionIdsToDelete.AddRange(directTextActionIds);
+
+        // Step 2: Delete notifications that reference these actions
+        if (allActionIdsToDelete.Any())
+        {
+            var notificationsToDelete = await _context.Notifications
+                .Where(n => allActionIdsToDelete.Contains(n.RelatedActionId.Value))
+                .ToListAsync();
+
+            if (notificationsToDelete.Any())
+            {
+                _context.Notifications.RemoveRange(notificationsToDelete);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // Step 3: Now delete the actions
+        if (allActionIdsToDelete.Any())
+        {
+            var actionsToDelete = await _context.Actions
+                .Where(a => allActionIdsToDelete.Contains(a.ActionId))
+                .ToListAsync();
+
+            if (actionsToDelete.Any())
+            {
+                _context.Actions.RemoveRange(actionsToDelete);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // Step 4: Delete ComplianceEvaluations and their related data
+        var evaluations = await _context.ComplianceEvaluations
+            .Where(ce => ce.TextId == id)
+            .ToListAsync();
+
+        if (evaluations.Any())
+        {
+            var evaluationIds = evaluations.Select(e => e.EvaluationId).ToList();
+
+            // Delete related records (these should cascade automatically, but being explicit)
+            var observations = await _context.Observations
+                .Where(o => evaluationIds.Contains(o.EvaluationId))
+                .ToListAsync();
+            
+            var monitoringParams = await _context.MonitoringParameters
+                .Where(mp => evaluationIds.Contains(mp.EvaluationId))
+                .ToListAsync();
+            
+            var attachments = await _context.EvaluationAttachments
+                .Where(ea => evaluationIds.Contains(ea.EvaluationId))
+                .ToListAsync();
+            
+            var history = await _context.EvaluationHistory
+                .Where(eh => evaluationIds.Contains(eh.EvaluationId))
+                .ToListAsync();
+
+            // Remove all evaluation-related data
+            if (observations.Any()) _context.Observations.RemoveRange(observations);
+            if (monitoringParams.Any()) _context.MonitoringParameters.RemoveRange(monitoringParams);
+            if (attachments.Any()) _context.EvaluationAttachments.RemoveRange(attachments);
+            if (history.Any()) _context.EvaluationHistory.RemoveRange(history);
+            
+            // Remove evaluations
+            _context.ComplianceEvaluations.RemoveRange(evaluations);
+            await _context.SaveChangesAsync();
+        }
+
+        // Step 5: Delete RevueLegalTexts that reference this text
+        var revueLegalTexts = await _context.RevueLegalTexts
+            .Where(rlt => rlt.TextId == id)
+            .ToListAsync();
+
+        if (revueLegalTexts.Any())
+        {
+            _context.RevueLegalTexts.RemoveRange(revueLegalTexts);
+            await _context.SaveChangesAsync();
+        }
+
+        // Step 6: Delete RevueRequirements that reference TextRequirements of this text
+        if (textRequirementIds.Any())
+        {
+            var revueRequirements = await _context.RevueRequirements
+                .Where(rr => textRequirementIds.Contains(rr.TextRequirementId))
+                .ToListAsync();
+
+            if (revueRequirements.Any())
+            {
+                _context.RevueRequirements.RemoveRange(revueRequirements);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // Step 7: Now delete the text (TextRequirements will cascade automatically)
+        // Delete file if exists
+        if (!string.IsNullOrEmpty(text.FilePath))
+        {
+            var filePath = Path.Combine(_environment.ContentRootPath, text.FilePath);
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+        }
+
+        _context.Texts.Remove(text);
+        await _context.SaveChangesAsync();
+
+        // Commit the transaction
+        await transaction.CommitAsync();
+
+        return Ok(new { message = "Text deleted successfully" });
+    }
+    catch (Exception ex)
+    {
+        // Rollback the transaction on error
+        await transaction.RollbackAsync();
+        
+        // Log the error (you might want to use a proper logging framework)
+        Console.WriteLine($"Error deleting text: {ex.Message}");
+        
+        return StatusCode(500, new { message = "An error occurred while deleting the text. Please try again." });
+    }
+}
+        [HttpPut("{id}/status")]
 public async Task<IActionResult> UpdateTextStatus(int id, [FromBody] UpdateTextStatusRequest request)
 {
     var userRole = HttpContext.Session.GetString("UserRole");

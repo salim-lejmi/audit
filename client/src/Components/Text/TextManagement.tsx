@@ -239,22 +239,22 @@ const TextManagement: React.FC = () => {
 
   // Delete text handler
   const handleDeleteText = async (textId: number) => {
-    if (userRole !== 'SuperAdmin') {
-      alert('Only Super Administrators can delete texts.');
-      return;
-    }
+  if (userRole !== 'SuperAdmin' && userRole !== 'SubscriptionManager') {
+    alert('Only Super Administrators and Subscription Managers can delete texts.');
+    return;
+  }
 
-    if (window.confirm('Are you sure you want to delete this text? This action cannot be undone.')) {
-      try {
-        await axios.delete(`/api/texts/${textId}`);
-        alert('Text deleted successfully');
-        loadTexts();
-      } catch (err) {
-        alert('Failed to delete text. Please try again.');
-        console.error('Error deleting text:', err);
-      }
+  if (window.confirm('Are you sure you want to delete this text? This action cannot be undone.')) {
+    try {
+      await axios.delete(`/api/texts/${textId}`);
+      alert('Text deleted successfully');
+      loadTexts();
+    } catch (err) {
+      alert('Failed to delete text. Please try again.');
+      console.error('Error deleting text:', err);
     }
-  };
+  }
+};
 
   return (
     <div className="text-management-container">
@@ -367,7 +367,7 @@ const TextManagement: React.FC = () => {
           <button className="btn-secondary" onClick={resetFilters}>Reset Filters</button>
           
           {/* Only show Add Text button for SuperAdmin or SubscriptionManager */}
-          {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
+          {(userRole === 'SubscriptionManager') && (
             <button className="btn-add" onClick={() => setShowAddModal(true)}>Add New Text</button>
           )}
         </div>
@@ -423,15 +423,15 @@ const TextManagement: React.FC = () => {
           Consult
         </button>
         
-        {userRole === 'SuperAdmin' && (
-          <button 
-            className="btn-delete" 
-            onClick={() => handleDeleteText(text.textId)}
-            title="Delete text"
-          >
-            Delete
-          </button>
-        )}
+      {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
+  <button 
+    className="btn-delete" 
+    onClick={() => handleDeleteText(text.textId)}
+    title="Delete text"
+  >
+    Delete
+  </button>
+)}
       </td>
     </tr>
   ))}

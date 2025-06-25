@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Form, Badge } from 'react-bootstrap';
 import Modal from '../shared/modal';
 import axios from 'axios';
+import '../../styles/admincompanymanagement.css';
 
 interface Company {
   companyId: number;

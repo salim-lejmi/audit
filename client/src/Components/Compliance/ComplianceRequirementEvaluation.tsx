@@ -232,13 +232,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
             <Typography variant="body1" gutterBottom><strong>Année de publication:</strong> {text.publicationYear || '-'}</Typography>
             <Typography variant="body1" gutterBottom><strong>Pénalités/Incitations:</strong> {text.penalties || '-'}</Typography>
           </Grid>
-          <Grid sx={{ xs: 12 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button variant="outlined" startIcon={<PictureAsPdf />} onClick={handleExportPdf} sx={{ mr: 1 }}>Exporter</Button>
-              <Button variant="outlined" startIcon={<Print />} onClick={() => window.print()} sx={{ mr: 1 }}>Imprimer</Button>
-              <Button variant="contained" startIcon={<Save />} onClick={handleSaveToHistory}>Sauvegarder dans l'historique</Button>
-            </Box>
-          </Grid>
+   
         </Grid>
       </Paper>
       <Typography variant="h6" gutterBottom>Liste des exigences</Typography>

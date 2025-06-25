@@ -291,6 +291,7 @@ const handleUpdateStatus = async () => {
                 </div>
                 <div className="info-item">
                   <h3>Status</h3>
+
                   {editMode ? (
                     <div className="edit-status">
                       <select 
@@ -315,7 +316,7 @@ const handleUpdateStatus = async () => {
                       <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
                         {text.status}
                       </span>
-                      {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
+                      {(userRole === 'SubscriptionManager') && (
                         <button className="btn-edit-small" onClick={() => setEditMode(true)}>Edit</button>
                       )}
                     </div>
@@ -370,7 +371,8 @@ const handleUpdateStatus = async () => {
                         <th>Number</th>
                         <th>Title</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                         {userRole === 'SubscriptionManager' && (
+                        <th>Actions</th> )}
                       </tr>
                     </thead>
                     <tbody>
@@ -421,25 +423,26 @@ const handleUpdateStatus = async () => {
                                   {req.status}
                                 </span>
                               </td>
-                              <td>
-                                <div className="req-actions">
-                                  <button 
-                                    className="btn-edit-small" 
-                                    onClick={() => startEditRequirement(req)}
-                                  >
-                                    Edit
-                                  </button>
-                                  
-                                  {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
-                                    <button 
-                                      className="btn-delete-small" 
-                                      onClick={() => deleteRequirement(req.requirementId)}
-                                    >
-                                      Delete
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
+  <td>
+    {userRole === 'SubscriptionManager' && (
+      <div className="req-actions">
+        <button 
+          className="btn-edit-small" 
+          onClick={() => startEditRequirement(req)}
+        >
+          Edit
+        </button>
+        
+       
+          <button 
+            className="btn-delete-small" 
+            onClick={() => deleteRequirement(req.requirementId)}
+          >
+            Delete
+          </button>
+      </div>
+    )}
+  </td>
                             </>
                           )}
                         </tr>
@@ -450,7 +453,7 @@ const handleUpdateStatus = async () => {
               )}
               
               {/* Add new requirement section - only for SuperAdmin and SubscriptionManager */}
-              {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
+              {( userRole === 'SubscriptionManager') && (
                 <div className="add-requirement-section">
                   <h4>Add New Requirement</h4>
                   <div className="add-requirement-form">
