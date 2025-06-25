@@ -5,12 +5,13 @@ import {
   IconButton, Chip, Tooltip, Dialog,
   DialogTitle, DialogContent, DialogActions,
   FormControl, InputLabel, Select, Slider,
-  Divider, LinearProgress
+  Divider, LinearProgress, Alert
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { 
   ArrowBack, Add, Delete, Edit, PictureAsPdf, 
-  FilterAlt, Search, Clear, ArrowForward, KeyboardReturn
+  FilterAlt, Search, Clear, ArrowForward, KeyboardReturn,
+  Close
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -38,7 +39,8 @@ const ActionPlan: React.FC = () => {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [subThemes, setSubThemes] = useState<SubTheme[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [requirements, setRequirements] = useState<TextRequirement[]>([]); // Added state for requirements
+  const [requirements, setRequirements] = useState<TextRequirement[]>([]);
+  const [userRole, setUserRole] = useState<string>('');
   
   const [filters, setFilters] = useState({
     domainId: '',
@@ -58,7 +60,7 @@ const ActionPlan: React.FC = () => {
     textId: undefined,
     actionId: undefined,
     data: {
-      requirementId: undefined, // Added requirementId to data
+      requirementId: undefined,
       description: '',
       responsibleId: 0,
       deadline: dayjs().add(30, 'day').format('YYYY-MM-DD'),
@@ -68,10 +70,14 @@ const ActionPlan: React.FC = () => {
     }
   });
   
+  // Check if current user is an auditor (role "User")
+  const isAuditor = userRole && userRole !== "SuperAdmin" && userRole !== "SubscriptionManager";
+  
   useEffect(() => {
     if (textId) {
       setFilters(prev => ({ ...prev, textId: textId.toString() }));
     }
+    fetchUserRole();
     fetchDomains();
     fetchUsers();
     fetchActions();
@@ -79,9 +85,18 @@ const ActionPlan: React.FC = () => {
   
   useEffect(() => {
     if (actionDialog.open && actionDialog.textId) {
-      fetchRequirements(actionDialog.textId); // Fetch requirements when dialog opens with textId
+      fetchRequirements(actionDialog.textId);
     }
   }, [actionDialog.open, actionDialog.textId]);
+  
+  const fetchUserRole = async () => {
+    try {
+      const response = await axios.get<{ role: string }>('/api/auth/verify');
+      setUserRole(response.data.role);
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
   
   const fetchDomains = async () => {
     try {
@@ -204,7 +219,7 @@ const ActionPlan: React.FC = () => {
       textId: textId,
       actionId: undefined,
       data: {
-        requirementId: requirementId, // Preselect requirementId from URL if provided
+        requirementId: requirementId,
         description: '',
         responsibleId: 0,
         deadline: dayjs().add(30, 'day').format('YYYY-MM-DD'),
@@ -238,7 +253,7 @@ const ActionPlan: React.FC = () => {
       ...prev,
       data: {
         ...prev.data,
-        [field]: value === '' ? undefined : value // Handle empty string as undefined
+        [field]: value === '' ? undefined : value
       }
     }));
   };
@@ -250,7 +265,7 @@ const ActionPlan: React.FC = () => {
       if (mode === 'create') {
         await axios.post('/api/action-plan', {
           textId,
-          requirementId: data.requirementId, // Send selected requirementId
+          requirementId: data.requirementId,
           description: data.description,
           responsibleId: data.responsibleId,
           deadline: data.deadline,
@@ -259,14 +274,22 @@ const ActionPlan: React.FC = () => {
           status: data.status
         });
       } else {
-        await axios.put(`/api/action-plan/${actionId}`, {
-          description: data.description,
-          responsibleId: data.responsibleId,
-          deadline: data.deadline,
-          progress: data.progress,
-          effectiveness: data.effectiveness,
-          status: data.status
-        });
+        // For auditors, only send progress and status
+        if (isAuditor) {
+          await axios.put(`/api/action-plan/${actionId}`, {
+            progress: data.progress,
+            status: data.status
+          });
+        } else {
+          await axios.put(`/api/action-plan/${actionId}`, {
+            description: data.description,
+            responsibleId: data.responsibleId,
+            deadline: data.deadline,
+            progress: data.progress,
+            effectiveness: data.effectiveness,
+            status: data.status
+          });
+        }
       }
       
       setActionDialog(prev => ({ ...prev, open: false }));
@@ -349,9 +372,11 @@ const ActionPlan: React.FC = () => {
               <Button startIcon={<PictureAsPdf />} onClick={handleExportPdf} sx={{ mr: 1 }}>
                 Exporter PDF
               </Button>
-              <Button startIcon={<Add />} variant="contained" onClick={handleCreateAction}>
-                Nouvelle action
-              </Button>
+              {!isAuditor && (
+                <Button startIcon={<Add />} variant="contained" onClick={handleCreateAction}>
+                  Nouvelle action
+                </Button>
+              )}
             </Box>
           </Box>
           
@@ -365,7 +390,7 @@ const ActionPlan: React.FC = () => {
             
             {showFilters && (
               <Grid container spacing={2} sx={{ mt: 2 }}>
-                <Grid item sx={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth size="small">
                     <InputLabel id="domain-label">Domaine</InputLabel>
                     <Select
@@ -386,7 +411,7 @@ const ActionPlan: React.FC = () => {
                   </FormControl>
                 </Grid>
                 
-                <Grid item sx={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth size="small">
                     <InputLabel id="theme-label">Thème</InputLabel>
                     <Select
@@ -408,7 +433,7 @@ const ActionPlan: React.FC = () => {
                   </FormControl>
                 </Grid>
                 
-                <Grid item sx={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth size="small">
                     <InputLabel id="subtheme-label">Sous-thème</InputLabel>
                     <Select
@@ -430,7 +455,7 @@ const ActionPlan: React.FC = () => {
                   </FormControl>
                 </Grid>
                 
-                <Grid item sx={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -442,7 +467,7 @@ const ActionPlan: React.FC = () => {
                   />
                 </Grid>
                 
-                <Grid item sx={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -455,7 +480,7 @@ const ActionPlan: React.FC = () => {
                   />
                 </Grid>
                 
-                <Grid item sx={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth size="small">
                     <InputLabel id="responsible-label">Responsable</InputLabel>
                     <Select
@@ -477,7 +502,7 @@ const ActionPlan: React.FC = () => {
                   </FormControl>
                 </Grid>
                 
-                <Grid item sx={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth size="small">
                     <InputLabel id="status-label">Status</InputLabel>
                     <Select
@@ -496,7 +521,7 @@ const ActionPlan: React.FC = () => {
                   </FormControl>
                 </Grid>
                 
-                <Grid item sx={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
                     size="small"
@@ -508,7 +533,7 @@ const ActionPlan: React.FC = () => {
                   />
                 </Grid>
                 
-                <Grid item sx={{ xs: 12 }}>
+                <Grid item xs={12}>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                     <Button onClick={handleClearFilters}>Réinitialiser</Button>
                     <Button 
@@ -532,7 +557,7 @@ const ActionPlan: React.FC = () => {
             </Box>
           ) : actions.length === 0 ? (
             <Typography variant="body1" sx={{ textAlign: 'center', my: 4 }}>
-              Aucune action trouvée. Créez votre première action en cliquant sur "Nouvelle action".
+              Aucune action trouvée. {!isAuditor && "Créez votre première action en cliquant sur \"Nouvelle action\"."}
             </Typography>
           ) : (
             <>
@@ -589,13 +614,15 @@ const ActionPlan: React.FC = () => {
                           >
                             <Edit fontSize="small" />
                           </IconButton>
-                          <IconButton 
-                            size="small" 
-                            onClick={() => handleDeleteAction(action.actionId)}
-                            aria-label="Delete"
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
+                          {!isAuditor && (
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleDeleteAction(action.actionId)}
+                              aria-label="Delete"
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -641,20 +668,52 @@ const ActionPlan: React.FC = () => {
         </Box>
       </Box>
       
+      {/* Modern Action Dialog */}
       <Dialog 
         open={actionDialog.open} 
         onClose={() => setActionDialog(prev => ({ ...prev, open: false }))}
         maxWidth="md"
         fullWidth
+        className="modern-action-dialog"
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.20)'
+          }
+        }}
       >
-        <DialogTitle>
-          {actionDialog.mode === 'create' ? 'Créer une nouvelle action' : 'Modifier une action'}
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          pb: 1,
+          borderBottom: '1px solid #e0e0e0'
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            {actionDialog.mode === 'create' ? 'Créer une nouvelle action' : 
+             isAuditor ? 'Mettre à jour le statut de l\'action' : 'Modifier une action'}
+          </Typography>
+          <IconButton 
+            onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}
+            size="small"
+            sx={{ color: 'grey.500' }}
+          >
+            <Close />
+          </IconButton>
         </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            {actionDialog.mode === 'create' && actionDialog.textId && (
-              <Grid item sx={{ xs: 12 }}>
-                <FormControl fullWidth>
+        
+        <DialogContent sx={{ pt: 3 }}>
+          {isAuditor && actionDialog.mode === 'edit' && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              En tant qu'auditeur, vous pouvez uniquement modifier la progression et le statut de cette action.
+            </Alert>
+          )}
+          
+          <Grid container spacing={3}>
+            {/* Requirement Selection - Only for creation and non-auditors */}
+            {actionDialog.mode === 'create' && actionDialog.textId && !isAuditor && (
+              <Grid item xs={12}>
+                <FormControl fullWidth variant="outlined">
                   <InputLabel id="requirement-label">Exigence</InputLabel>
                   <Select
                     labelId="requirement-label"
@@ -673,81 +732,158 @@ const ActionPlan: React.FC = () => {
                 </FormControl>
               </Grid>
             )}
+            
+            {/* Read-only requirement for edit mode */}
             {actionDialog.mode === 'edit' && actionDialog.data.requirementId && (
-              <Grid item sx={{ xs: 12 }}>
-                <Typography>
-                  <strong>Exigence:</strong> {requirements.find(r => r.requirementId === actionDialog.data.requirementId)?.title || '-'}
-                </Typography>
+              <Grid item xs={12}>
+                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Exigence
+                  </Typography>
+                  <Typography variant="body1">
+                    {requirements.find(r => r.requirementId === actionDialog.data.requirementId)?.title || '-'}
+                  </Typography>
+                </Box>
               </Grid>
             )}
-            <Grid item sx={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                id="description"
-                label="Description de l'action"
-                value={actionDialog.data.description}
-                onChange={(e) => handleActionDialogChange('description', e.target.value)}
-                required
-              />
+            
+            {/* Description - Read-only for auditors in edit mode */}
+            <Grid item xs={12}>
+              {isAuditor && actionDialog.mode === 'edit' ? (
+                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Description de l'action
+                  </Typography>
+                  <Typography variant="body1">{actionDialog.data.description}</Typography>
+                </Box>
+              ) : (
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  id="description"
+                  label="Description de l'action"
+                  value={actionDialog.data.description}
+                  onChange={(e) => handleActionDialogChange('description', e.target.value)}
+                  required
+                  variant="outlined"
+                />
+              )}
             </Grid>
-            <Grid item sx={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel id="responsible-dialog-label">Responsable</InputLabel>
-                <Select
-                  labelId="responsible-dialog-label"
-                  id="responsible-dialog-select"
-                  value={actionDialog.data.responsibleId || ''}
-                  label="Responsable"
-                  onChange={(e) => handleActionDialogChange('responsibleId', e.target.value === '' ? null : e.target.value)}
-                >
-                  <MenuItem value="">Sélectionner un responsable</MenuItem>
-                  {users.map(user => (
-                    <MenuItem key={user.userId} value={user.userId}>
-                      {user.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            
+            {/* Responsible and Deadline - Read-only for auditors */}
+            <Grid item xs={12} sm={6}>
+              {isAuditor && actionDialog.mode === 'edit' ? (
+                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Responsable
+                  </Typography>
+                  <Typography variant="body1">
+                    {users.find(u => u.userId === actionDialog.data.responsibleId)?.name || 'Non assigné'}
+                  </Typography>
+                </Box>
+              ) : (
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel id="responsible-dialog-label">Responsable</InputLabel>
+                  <Select
+                    labelId="responsible-dialog-label"
+                    id="responsible-dialog-select"
+                    value={actionDialog.data.responsibleId || ''}
+                    label="Responsable"
+                    onChange={(e) => handleActionDialogChange('responsibleId', e.target.value === '' ? null : e.target.value)}
+                  >
+                    <MenuItem value="">Sélectionner un responsable</MenuItem>
+                    {users.map(user => (
+                      <MenuItem key={user.userId} value={user.userId}>
+                        {user.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
             </Grid>
-            <Grid item sx={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                id="deadline"
-                label="Date d'échéance"
-                type="date"
-                value={actionDialog.data.deadline}
-                onChange={(e) => handleActionDialogChange('deadline', e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
+            
+            <Grid item xs={12} sm={6}>
+              {isAuditor && actionDialog.mode === 'edit' ? (
+                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Date d'échéance
+                  </Typography>
+                  <Typography variant="body1">
+                    {new Date(actionDialog.data.deadline).toLocaleDateString()}
+                  </Typography>
+                </Box>
+              ) : (
+                <TextField
+                  fullWidth
+                  id="deadline"
+                  label="Date d'échéance"
+                  type="date"
+                  value={actionDialog.data.deadline}
+                  onChange={(e) => handleActionDialogChange('deadline', e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                  variant="outlined"
+                />
+              )}
             </Grid>
-            <Grid item sx={{ xs: 12 }}>
-              <Typography gutterBottom>Progression: {actionDialog.data.progress}%</Typography>
-              <Slider
-                value={actionDialog.data.progress}
-                onChange={(_, value) => handleActionDialogChange('progress', value)}
-                aria-labelledby="progress-slider"
-                valueLabelDisplay="auto"
-                step={5}
-                marks
-                min={0}
-                max={100}
-              />
+            
+            {/* Progress - Editable for everyone */}
+            <Grid item xs={12}>
+              <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Progression: {actionDialog.data.progress}%
+                </Typography>
+                <Slider
+                  value={actionDialog.data.progress}
+                  onChange={(_, value) => handleActionDialogChange('progress', value)}
+                  aria-labelledby="progress-slider"
+                  valueLabelDisplay="auto"
+                  step={5}
+                  marks
+                  min={0}
+                  max={100}
+                  sx={{
+                    '& .MuiSlider-thumb': {
+                      height: 20,
+                      width: 20,
+                    },
+                    '& .MuiSlider-track': {
+                      height: 6,
+                    },
+                    '& .MuiSlider-rail': {
+                      height: 6,
+                    }
+                  }}
+                />
+              </Box>
             </Grid>
-            <Grid item sx={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                id="effectiveness"
-                label="Efficacité"
-                value={actionDialog.data.effectiveness}
-                onChange={(e) => handleActionDialogChange('effectiveness', e.target.value)}
-                helperText="Par exemple: Mesures d'impact, résultats de l'action"
-              />
+            
+            {/* Effectiveness - Read-only for auditors */}
+            <Grid item xs={12} sm={6}>
+              {isAuditor && actionDialog.mode === 'edit' ? (
+                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Efficacité
+                  </Typography>
+                  <Typography variant="body1">{actionDialog.data.effectiveness || '-'}</Typography>
+                </Box>
+              ) : (
+                <TextField
+                  fullWidth
+                  id="effectiveness"
+                  label="Efficacité"
+                  value={actionDialog.data.effectiveness}
+                  onChange={(e) => handleActionDialogChange('effectiveness', e.target.value)}
+                  helperText="Mesures d'impact, résultats de l'action"
+                  variant="outlined"
+                />
+              )}
             </Grid>
-            <Grid item sx={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
+            
+            {/* Status - Editable for everyone */}
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth variant="outlined">
                 <InputLabel id="status-dialog-label">Statut</InputLabel>
                 <Select
                   labelId="status-dialog-label"
@@ -765,19 +901,29 @@ const ActionPlan: React.FC = () => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}>
+        
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button 
+            onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}
+            variant="outlined"
+            sx={{ mr: 1 }}
+          >
             Annuler
           </Button>
           <Button 
             variant="contained" 
             onClick={handleActionDialogSubmit}
             disabled={
-              !actionDialog.data.description || 
-              !actionDialog.data.responsibleId ||
-              !actionDialog.data.deadline ||
+              (actionDialog.mode === 'create' && (!actionDialog.data.description || !actionDialog.data.responsibleId || !actionDialog.data.deadline)) ||
               !actionDialog.data.status
             }
+            sx={{ 
+              minWidth: 120,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+              }
+            }}
           >
             {actionDialog.mode === 'create' ? 'Créer' : 'Enregistrer'}
           </Button>
