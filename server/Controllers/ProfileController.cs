@@ -51,63 +51,71 @@ namespace server.Controllers
             });
         }
 
-[HttpPut]
-public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
-{
-    // Get user ID from session
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-    {
-        return Unauthorized(new { message = "Not authenticated" });
-    }
+        [HttpPut]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+        {
+            // Get user ID from session
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return Unauthorized(new { message = "Not authenticated" });
+            }
 
-    // Find user by ID
-    var user = await _context.Users
-        .Include(u => u.Company)
-        .FirstOrDefaultAsync(u => u.UserId == userId.Value);
+            // Find user by ID
+            var user = await _context.Users
+                .Include(u => u.Company)
+                .FirstOrDefaultAsync(u => u.UserId == userId.Value);
 
-    if (user == null)
-    {
-        return NotFound(new { message = "User not found" });
-    }
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
 
-    // Update user fields
-    user.Name = request.Name ?? user.Name;
-    user.Email = request.Email ?? user.Email;
-    user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
+            // Update user fields
+            user.Name = request.Name ?? user.Name;
+            user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
 
-    // Update password if provided
-    if (!string.IsNullOrEmpty(request.Password))
-    {
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-    }
+            // Verify old password and update password if provided
+            if (!string.IsNullOrEmpty(request.OldPassword) && !string.IsNullOrEmpty(request.NewPassword))
+            {
+                // Verify old password
+                if (!BCrypt.Net.BCrypt.Verify(request.OldPassword, user.PasswordHash))
+                {
+                    return BadRequest(new { message = "Current password is incorrect" });
+                }
+                
+                // Update to new password
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            }
 
-    // Update company name if applicable
-    if (user.Role != "SuperAdmin" && user.Company != null && !string.IsNullOrEmpty(request.CompanyName))
-    {
-        user.Company.CompanyName = request.CompanyName;
-    }
+            // Update company name only for SubscriptionManager
+            if (user.Role == "SubscriptionManager" && user.Company != null && !string.IsNullOrEmpty(request.CompanyName))
+            {
+                user.Company.CompanyName = request.CompanyName;
+            }
 
-    try
-    {
-        await _context.SaveChangesAsync();
-        return Ok(new { message = "Profile updated successfully" });
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Profile updated successfully" });
+            }
+            catch (DbUpdateException)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating your profile" });
+            }
+        }
     }
-    catch (DbUpdateException)
-    {
-        return StatusCode(500, new { message = "An error occurred while updating your profile" });
-    }
-}  }
 
     public class UpdateProfileRequest
-{
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public string PhoneNumber { get; set; }
-    
-    // Make sure the Password is properly nullable
-    public string? Password { get; set; } = null;
-    
-    public string CompanyName { get; set; }
-}
+    {
+        public string Name { get; set; }
+        public string PhoneNumber { get; set; }
+        
+        // Password change fields
+        public string? OldPassword { get; set; } = null;
+        public string? NewPassword { get; set; } = null;
+        
+        // Company name only for SubscriptionManager
+        public string CompanyName { get; set; }
+    }
 }

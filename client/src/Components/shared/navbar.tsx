@@ -248,12 +248,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
                   <i className="fas fa-user-cog"></i>
                   <span>My Profile</span>
                 </Link>
-                {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
-                  <Link to={`${getBasePath()}/settings`} className="dropdown-item">
-                    <i className="fas fa-cog"></i>
-                    <span>Settings</span>
-                  </Link>
-                )}
+          
                 <div className="dropdown-divider"></div>
                 <div className="dropdown-item" onClick={handleLogout} style={{cursor: 'pointer'}}>
                   <i className="fas fa-sign-out-alt"></i>

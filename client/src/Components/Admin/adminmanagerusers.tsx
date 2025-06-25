@@ -230,13 +230,7 @@ const AdminManageUsers: React.FC = () => {
                     </td>
                     <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                     <td className="actions-cell">
-                      <button 
-                        className="action-btn edit"
-                        onClick={() => openEditModal(user)}
-                        title="Edit User"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
+                    
                       <button 
                         className="action-btn delete"
                         onClick={() => openDeleteModal(user)}

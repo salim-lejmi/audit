@@ -236,13 +236,7 @@ const AdminCompanyManagement: React.FC = () => {
                     </td>
                     <td>{new Date(company.createdAt).toLocaleDateString()}</td>
                     <td className="actions-cell">
-                      <button 
-                        className="action-btn edit"
-                        onClick={() => openEditModal(company)}
-                        title="Edit Company"
-                      >
-                        <i className="fas fa-edit"></i>
-                      </button>
+                    
                       <button 
                         className="action-btn delete"
                         onClick={() => openDeleteModal(company)}

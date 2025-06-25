@@ -17,8 +17,8 @@ const ProfilePage: React.FC = () => {
   });
   
   const [passwordData, setPasswordData] = useState({
-    newPassword: '',
-    confirmPassword: ''
+    oldPassword: '',
+    newPassword: ''
   });
   
   const [loading, setLoading] = useState(true);
@@ -60,7 +60,7 @@ const ProfilePage: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     
-    if (id === 'newPassword' || id === 'confirmPassword') {
+    if (id === 'oldPassword' || id === 'newPassword') {
       setPasswordData({
         ...passwordData,
         [id]: value
@@ -78,15 +78,20 @@ const ProfilePage: React.FC = () => {
     setError('');
     setSuccess('');
     
-    // Only validate password if the user is attempting to change it
-    if (passwordData.newPassword || passwordData.confirmPassword) {
-      if (passwordData.newPassword !== passwordData.confirmPassword) {
-        setError('Passwords do not match');
+    // Password validation - both old and new password must be provided together
+    if (passwordData.oldPassword || passwordData.newPassword) {
+      if (!passwordData.oldPassword) {
+        setError('Please enter your current password');
+        return;
+      }
+      
+      if (!passwordData.newPassword) {
+        setError('Please enter your new password');
         return;
       }
       
       if (passwordData.newPassword.length < 8) {
-        setError('Password must be at least 8 characters long');
+        setError('New password must be at least 8 characters long');
         return;
       }
     }
@@ -96,11 +101,14 @@ const ProfilePage: React.FC = () => {
       name: userData.role === 'SuperAdmin' 
         ? `${userData.firstName} ${userData.lastName}`.trim() 
         : userData.name,
-      email: userData.email,
       phoneNumber: userData.phoneNumber,
-      companyName: userData.companyName,
-      // Explicitly set password to null if not provided
-      password: passwordData.newPassword || null
+      // Only include companyName for SubscriptionManager
+      ...(userData.role === 'SubscriptionManager' && { companyName: userData.companyName }),
+      // Include password data only if provided
+      ...(passwordData.oldPassword && passwordData.newPassword && {
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword
+      })
     };
     
     // DEBUG: Log the data being sent to the server
@@ -115,8 +123,8 @@ const ProfilePage: React.FC = () => {
       
       // Reset password fields
       setPasswordData({
-        newPassword: '',
-        confirmPassword: ''
+        oldPassword: '',
+        newPassword: ''
       });
       
     } catch (error: unknown) {
@@ -148,7 +156,8 @@ const ProfilePage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-    if (loading) {
+
+  if (loading) {
     return <div className="loading">Loading profile data...</div>;
   }
 
@@ -203,8 +212,8 @@ const ProfilePage: React.FC = () => {
             </>
           )}
           
-          {/* User View Form Fields */}
-          {userData.role !== 'SuperAdmin' && (
+          {/* Subscription Manager View Form Fields */}
+          {userData.role === 'SubscriptionManager' && (
             <>
               <div className="form-group">
                 <label htmlFor="name">Name</label>
@@ -242,8 +251,36 @@ const ProfilePage: React.FC = () => {
               </div>
             </>
           )}
+
+          {/* Other User Roles (Auditor, etc.) */}
+          {userData.role !== 'SuperAdmin' && userData.role !== 'SubscriptionManager' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="name">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  className="form-input"
+                  value={userData.name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="phoneNumber">Phone Number</label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  className="form-input"
+                  value={userData.phoneNumber}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </>
+          )}
           
-          {/* Common Fields for Both Views */}
+          {/* Email Display (Read-only) */}
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input
@@ -251,12 +288,26 @@ const ProfilePage: React.FC = () => {
               id="email"
               className="form-input"
               value={userData.email}
-              onChange={handleInputChange}
-              required
+              readOnly
+              disabled
+              style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
             />
           </div>
           
+          {/* Password Change Section */}
           <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="oldPassword">Current Password</label>
+              <input
+                type="password"
+                id="oldPassword"
+                className="form-input"
+                value={passwordData.oldPassword}
+                onChange={handleInputChange}
+                placeholder="Enter current password to change"
+              />
+            </div>
+            
             <div className="form-group">
               <label htmlFor="newPassword">New Password</label>
               <input
@@ -265,19 +316,7 @@ const ProfilePage: React.FC = () => {
                 className="form-input"
                 value={passwordData.newPassword}
                 onChange={handleInputChange}
-                placeholder="Leave blank to keep current password"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                className="form-input"
-                value={passwordData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder="Leave blank to keep current password"
+                placeholder="Enter new password"
               />
             </div>
           </div>
