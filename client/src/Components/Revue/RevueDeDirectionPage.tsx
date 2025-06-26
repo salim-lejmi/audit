@@ -194,7 +194,7 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
                     <Link to={`${review.revueId}`} className="action-btn view">View</Link>
                     
                     {/* Only SubscriptionManager and Auditor can edit */}
-                    {canEdit() && (
+                    {canEdit()  &&(userRole === 'SubscriptionManager') && (
                       <button
                         onClick={() => { setEditReview(review); setShowEditModal(true); }}
                         className="action-btn edit"

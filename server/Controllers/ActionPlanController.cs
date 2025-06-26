@@ -315,166 +315,232 @@ namespace server.Controllers
                 new { actionId = action.ActionId, message = "Action created successfully" });
         }
 
-        [HttpPut("{actionId}")]
-        public async Task<IActionResult> UpdateAction(int actionId, [FromBody] UpdateActionRequest request)
+[HttpPut("{actionId}")]
+public async Task<IActionResult> UpdateAction(int actionId, [FromBody] UpdateActionRequest request)
+{
+    // Check authentication
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var companyId = HttpContext.Session.GetInt32("CompanyId");
+    
+    if (!userId.HasValue || !companyId.HasValue)
+    {
+        return Unauthorized(new { message = "Not authenticated" });
+    }
+
+    // Find action and ensure it belongs to the user's company
+    var action = await _context.Actions
+        .Include(a => a.CreatedBy)
+        .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
+        
+    if (action == null)
+    {
+        return NotFound(new { message = "Action not found" });
+    }
+
+    // Get current user
+    var currentUser = await _context.Users.FindAsync(userId.Value);
+
+    // Check permission based on user role
+    bool isAuditor = currentUser.Role != "SuperAdmin" && currentUser.Role != "SubscriptionManager";
+    bool canEdit = false;
+
+    if (!isAuditor)
+    {
+        // SuperAdmin or SubscriptionManager can edit any action in their company
+        canEdit = true;
+    }
+    else
+    {
+        // Auditors can only edit actions assigned to them
+        canEdit = action.ResponsibleId == userId.Value;
+    }
+
+    if (!canEdit)
+    {
+        return StatusCode(403, new { message = "You don't have permission to update this action" });
+    }
+
+    var oldStatus = action.Status;
+    var wasAssignedToSomeoneElse = false;
+    var oldResponsibleId = action.ResponsibleId;
+
+    // Track changes to specific fields
+    var entry = _context.Entry(action);
+
+    if (isAuditor)
+    {
+        // Auditors can only update progress and status
+        if (request.Progress.HasValue)
         {
-            // Check authentication
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var companyId = HttpContext.Session.GetInt32("CompanyId");
-            
-            if (!userId.HasValue || !companyId.HasValue)
+            entry.Property(a => a.Progress).IsModified = true;
+            action.Progress = request.Progress.Value;
+        }
+
+        if (!string.IsNullOrEmpty(request.Status))
+        {
+            entry.Property(a => a.Status).IsModified = true;
+            action.Status = request.Status;
+        }
+
+        if (request.Effectiveness != null) // Check for null to allow clearing
+        {
+            entry.Property(a => a.Effectiveness).IsModified = true;
+            action.Effectiveness = request.Effectiveness;
+        }
+    }
+    else
+    {
+        // SuperAdmin/SubscriptionManager can update all fields
+        if (!string.IsNullOrEmpty(request.Description))
+        {
+            entry.Property(a => a.Description).IsModified = true;
+            action.Description = request.Description;
+        }
+
+        if (request.ResponsibleId.HasValue)
+        {
+            // If ResponsibleId is provided and not zero, verify responsible user exists and is in the same company
+            if (request.ResponsibleId.Value > 0)
             {
-                return Unauthorized(new { message = "Not authenticated" });
-            }
-
-            // Find action and ensure it belongs to the user's company
-            var action = await _context.Actions
-                .Include(a => a.CreatedBy)
-                .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
-                
-            if (action == null)
-            {
-                return NotFound(new { message = "Action not found" });
-            }
-
-            // Get current user
-            var currentUser = await _context.Users.FindAsync(userId.Value);
-
-            // Check permission: Only SubscriptionManager or responsible user can update the action
-            if (currentUser.Role != "SubscriptionManager" && action.ResponsibleId != userId)
-            {
-                return StatusCode(403, new { message = "You don't have permission to update this action" });
-            }
-
-            var oldStatus = action.Status;
-            var wasAssignedToSomeoneElse = false;
-            var oldResponsibleId = action.ResponsibleId;
-
-            // If user is not SubscriptionManager, they can only update progress and effectiveness
-            if (currentUser.Role != "SubscriptionManager")
-            {
-                // Only allow updating progress and effectiveness
-                if (request.Progress.HasValue)
-                    action.Progress = request.Progress.Value;
-
-                if (!string.IsNullOrEmpty(request.Effectiveness))
-                    action.Effectiveness = request.Effectiveness;
-
-                if (!string.IsNullOrEmpty(request.Status))
-                    action.Status = request.Status;
-            }
-            else
-            {
-                // SubscriptionManager can update all fields
-                if (!string.IsNullOrEmpty(request.Description))
-                    action.Description = request.Description;
-
-                if (request.ResponsibleId.HasValue)
+                var responsible = await _context.Users.FindAsync(request.ResponsibleId.Value);
+                if (responsible == null)
                 {
-                    // If ResponsibleId is provided and not zero, verify responsible user exists and is in the same company
-                    if (request.ResponsibleId.Value > 0)
-                    {
-                        var responsible = await _context.Users.FindAsync(request.ResponsibleId.Value);
-                        if (responsible == null)
-                        {
-                            return NotFound(new { message = "Responsible user not found" });
-                        }
-                        if (responsible.CompanyId != currentUser.CompanyId)
-                        {
-                            return StatusCode(403, new { message = "You can only assign actions to users in your company" });
-                        }
-
-                        // Check if action is being assigned to someone else
-                        if (request.ResponsibleId.Value != oldResponsibleId && request.ResponsibleId.Value != userId.Value)
-                        {
-                            wasAssignedToSomeoneElse = true;
-                        }
-                    }
-                    action.ResponsibleId = request.ResponsibleId;
+                    return BadRequest(new { message = "Responsible user not found" });
+                }
+                if (responsible.CompanyId != currentUser.CompanyId)
+                {
+                    return StatusCode(403, new { message = "You can only assign actions to users in your company" });
                 }
 
-                if (request.Deadline.HasValue)
-                    action.Deadline = request.Deadline.Value;
-
-                if (request.Progress.HasValue)
-                    action.Progress = request.Progress.Value;
-
-                if (!string.IsNullOrEmpty(request.Effectiveness))
-                    action.Effectiveness = request.Effectiveness;
-
-                if (!string.IsNullOrEmpty(request.Status))
-                    action.Status = request.Status;
+                // Check if action is being assigned to someone else
+                if (request.ResponsibleId.Value != oldResponsibleId && request.ResponsibleId.Value != userId.Value)
+                {
+                    wasAssignedToSomeoneElse = true;
+                }
             }
-
-            action.UpdatedAt = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-
-            // Create notifications based on what changed
-            
-            // Notification for action assignment (only if SubscriptionManager assigns to someone else)
-            if (wasAssignedToSomeoneElse && action.ResponsibleId.HasValue)
-            {
-                await _notificationService.CreateNotificationAsync(
-                    action.ResponsibleId.Value,
-                    "Action Assigned to You",
-                    $"You have been assigned an action: {action.Description}",
-                    "ActionAssigned",
-                    action.ActionId
-                );
-            }
-
-            // Notification for action completion (when responsible user marks as completed)
-            if (oldStatus != "completed" && action.Status == "completed" && action.CreatedById != userId.Value)
-            {
-                await _notificationService.CreateNotificationAsync(
-                    action.CreatedById,
-                    "Action Completed",
-                    $"Action has been completed: {action.Description}",
-                    "ActionCompleted",
-                    action.ActionId
-                );
-            }
-
-            return Ok(new { message = "Action updated successfully" });
+            entry.Property(a => a.ResponsibleId).IsModified = true;
+            action.ResponsibleId = request.ResponsibleId;
         }
 
-        [HttpDelete("{actionId}")]
-        public async Task<IActionResult> DeleteAction(int actionId)
+        if (request.Deadline.HasValue)
         {
-            // Check authentication
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var companyId = HttpContext.Session.GetInt32("CompanyId");
-            
-            if (!userId.HasValue || !companyId.HasValue)
-            {
-                return Unauthorized(new { message = "Not authenticated" });
-            }
-
-            // Find action and ensure it belongs to the user's company
-            var action = await _context.Actions
-                .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
-                
-            if (action == null)
-            {
-                return NotFound(new { message = "Action not found" });
-            }
-
-            // Get current user
-            var currentUser = await _context.Users.FindAsync(userId.Value);
-
-            // Check permission: Only SubscriptionManager or creator can delete the action
-            if (currentUser.Role != "SubscriptionManager" && action.CreatedById != userId)
-            {
-                return StatusCode(403, new { message = "You don't have permission to delete this action" });
-            }
-
-            _context.Actions.Remove(action);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Action deleted successfully" });
+            entry.Property(a => a.Deadline).IsModified = true;
+            action.Deadline = request.Deadline.Value;
         }
 
+        if (request.Progress.HasValue)
+        {
+            entry.Property(a => a.Progress).IsModified = true;
+            action.Progress = request.Progress.Value;
+        }
+
+        if (request.Effectiveness != null) // Check for null to allow clearing
+        {
+            entry.Property(a => a.Effectiveness).IsModified = true;
+            action.Effectiveness = request.Effectiveness;
+        }
+
+        if (!string.IsNullOrEmpty(request.Status))
+        {
+            entry.Property(a => a.Status).IsModified = true;
+            action.Status = request.Status;
+        }
+    }
+
+    action.UpdatedAt = DateTime.Now;
+    entry.Property(a => a.UpdatedAt).IsModified = true;
+
+    try
+    {
+        await _context.SaveChangesAsync();
+    }
+    catch (DbUpdateException ex)
+    {
+        return StatusCode(500, new { message = "Error saving changes", error = ex.InnerException?.Message ?? ex.Message });
+    }
+
+    // Create notifications based on what changed
+    if (wasAssignedToSomeoneElse && action.ResponsibleId.HasValue)
+    {
+        await _notificationService.CreateNotificationAsync(
+            action.ResponsibleId.Value,
+            "Action Assigned to You",
+            $"You have been assigned an action: {action.Description}",
+            "ActionAssigned",
+            action.ActionId
+        );
+    }
+
+    if (oldStatus != "completed" && action.Status == "completed" && action.CreatedById != userId.Value)
+    {
+        await _notificationService.CreateNotificationAsync(
+            action.CreatedById,
+            "Action Completed",
+            $"Action has been completed: {action.Description}",
+            "ActionCompleted",
+            action.ActionId
+        );
+    }
+
+    return Ok(new { message = "Action updated successfully" });
+}
+[HttpDelete("{actionId}")]
+public async Task<IActionResult> DeleteAction(int actionId)
+{
+    try
+    {
+        // Check authentication
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var companyId = HttpContext.Session.GetInt32("CompanyId");
+        
+        if (!userId.HasValue || !companyId.HasValue)
+        {
+            return Unauthorized(new { message = "Not authenticated" });
+        }
+
+        // Find action and ensure it belongs to the user's company
+        var action = await _context.Actions
+            .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
+            
+        if (action == null)
+        {
+            return NotFound(new { message = "Action not found" });
+        }
+
+        // Get current user
+        var currentUser = await _context.Users.FindAsync(userId.Value);
+
+        // Check permission: Only SubscriptionManager or creator can delete the action
+        if (currentUser.Role != "SubscriptionManager" && action.CreatedById != userId)
+        {
+            return StatusCode(403, new { message = "You don't have permission to delete this action" });
+        }
+
+        // --- DELETE RELATED NOTIFICATIONS FIRST ---
+        
+        // Delete all notifications that reference this action
+        var relatedNotifications = await _context.Notifications
+                                                .Where(n => n.RelatedActionId == actionId)
+                                                .ToListAsync();
+        
+        if (relatedNotifications.Any())
+        {
+            _context.Notifications.RemoveRange(relatedNotifications);
+        }
+
+        // Delete the action
+        _context.Actions.Remove(action);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Action deleted successfully" });
+    }
+    catch (Exception ex)
+    {
+        // Log the exception
+        Console.WriteLine($"Error deleting action: {ex.Message}");
+        return StatusCode(500, new { message = "An error occurred while deleting the action", details = ex.Message });
+    }
+}
         [HttpGet("export")]
         public async Task<IActionResult> ExportActionPlan(
             [FromQuery] int? textId = null,
@@ -585,14 +651,15 @@ namespace server.Controllers
             public string Status { get; set; } = "active";
         }       
         
-        public class UpdateActionRequest
-        {
-            public string Description { get; set; }
-            public int? ResponsibleId { get; set; }
-            public DateTime? Deadline { get; set; }
-            public int? Progress { get; set; }
-            public string Effectiveness { get; set; }
-            public string Status { get; set; }
-        }
+    public class UpdateActionRequest
+{
+    public string Description { get; set; }
+    public int? ResponsibleId { get; set; }
+    public DateTime? Deadline { get; set; }
+    public int? Progress { get; set; }
+    public string Effectiveness { get; set; }
+    public string Status { get; set; }
+}
+
     }
 }

@@ -294,7 +294,7 @@ const handleGeneratePdf = () => {
         </div>
 
 <div className="action-buttons-row">
-  {review.status === 'Draft' && canModify() && (
+  {review.status === 'Draft' && canModify() &&(userRole === 'SubscriptionManager') && (
     <button onClick={handleStartReview} className="action-btn-primary btn-start">
       Start Review
     </button>
@@ -304,7 +304,7 @@ const handleGeneratePdf = () => {
       Complete Review
     </button>
   )}
-  {review.status !== 'Canceled' && review.status !== 'Completed' && canModify() && (
+  {review.status !== 'Canceled' && review.status !== 'Completed' && canModify() &&(userRole === 'SubscriptionManager') && (
     <button onClick={handleCancelReview} className="action-btn-primary btn-cancel">
       Cancel Review
     </button>

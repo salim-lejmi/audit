@@ -139,7 +139,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
           )}
 
           {/* Compliance Evaluation link */}
-          {(userRole === 'SubscriptionManager' || userRole === 'User' || userRole === 'Auditor' || userRole === 'Manager') && (
+          {(userRole === 'SubscriptionManager') && (
             <div className="nav-item">
               <Link to={`${getBasePath()}/compliance`} className="nav-button">
                 <i className="fas fa-check-square"></i>
@@ -148,6 +148,14 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             </div>
           )}
 
+       {(userRole === 'Auditor') && (
+            <div className="nav-item">
+              <Link to={`${getBasePath()}/action-plan`} className="nav-button">
+                <i className="fas fa-tasks"></i>
+                <span className="nav-label">Action Plan</span>
+              </Link>
+            </div>
+          )}
           {/* Taxonomy Manager link */}
           {userRole === 'SuperAdmin' && (
             <div className="nav-item">

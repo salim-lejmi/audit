@@ -261,8 +261,27 @@ const ActionPlan: React.FC = () => {
   const handleActionDialogSubmit = async () => {
     try {
       const { mode, actionId, textId, data } = actionDialog;
-      
+
+      console.log('Submitting Action Dialog:', {
+        mode,
+        actionId,
+        textId,
+        data,
+        isAuditor
+      });
+
       if (mode === 'create') {
+        console.log('Creating action with data:', {
+          textId,
+          requirementId: data.requirementId,
+          description: data.description,
+          responsibleId: data.responsibleId,
+          deadline: data.deadline,
+          progress: data.progress,
+          effectiveness: data.effectiveness,
+          status: data.status
+        });
+
         await axios.post('/api/action-plan', {
           textId,
           requirementId: data.requirementId,
@@ -273,14 +292,39 @@ const ActionPlan: React.FC = () => {
           effectiveness: data.effectiveness,
           status: data.status
         });
+
       } else {
-        // For auditors, only send progress and status
         if (isAuditor) {
-          await axios.put(`/api/action-plan/${actionId}`, {
+          console.log('Auditor updating action with data:', {
+            actionId,
+            description: data.description,
+            responsibleId: data.responsibleId,
+            deadline: data.deadline,
             progress: data.progress,
+            effectiveness: data.effectiveness,
             status: data.status
           });
+
+          await axios.put(`/api/action-plan/${actionId}`, {
+            description: data.description,
+            responsibleId: data.responsibleId,
+            deadline: data.deadline,
+            progress: data.progress,
+            effectiveness: data.effectiveness,
+            status: data.status
+          });
+
         } else {
+          console.log('Editor updating action with data:', {
+            actionId,
+            description: data.description,
+            responsibleId: data.responsibleId,
+            deadline: data.deadline,
+            progress: data.progress,
+            effectiveness: data.effectiveness,
+            status: data.status
+          });
+
           await axios.put(`/api/action-plan/${actionId}`, {
             description: data.description,
             responsibleId: data.responsibleId,
@@ -291,11 +335,20 @@ const ActionPlan: React.FC = () => {
           });
         }
       }
-      
+
       setActionDialog(prev => ({ ...prev, open: false }));
       fetchActions(currentPage);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving action:', error);
+      if (error.response) {
+        console.error('Server response data:', error.response.data);
+        console.error('Server response status:', error.response.status);
+        console.error('Server response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('No response received. Request was:', error.request);
+      } else {
+        console.error('Error setting up the request:', error.message);
+      }
     }
   };
   
