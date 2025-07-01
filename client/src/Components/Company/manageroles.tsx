@@ -16,7 +16,7 @@ const ManageRoles: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
 
-  const availableRoles = ['User', 'Auditor', 'Manager'];
+  const availableRoles = ['Utilisateur', 'Auditeur', 'Gestionnaire'];
 
   useEffect(() => {
     fetchUsers();
@@ -29,7 +29,7 @@ const ManageRoles: React.FC = () => {
       setUsers(response.data);
       setLoading(false);
     } catch {
-      setError('Failed to load users and roles');
+      setError('Échec du chargement des utilisateurs et des rôles');
       setLoading(false);
     }
   };
@@ -39,7 +39,7 @@ const ManageRoles: React.FC = () => {
       await axios.put(`/api/company/users/${userId}/role`, { role: newRole });
       fetchUsers();
     } catch {
-      setError('Failed to update user role');
+      setError('Échec de la mise à jour du rôle de l’utilisateur');
     }
   };
 
@@ -60,7 +60,7 @@ const ManageRoles: React.FC = () => {
   }, {});
 
   if (loading) {
-    return <div className="loading-container">Loading users...</div>;
+    return <div className="loading-container">Chargement des utilisateurs...</div>;
   }
 
   if (error) {
@@ -71,8 +71,8 @@ const ManageRoles: React.FC = () => {
     <section className="manage-roles-section">
       <div className="container">
         <div className="section-header">
-          <h2>Role Management</h2>
-          <p className="text-muted">Manage user roles and permissions within your company</p>
+          <h2>Gestion des rôles</h2>
+          <p className="text-muted">Gérez les rôles et permissions des utilisateurs au sein de votre entreprise</p>
         </div>
 
         <div className="controls-container">
@@ -81,7 +81,7 @@ const ManageRoles: React.FC = () => {
             <input
               type="text"
               className="search-input"
-              placeholder="Search users..."
+              placeholder="Rechercher des utilisateurs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -93,11 +93,11 @@ const ManageRoles: React.FC = () => {
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
-              <option value="All">All Roles</option>
-              <option value="User">User</option>
-              <option value="Auditor">Auditor</option>
-              <option value="Manager">Manager</option>
-              <option value="SubscriptionManager">Subscription Manager</option>
+              <option value="All">Tous les rôles</option>
+              <option value="User">Utilisateur</option>
+              <option value="Auditor">Auditeur</option>
+              <option value="Manager">Gestionnaire</option>
+              <option value="SubscriptionManager">Gestionnaire d'abonnement</option>
             </select>
           </div>
         </div>
@@ -106,16 +106,16 @@ const ManageRoles: React.FC = () => {
           <table className="users-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Current Role</th>
-                <th>Change Role</th>
+                <th>Utilisateur</th>
+                <th>Rôle actuel</th>
+                <th>Modifier le rôle</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={3} style={{ textAlign: 'center', padding: '2rem' }}>
-                    No users found matching your criteria
+                    Aucun utilisateur trouvé correspondant à vos critères
                   </td>
                 </tr>
               ) : (
@@ -129,7 +129,10 @@ const ManageRoles: React.FC = () => {
                     </td>
                     <td>
                       <span className={`role-indicator role-${user.role.toLowerCase()}`}>
-                        {user.role}
+                        {user.role === 'User' ? 'Utilisateur' : 
+                         user.role === 'Auditor' ? 'Auditeur' : 
+                         user.role === 'Manager' ? 'Gestionnaire' : 
+                         user.role === 'SubscriptionManager' ? 'Gestionnaire d\'abonnement' : user.role}
                       </span>
                     </td>
                     <td>
@@ -145,7 +148,7 @@ const ManageRoles: React.FC = () => {
                         </select>
                       ) : (
                         <span className="role-indicator role-subscriptionmanager">
-                          Primary Account
+                          Compte principal
                         </span>
                       )}
                     </td>
@@ -157,23 +160,23 @@ const ManageRoles: React.FC = () => {
         </div>
 
         <div className="role-descriptions">
-          <h4>Role Descriptions</h4>
+          <h4>Descriptions des rôles</h4>
           <div className="descriptions-grid">
             <div className="description-item">
-              <h5>User</h5>
-              <p>Standard company user with basic access permissions.</p>
+              <h5>Utilisateur</h5>
+              <p>Utilisateur standard de l’entreprise avec des permissions d’accès de base.</p>
             </div>
             <div className="description-item">
-              <h5>Auditor</h5>
-              <p>Can view and analyze reports but cannot modify critical data.</p>
+              <h5>Auditeur</h5>
+              <p>Peut consulter et analyser les rapports mais ne peut pas modifier les données critiques.</p>
             </div>
             <div className="description-item">
-              <h5>Manager</h5>
-              <p>Has elevated permissions to manage projects and certain user activities.</p>
+              <h5>Gestionnaire</h5>
+              <p>Dispose de permissions élevées pour gérer les projets et certaines activités des utilisateurs.</p>
             </div>
             <div className="description-item">
-              <h5>Subscription Manager</h5>
-              <p>Primary account with administrative rights for the company.</p>
+              <h5>Gestionnaire d'abonnement</h5>
+              <p>Compte principal avec des droits administratifs pour l’entreprise.</p>
             </div>
           </div>
         </div>

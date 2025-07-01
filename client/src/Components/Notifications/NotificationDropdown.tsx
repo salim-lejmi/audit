@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/notifications.css';
+import { useTranslation } from '../../TranslationContext';
 
 interface Notification {
   notificationId: number;
@@ -14,6 +15,7 @@ interface Notification {
 }
 
 const NotificationDropdown: React.FC = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -23,10 +25,7 @@ const NotificationDropdown: React.FC = () => {
 
   useEffect(() => {
     fetchUnreadCount();
-    
-    // Set up polling for unread count every 30 seconds
     const interval = setInterval(fetchUnreadCount, 30000);
-    
     return () => clearInterval(interval);
   }, []);
 
@@ -46,7 +45,7 @@ const NotificationDropdown: React.FC = () => {
       const response = await axios.get('/api/notifications/unread-count');
       setUnreadCount(response.data.count);
     } catch (error) {
-      console.error('Error fetching unread count:', error);
+      console.error('Erreur lors de la récupération du nombre de notifications non lues:', error);
     }
   };
 
@@ -58,14 +57,13 @@ const NotificationDropdown: React.FC = () => {
       const response = await axios.get('/api/notifications');
       setNotifications(response.data);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('Erreur lors de la récupération des notifications:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleNotificationClick = async (notification: Notification) => {
-    // Mark as read if not already read
     if (!notification.isRead) {
       try {
         await axios.put(`/api/notifications/${notification.notificationId}/read`);
@@ -78,19 +76,15 @@ const NotificationDropdown: React.FC = () => {
         );
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (error) {
-        console.error('Error marking notification as read:', error);
+        console.error('Erreur lors du marquage de la notification comme lue:', error);
       }
     }
 
-    // Navigate to action plan if there's a related action
     if (notification.relatedActionId) {
-      // Determine the correct path based on user role
       const userRole = localStorage.getItem('userRole') || 'User';
       let basePath = '/user';
-      
       if (userRole === 'SuperAdmin') basePath = '/admin';
       else if (userRole === 'SubscriptionManager') basePath = '/company';
-      
       navigate(`${basePath}/action-plan`);
     }
 
@@ -103,7 +97,7 @@ const NotificationDropdown: React.FC = () => {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      console.error('Erreur lors du marquage de toutes les notifications comme lues:', error);
     }
   };
 
@@ -119,16 +113,16 @@ const NotificationDropdown: React.FC = () => {
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1) return t('notifications.just_now');
+    if (diffInMinutes < 60) return `${diffInMinutes} ${t('notifications.minutes_ago')}`;
     
     const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 24) return `${diffInHours} ${t('notifications.hours_ago')}`;
     
     const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d ago`;
+    if (diffInDays < 7) return `${diffInDays} ${t('notifications.days_ago')}`;
     
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('fr-FR');
   };
 
   const getNotificationIcon = (type: string) => {
@@ -147,7 +141,7 @@ const NotificationDropdown: React.FC = () => {
       <button 
         className="notification-button"
         onClick={handleDropdownToggle}
-        aria-label="Notifications"
+        aria-label={t('notifications.title')}
       >
         <i className="fas fa-bell"></i>
         {unreadCount > 0 && (
@@ -158,13 +152,13 @@ const NotificationDropdown: React.FC = () => {
       {isOpen && (
         <div className="notification-dropdown">
           <div className="notification-header">
-            <h3>Notifications</h3>
+            <h3>{t('notifications.title')}</h3>
             {unreadCount > 0 && (
               <button 
                 className="mark-all-read-btn"
                 onClick={handleMarkAllAsRead}
               >
-                Mark all as read
+                {t('notifications.mark_all_read')}
               </button>
             )}
           </div>
@@ -173,12 +167,12 @@ const NotificationDropdown: React.FC = () => {
             {loading ? (
               <div className="notification-loading">
                 <i className="fas fa-spinner fa-spin"></i>
-                <span>Loading...</span>
+                <span>{t('notifications.loading')}</span>
               </div>
             ) : notifications.length === 0 ? (
               <div className="no-notifications">
                 <i className="fas fa-bell-slash"></i>
-                <span>No notifications</span>
+                <span>{t('notifications.no_notifications')}</span>
               </div>
             ) : (
               notifications.map((notification) => (
@@ -204,7 +198,7 @@ const NotificationDropdown: React.FC = () => {
           {notifications.length > 0 && (
             <div className="notification-footer">
               <button className="view-all-btn">
-                View all notifications
+                {t('notifications.view_all')}
               </button>
             </div>
           )}

@@ -21,7 +21,6 @@ interface Text {
   companyName?: string;
 }
 
-
 interface TextFilters {
   domainId: number | null;
   themeId: number | null;
@@ -85,7 +84,7 @@ const TextManagement: React.FC = () => {
       try {
         const response = await axios.get('/api/auth/verify');
         setUserRole(response.data.role);
-      } catch  {
+      } catch {
         navigate('/', { replace: true });
       }
     };
@@ -101,7 +100,7 @@ const TextManagement: React.FC = () => {
       const response = await axios.get('/api/taxonomy/domains');
       setDomains(response.data);
     } catch (err) {
-      console.error('Error loading domains:', err);
+      console.error('Erreur lors du chargement des domaines:', err);
     }
   };
 
@@ -111,7 +110,7 @@ const TextManagement: React.FC = () => {
       const response = await axios.get(`/api/taxonomy/themes?domainId=${domainId}`);
       setThemes(response.data);
     } catch (err) {
-      console.error('Error loading themes:', err);
+      console.error('Erreur lors du chargement des thèmes:', err);
     }
   };
 
@@ -121,7 +120,7 @@ const TextManagement: React.FC = () => {
       const response = await axios.get(`/api/taxonomy/subthemes?themeId=${themeId}`);
       setSubThemes(response.data);
     } catch (err) {
-      console.error('Error loading subthemes:', err);
+      console.error('Erreur lors du chargement des sous-thèmes:', err);
     }
   };
 
@@ -150,8 +149,8 @@ const TextManagement: React.FC = () => {
       setTotalPages(response.data.totalPages);
       setCurrentPage(response.data.currentPage);
     } catch (err) {
-      setError('Failed to load texts. Please try again later.');
-      console.error('Error loading texts:', err);
+      setError('Échec du chargement des textes. Veuillez réessayer plus tard.');
+      console.error('Erreur lors du chargement des textes:', err);
     } finally {
       setLoading(false);
     }
@@ -161,32 +160,32 @@ const TextManagement: React.FC = () => {
   const handleFilterChange = (name: keyof TextFilters, value: string | number | null) => {
     // Special handling for domain change
     if (name === 'domainId') {
-        setFilters({
-          ...filters,
-          [name]: value as number,
-          themeId: null,
-          subThemeId: null
-        });
-        if (value) {
-          loadThemes(value as number);
-        } else {
-          setThemes([]);
-          setSubThemes([]);
-        }
-      } 
+      setFilters({
+        ...filters,
+        [name]: value as number,
+        themeId: null,
+        subThemeId: null
+      });
+      if (value) {
+        loadThemes(value as number);
+      } else {
+        setThemes([]);
+        setSubThemes([]);
+      }
+    } 
     // Special handling for theme change
     else if (name === 'themeId') {
-        setFilters({
-          ...filters,
-          [name]: value as number,
-          subThemeId: null
-        });
-        if (value) {
-          loadSubThemes(value as number);
-        } else {
-          setSubThemes([]);
-        }
+      setFilters({
+        ...filters,
+        [name]: value as number,
+        subThemeId: null
+      });
+      if (value) {
+        loadSubThemes(value as number);
+      } else {
+        setSubThemes([]);
       }
+    }
     // Default handling for other filters
     else {
       setFilters({
@@ -239,38 +238,38 @@ const TextManagement: React.FC = () => {
 
   // Delete text handler
   const handleDeleteText = async (textId: number) => {
-  if (userRole !== 'SuperAdmin' && userRole !== 'SubscriptionManager') {
-    alert('Only Super Administrators and Subscription Managers can delete texts.');
-    return;
-  }
-
-  if (window.confirm('Are you sure you want to delete this text? This action cannot be undone.')) {
-    try {
-      await axios.delete(`/api/texts/${textId}`);
-      alert('Text deleted successfully');
-      loadTexts();
-    } catch (err) {
-      alert('Failed to delete text. Please try again.');
-      console.error('Error deleting text:', err);
+    if (userRole !== 'SuperAdmin' && userRole !== 'SubscriptionManager') {
+      alert('Seuls les super administrateurs et les gestionnaires d\'abonnement peuvent supprimer des textes.');
+      return;
     }
-  }
-};
+
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce texte ? Cette action est irréversible.')) {
+      try {
+        await axios.delete(`/api/texts/${textId}`);
+        alert('Texte supprimé avec succès');
+        loadTexts();
+      } catch (err) {
+        alert('Échec de la suppression du texte. Veuillez réessayer.');
+        console.error('Erreur lors de la suppression du texte:', err);
+      }
+    }
+  };
 
   return (
     <div className="text-management-container">
-      <h1>Text Management</h1>
+      <h1>Gestion des textes</h1>
       
       {/* Filter section */}
       <div className="filters-container">
-        <h2>Filters</h2>
+        <h2>Filtres</h2>
         <div className="filters-grid">
           <div className="filter-item">
-            <label>Domain</label>
+            <label>Domaine</label>
             <select 
               value={filters.domainId || ''}
               onChange={(e) => handleFilterChange('domainId', e.target.value ? Number(e.target.value) : null)}
             >
-              <option value="">All Domains</option>
+              <option value="">Tous les domaines</option>
               {domains.map((domain) => (
                 <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
               ))}
@@ -278,13 +277,13 @@ const TextManagement: React.FC = () => {
           </div>
           
           <div className="filter-item">
-            <label>Theme</label>
+            <label>Thème</label>
             <select 
               value={filters.themeId || ''}
               onChange={(e) => handleFilterChange('themeId', e.target.value ? Number(e.target.value) : null)}
               disabled={!filters.domainId}
             >
-              <option value="">All Themes</option>
+              <option value="">Tous les thèmes</option>
               {themes.map((theme) => (
                 <option key={theme.themeId} value={theme.themeId}>{theme.name}</option>
               ))}
@@ -292,13 +291,13 @@ const TextManagement: React.FC = () => {
           </div>
           
           <div className="filter-item">
-            <label>Sub-Theme</label>
+            <label>Sous-thème</label>
             <select 
               value={filters.subThemeId || ''}
               onChange={(e) => handleFilterChange('subThemeId', e.target.value ? Number(e.target.value) : null)}
               disabled={!filters.themeId}
             >
-              <option value="">All Sub-Themes</option>
+              <option value="">Tous les sous-thèmes</option>
               {subThemes.map((subTheme) => (
                 <option key={subTheme.subThemeId} value={subTheme.subThemeId}>{subTheme.name}</option>
               ))}
@@ -311,37 +310,37 @@ const TextManagement: React.FC = () => {
               type="text" 
               value={filters.nature} 
               onChange={(e) => handleFilterChange('nature', e.target.value)}
-              placeholder="Enter nature"
+              placeholder="Entrer la nature"
             />
           </div>
           
           <div className="filter-item">
-            <label>Publication Year</label>
+            <label>Année de publication</label>
             <input 
               type="number" 
               value={filters.publicationYear || ''} 
               onChange={(e) => handleFilterChange('publicationYear', e.target.value ? parseInt(e.target.value) : null)}
-              placeholder="Enter year"
+              placeholder="Entrer l'année"
             />
           </div>
           
           <div className="filter-item">
-            <label>Keyword</label>
+            <label>Mot-clé</label>
             <input 
               type="text" 
               value={filters.keyword} 
               onChange={(e) => handleFilterChange('keyword', e.target.value)}
-              placeholder="Search by keyword"
+              placeholder="Rechercher par mot-clé"
             />
           </div>
           
           <div className="filter-item">
-            <label>Status</label>
+            <label>Statut</label>
             <select 
               value={filters.status} 
               onChange={(e) => handleFilterChange('status', e.target.value)}
             >
-              <option value="">All Statuses</option>
+              <option value="">Tous les statuts</option>
               <option value="À vérifier">À vérifier</option>
               <option value="Applicable">Applicable</option>
               <option value="Non applicable">Non applicable</option>
@@ -350,92 +349,92 @@ const TextManagement: React.FC = () => {
           </div>
           
           <div className="filter-item">
-            <label>Text Type</label>
+            <label>Type de texte</label>
             <select 
               value={filters.textType} 
               onChange={(e) => handleFilterChange('textType', e.target.value)}
             >
-              <option value="">All Types</option>
-              <option value="À vérifier">Texts to verify</option>
-              <option value="Pour information">Informational texts</option>
+              <option value="">Tous les types</option>
+              <option value="À vérifier">Textes à vérifier</option>
+              <option value="Pour information">Textes informatifs</option>
             </select>
           </div>
         </div>
         
         <div className="filters-actions">
-          <button className="btn-primary" onClick={applyFilters}>Apply Filters</button>
-          <button className="btn-secondary" onClick={resetFilters}>Reset Filters</button>
+          <button className="btn-primary" onClick={applyFilters}>Appliquer les filtres</button>
+          <button className="btn-secondary" onClick={resetFilters}>Réinitialiser les filtres</button>
           
           {/* Only show Add Text button for SuperAdmin or SubscriptionManager */}
           {(userRole === 'SubscriptionManager') && (
-            <button className="btn-add" onClick={() => setShowAddModal(true)}>Add New Text</button>
+            <button className="btn-add" onClick={() => setShowAddModal(true)}>Ajouter un nouveau texte</button>
           )}
         </div>
       </div>
 
       {/* Texts table */}
       <div className="texts-table-container">
-        <h2>Texts ({totalCount})</h2>
+        <h2>Textes ({totalCount})</h2>
         
         {loading ? (
-          <div className="loading">Loading texts...</div>
+          <div className="loading">Chargement des textes...</div>
         ) : error ? (
           <div className="error">{error}</div>
         ) : texts.length === 0 ? (
-          <div className="no-results">No texts found matching your criteria.</div>
+          <div className="no-results">Aucun texte trouvé correspondant à vos critères.</div>
         ) : (
           <>
             <table className="texts-table">
-             <thead>
-  <tr>
-    {userRole === 'SuperAdmin' && <th>Company</th>}
-    <th>Domain</th>
-    <th>Theme</th>
-    <th>Reference</th>
-    <th>Nature</th>
-    <th>Year</th>
-    <th>Status</th>
-    <th>Created By</th>
-    <th>Actions</th>
-  </tr>
-</thead>
-<tbody>
-  {texts.map((text) => (
-    <tr key={text.textId} className={text.isConsulted ? 'consulted' : ''}>
-      {userRole === 'SuperAdmin' && <td>{text.companyName}</td>}
-      <td>{text.domain}</td>
-      <td>{text.theme}</td>
-      <td>{text.reference}</td>
-      <td>{text.nature}</td>
-      <td>{text.publicationYear}</td>
-      <td>
-        <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
-          {text.status}
-        </span>
-      </td>
-      <td>{text.createdBy}</td>
-      <td className="actions-cell">
-        <button 
-          className="btn-view" 
-          onClick={() => openTextDetail(text.textId)}
-          title="View text details"
-        >
-          Consult
-        </button>
-        
-      {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
-  <button 
-    className="btn-delete" 
-    onClick={() => handleDeleteText(text.textId)}
-    title="Delete text"
-  >
-    Delete
-  </button>
-)}
-      </td>
-    </tr>
-  ))}
-</tbody>            </table>
+              <thead>
+                <tr>
+                  {userRole === 'SuperAdmin' && <th>Entreprise</th>}
+                  <th>Domaine</th>
+                  <th>Thème</th>
+                  <th>Référence</th>
+                  <th>Nature</th>
+                  <th>Année</th>
+                  <th>Statut</th>
+                  <th>Créé par</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {texts.map((text) => (
+                  <tr key={text.textId} className={text.isConsulted ? 'consulted' : ''}>
+                    {userRole === 'SuperAdmin' && <td>{text.companyName}</td>}
+                    <td>{text.domain}</td>
+                    <td>{text.theme}</td>
+                    <td>{text.reference}</td>
+                    <td>{text.nature}</td>
+                    <td>{text.publicationYear}</td>
+                    <td>
+                      <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                        {text.status}
+                      </span>
+                    </td>
+                    <td>{text.createdBy}</td>
+                    <td className="actions-cell">
+                      <button 
+                        className="btn-view" 
+                        onClick={() => openTextDetail(text.textId)}
+                        title="Voir les détails du texte"
+                      >
+                        Consulter
+                      </button>
+                      {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
+                        <button 
+                          className="btn-delete" 
+                          onClick={() => handleDeleteText(text.textId)}
+                          title="Supprimer le texte"
+                        >
+                          Supprimer
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             
             {/* Pagination */}
             <div className="pagination">
@@ -443,30 +442,30 @@ const TextManagement: React.FC = () => {
                 onClick={() => goToPage(1)} 
                 disabled={currentPage === 1}
               >
-                &laquo;
+                «
               </button>
               <button 
                 onClick={() => goToPage(currentPage - 1)} 
                 disabled={currentPage === 1}
               >
-                &lsaquo;
+                ‹
               </button>
               
               <span className="page-info">
-                Page {currentPage} of {totalPages}
+                Page {currentPage} sur {totalPages}
               </span>
               
               <button 
                 onClick={() => goToPage(currentPage + 1)} 
                 disabled={currentPage === totalPages}
               >
-                &rsaquo;
+                ›
               </button>
               <button 
                 onClick={() => goToPage(totalPages)} 
                 disabled={currentPage === totalPages}
               >
-                &raquo;
+                »
               </button>
             </div>
           </>

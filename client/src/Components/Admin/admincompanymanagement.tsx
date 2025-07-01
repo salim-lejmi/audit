@@ -32,7 +32,7 @@ const AdminCompanyManagement: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('Tous');
 
   const [editForm, setEditForm] = useState<UpdateCompanyForm>({
     companyName: '',
@@ -40,7 +40,7 @@ const AdminCompanyManagement: React.FC = () => {
     status: ''
   });
 
-  const availableStatuses = ['Pending', 'Approved', 'Rejected'];
+  const availableStatuses = ['En attente', 'Approuvé', 'Rejeté'];
 
   useEffect(() => {
     fetchCompanies();
@@ -53,7 +53,7 @@ const AdminCompanyManagement: React.FC = () => {
       setCompanies(response.data);
       setLoading(false);
     } catch {
-      setError('Failed to load companies');
+      setError('Échec du chargement des entreprises');
       setLoading(false);
     }
   };
@@ -67,7 +67,7 @@ const AdminCompanyManagement: React.FC = () => {
       setShowEditModal(false);
       fetchCompanies();
     } catch {
-      setError('Failed to update company');
+      setError('Échec de la mise à jour de l\'entreprise');
     }
   };
 
@@ -79,13 +79,12 @@ const AdminCompanyManagement: React.FC = () => {
       setShowDeleteModal(false);
       fetchCompanies();
       
-      // Show success message with deletion counts
       if (response.data.deletedCounts) {
         const counts = response.data.deletedCounts;
-        alert(`Company deleted successfully!\nDeleted: ${counts.users} users, ${counts.texts} texts, ${counts.actions} actions`);
+        alert(`Entreprise supprimée avec succès !\nSupprimé : ${counts.users} utilisateurs, ${counts.texts} textes, ${counts.actions} actions`);
       }
     } catch {
-      setError('Failed to delete company');
+      setError('Échec de la suppression de l\'entreprise');
     }
   };
 
@@ -105,8 +104,8 @@ const AdminCompanyManagement: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variant = status === 'Approved' ? 'success' : 
-                   status === 'Pending' ? 'warning' : 'danger';
+    const variant = status === 'Approuvé' ? 'success' : 
+                   status === 'En attente' ? 'warning' : 'danger';
     return <Badge bg={variant}>{status}</Badge>;
   };
 
@@ -117,13 +116,13 @@ const AdminCompanyManagement: React.FC = () => {
       company.subscriptionManagerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       company.subscriptionManagerEmail?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'All' || company.status === statusFilter;
+    const matchesStatus = statusFilter === 'Tous' || company.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
 
   if (loading) {
-    return <div className="loading-container">Loading companies...</div>;
+    return <div className="loading-container">Chargement des entreprises...</div>;
   }
 
   if (error) {
@@ -133,10 +132,10 @@ const AdminCompanyManagement: React.FC = () => {
   const editModalFooter = (
     <>
       <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-        Cancel
+        Annuler
       </Button>
       <Button variant="primary" type="submit" form="editForm">
-        Update Company
+        Mettre à jour l'entreprise
       </Button>
     </>
   );
@@ -144,29 +143,29 @@ const AdminCompanyManagement: React.FC = () => {
   const deleteModalFooter = (
     <>
       <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-        Cancel
+        Annuler
       </Button>
       <Button variant="danger" onClick={handleDeleteConfirm}>
-        Delete Company
+        Supprimer l'entreprise
       </Button>
     </>
   );
 
-  const uniqueStatuses = ['All', ...new Set(companies.map(company => company.status))];
+  const uniqueStatuses = ['Tous', ...new Set(companies.map(company => company.status))];
 
   return (
     <section className="manage-companies-section">
       <div className="container">
         <div className="section-header">
-          <h2>Company Management</h2>
-          <p className="text-muted">View and manage all companies in the system</p>
+          <h2>Gestion des entreprises</h2>
+          <p className="text-muted">Voir et gérer toutes les entreprises du système</p>
         </div>
 
         <div className="controls-row">
           <div className="search-container">
             <input
               type="text"
-              placeholder="Search companies..."
+              placeholder="Rechercher des entreprises..."
               className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -188,21 +187,21 @@ const AdminCompanyManagement: React.FC = () => {
 
         {companies.length === 0 ? (
           <div className="no-companies-message">
-            <p>No companies found.</p>
+            <p>Aucune entreprise trouvée.</p>
           </div>
         ) : (
           <div className="companies-table-container">
             <table className="companies-table">
               <thead>
                 <tr>
-                  <th>Company Name</th>
-                  <th>Industry</th>
-                  <th>Status</th>
-                  <th>Manager</th>
-                  <th>Users</th>
-                  <th>Texts</th>
+                  <th>Nom de l'entreprise</th>
+                  <th>Secteur</th>
+                  <th>Statut</th>
+                  <th>Gestionnaire</th>
+                  <th>Utilisateurs</th>
+                  <th>Textes</th>
                   <th>Actions</th>
-                  <th>Created</th>
+                  <th>Créé le</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -213,7 +212,7 @@ const AdminCompanyManagement: React.FC = () => {
                       <div>
                         <strong>{company.companyName}</strong>
                         {company.isEmailVerified && (
-                          <i className="fas fa-check-circle text-success ms-1" title="Email Verified"></i>
+                          <i className="fas fa-check-circle text-success ms-1" title="Email vérifié"></i>
                         )}
                       </div>
                     </td>
@@ -234,13 +233,12 @@ const AdminCompanyManagement: React.FC = () => {
                     <td>
                       <span className="badge bg-warning">{company.totalActions}</span>
                     </td>
-                    <td>{new Date(company.createdAt).toLocaleDateString()}</td>
+                    <td>{new Date(company.createdAt).toLocaleDateString('fr-FR')}</td>
                     <td className="actions-cell">
-                    
                       <button 
                         className="action-btn delete"
                         onClick={() => openDeleteModal(company)}
-                        title="Delete Company"
+                        title="Supprimer l'entreprise"
                       >
                         <i className="fas fa-trash"></i>
                       </button>
@@ -257,32 +255,32 @@ const AdminCompanyManagement: React.FC = () => {
       <Modal 
         isOpen={showEditModal} 
         onClose={() => setShowEditModal(false)} 
-        title="Edit Company"
+        title="Modifier l'entreprise"
         footer={editModalFooter}
       >
         <Form id="editForm" onSubmit={handleEditSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Company Name</Form.Label>
+            <Form.Label>Nom de l'entreprise</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Company Name"
+              placeholder="Nom de l'entreprise"
               value={editForm.companyName}
               onChange={(e) => setEditForm({...editForm, companyName: e.target.value})}
               required
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Industry</Form.Label>
+            <Form.Label>Secteur</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Industry"
+              placeholder="Secteur"
               value={editForm.industry}
               onChange={(e) => setEditForm({...editForm, industry: e.target.value})}
               required
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Status</Form.Label>
+            <Form.Label>Statut</Form.Label>
             <Form.Select
               value={editForm.status}
               onChange={(e) => setEditForm({...editForm, status: e.target.value})}
@@ -300,22 +298,22 @@ const AdminCompanyManagement: React.FC = () => {
       <Modal 
         isOpen={showDeleteModal} 
         onClose={() => setShowDeleteModal(false)} 
-        title="Delete Company"
+        title="Supprimer l'entreprise"
         footer={deleteModalFooter}
         size="sm"
       >
         <div className="alert alert-danger">
-          <strong>Warning!</strong> This action cannot be undone.
+          <strong>Attention !</strong> Cette action est irréversible.
         </div>
-        <p>Are you sure you want to delete <strong>{selectedCompany?.companyName}</strong>?</p>
+        <p>Êtes-vous sûr de vouloir supprimer <strong>{selectedCompany?.companyName}</strong> ?</p>
         {selectedCompany && (
           <div className="deletion-details">
-            <p>This will also delete:</p>
+            <p>Cela supprimera également :</p>
             <ul>
-              <li>{selectedCompany.totalUsers} users</li>
-              <li>{selectedCompany.totalTexts} texts</li>
+              <li>{selectedCompany.totalUsers} utilisateurs</li>
+              <li>{selectedCompany.totalTexts} textes</li>
               <li>{selectedCompany.totalActions} actions</li>
-              <li>All associated compliance evaluations, revues, and other data</li>
+              <li>Toutes les évaluations de conformité, revues et autres données associées</li>
             </ul>
           </div>
         )}

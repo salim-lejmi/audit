@@ -25,7 +25,7 @@ const SuperAdminDashboard: React.FC = () => {
         setStats(response.data);
         setLoading(false);
       } catch {
-        setError('Failed to load dashboard data');
+        setError('Échec du chargement des données du tableau de bord');
         setLoading(false);
       }
     };
@@ -34,7 +34,7 @@ const SuperAdminDashboard: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="loading-container">Loading dashboard...</div>;
+    return <div className="loading-container">Chargement du tableau de bord...</div>;
   }
 
   if (error) {
@@ -46,8 +46,8 @@ const SuperAdminDashboard: React.FC = () => {
       <div className="dashboard-container">
         <div className="dashboard-header">
           <div className="dashboard-title">
-            <h2>Welcome, Super Admin</h2>
-            <p className="subtitle">Manage system users, companies, and configuration</p>
+            <h2>Bienvenue, Super Administrateur</h2>
+            <p className="subtitle">Gérer les utilisateurs, les entreprises et la configuration du système</p>
           </div>
         </div>
 
@@ -55,30 +55,30 @@ const SuperAdminDashboard: React.FC = () => {
         <div className="stats-container">
           <div className="stat-card primary">
             <div className="stat-card-body">
-              <h5 className="stat-title">Total Companies</h5>
+              <h5 className="stat-title">Total des entreprises</h5>
               <p className="stat-value">{stats.totalCompanies}</p>
               <Link to="/admin/companies" className="stat-link">
-                View all companies <i className="fas fa-arrow-right"></i>
+                Voir toutes les entreprises <i className="fas fa-arrow-right"></i>
               </Link>
             </div>
           </div>
 
           <div className="stat-card success">
             <div className="stat-card-body">
-              <h5 className="stat-title">Total Users</h5>
+              <h5 className="stat-title">Total des utilisateurs</h5>
               <p className="stat-value">{stats.totalUsers}</p>
               <Link to="/admin/users" className="stat-link">
-                Manage users <i className="fas fa-arrow-right"></i>
+                Gérer les utilisateurs <i className="fas fa-arrow-right"></i>
               </Link>
             </div>
           </div>
 
           <div className="stat-card warning">
             <div className="stat-card-body">
-              <h5 className="stat-title">Pending Requests</h5>
+              <h5 className="stat-title">Demandes en attente</h5>
               <p className="stat-value">{stats.pendingRequests}</p>
               <Link to="/admin/pending-requests" className="stat-link">
-                Review requests <i className="fas fa-arrow-right"></i>
+                Examiner les demandes <i className="fas fa-arrow-right"></i>
               </Link>
             </div>
           </div>
@@ -88,24 +88,24 @@ const SuperAdminDashboard: React.FC = () => {
         <div className="actions-container">
           <div className="actions-card">
             <div className="actions-header">
-              <h5>Quick Actions</h5>
+              <h5>Actions rapides</h5>
             </div>
             <div className="actions-body">
               <Link to="/admin/pending-requests" className="action-button primary">
                 <i className="fas fa-check-circle"></i>
-                <span>Approve/Reject Companies</span>
+                <span>Approuver/Rejeter des entreprises</span>
               </Link>
               <Link to="/admin/users/create" className="action-button success">
                 <i className="fas fa-user-plus"></i>
-                <span>Create User</span>
+                <span>Créer un utilisateur</span>
               </Link>
               <Link to="/admin/users" className="action-button info">
                 <i className="fas fa-users-cog"></i>
-                <span>Manage Users</span>
+                <span>Gérer les utilisateurs</span>
               </Link>
               <Link to="/admin/roles" className="action-button dark">
                 <i className="fas fa-user-tag"></i>
-                <span>Roles & Permissions</span>
+                <span>Rôles et permissions</span>
               </Link>
             </div>
           </div>
@@ -115,24 +115,24 @@ const SuperAdminDashboard: React.FC = () => {
         <div className="menu-container">
           <div className="menu-card">
             <div className="menu-header">
-              <h5>System Management</h5>
+              <h5>Gestion du système</h5>
             </div>
             <div className="menu-body">
               <Link to="/admin/users" className="menu-item">
                 <i className="fas fa-users"></i>
-                <span>User Management</span>
+                <span>Gestion des utilisateurs</span>
               </Link>
               <Link to="/admin/companies" className="menu-item">
                 <i className="fas fa-building"></i>
-                <span>Company Management</span>
+                <span>Gestion des entreprises</span>
               </Link>
               <Link to="/admin/roles" className="menu-item">
                 <i className="fas fa-user-shield"></i>
-                <span>Roles & Permissions</span>
+                <span>Rôles et permissions</span>
               </Link>
               <Link to="/admin/audit-logs" className="menu-item">
                 <i className="fas fa-clipboard-list"></i>
-                <span>Audit Logs</span>
+                <span>Journaux d'audit</span>
               </Link>
             </div>
           </div>

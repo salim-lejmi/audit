@@ -62,8 +62,8 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
         setText(response.data);
         setTextStatus(response.data.status);
       } catch (err) {
-        setError('Failed to load text details');
-        console.error('Error loading text details:', err);
+        setError('Échec du chargement des détails du texte');
+        console.error('Erreur lors du chargement des détails du texte:', err);
       } finally {
         setLoading(false);
       }
@@ -86,25 +86,26 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
       setPdfUrl(fileURL);
       setShowPdf(true);
     } catch (err) {
-      alert('Failed to load PDF file');
-      console.error('Error loading PDF:', err);
+      alert('Échec du chargement du fichier PDF');
+      console.error('Erreur lors du chargement du PDF:', err);
     }
   };
 
-// Update text status
-const handleUpdateStatus = async () => {
-  if (!text) return;
-  
-  try {
-    await axios.put(`/api/texts/${textId}/status`, { status: textStatus });
-    setText({ ...text, status: textStatus });
-    alert('Text status updated successfully');
-    setEditMode(false);
-  } catch (err) {
-    alert('Failed to update text status');
-    console.error('Error updating text status:', err);
-  }
-};
+  // Update text status
+  const handleUpdateStatus = async () => {
+    if (!text) return;
+    
+    try {
+      await axios.put(`/api/texts/${textId}/status`, { status: textStatus });
+      setText({ ...text, status: textStatus });
+      alert('Statut du texte mis à jour avec succès');
+      setEditMode(false);
+    } catch (err) {
+      alert('Échec de la mise à jour du statut du texte');
+      console.error('Erreur lors de la mise à jour du statut du texte:', err);
+    }
+  };
+
   // Start editing a requirement
   const startEditRequirement = (requirement: Requirement) => {
     setEditingRequirement(requirement);
@@ -135,10 +136,10 @@ const handleUpdateStatus = async () => {
       }
       
       setEditingRequirement(null);
-      alert('Requirement updated successfully');
+      alert('Exigence mise à jour avec succès');
     } catch (err) {
-      alert('Failed to update requirement');
-      console.error('Error updating requirement:', err);
+      alert('Échec de la mise à jour de l\'exigence');
+      console.error('Erreur lors de la mise à jour de l\'exigence:', err);
     }
   };
 
@@ -147,7 +148,7 @@ const handleUpdateStatus = async () => {
     if (!text) return;
     
     if (!newRequirement.number || !newRequirement.title) {
-      alert('Please fill in both Number and Title fields');
+      alert('Veuillez remplir les champs Numéro et Titre');
       return;
     }
     
@@ -172,10 +173,10 @@ const handleUpdateStatus = async () => {
         status: 'À vérifier'
       });
       
-      alert('Requirement added successfully');
+      alert('Exigence ajoutée avec succès');
     } catch (err) {
-      alert('Failed to add requirement');
-      console.error('Error adding requirement:', err);
+      alert('Échec de l\'ajout de l\'exigence');
+      console.error('Erreur lors de l\'ajout de l\'exigence:', err);
     }
   };
 
@@ -183,7 +184,7 @@ const handleUpdateStatus = async () => {
   const deleteRequirement = async (requirementId: number) => {
     if (!text) return;
     
-    if (window.confirm('Are you sure you want to delete this requirement?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette exigence ?')) {
       try {
         await axios.delete(`/api/texts/${textId}/requirement/${requirementId}`);
         
@@ -193,10 +194,10 @@ const handleUpdateStatus = async () => {
           requirements: text.requirements.filter(req => req.requirementId !== requirementId)
         });
         
-        alert('Requirement deleted successfully');
+        alert('Exigence supprimée avec succès');
       } catch (err) {
-        alert('Failed to delete requirement');
-        console.error('Error deleting requirement:', err);
+        alert('Échec de la suppression de l\'exigence');
+        console.error('Erreur lors de la suppression de l\'exigence:', err);
       }
     }
   };
@@ -223,7 +224,7 @@ const handleUpdateStatus = async () => {
     return (
       <div className="modal-overlay">
         <div className="modal-content">
-          <div className="loading">Loading text details...</div>
+          <div className="loading">Chargement des détails du texte...</div>
         </div>
       </div>
     );
@@ -233,9 +234,9 @@ const handleUpdateStatus = async () => {
     return (
       <div className="modal-overlay">
         <div className="modal-content">
-          <div className="error">{error || 'Text not found'}</div>
+          <div className="error">{error || 'Texte non trouvé'}</div>
           <div className="modal-actions">
-            <button onClick={onClose}>Close</button>
+            <button onClick={onClose}>Fermer</button>
           </div>
         </div>
       </div>
@@ -247,19 +248,19 @@ const handleUpdateStatus = async () => {
       <div className="modal-content text-detail-modal">
         <div className="modal-header">
           <h2>{text.reference}</h2>
-          <button className="close-button" onClick={onClose}>&times;</button>
+          <button className="close-button" onClick={onClose}>×</button>
         </div>
 
         {showPdf ? (
           <div className="pdf-viewer">
             <div className="pdf-viewer-header">
-              <button onClick={() => setShowPdf(false)}>Back to Details</button>
+              <button onClick={() => setShowPdf(false)}>Retour aux détails</button>
             </div>
             <iframe 
               src={`${pdfUrl}#toolbar=0`} 
               width="100%" 
               height="600px" 
-              title="PDF Viewer"
+              title="Visionneuse PDF"
             />
           </div>
         ) : (
@@ -267,15 +268,15 @@ const handleUpdateStatus = async () => {
             <div className="text-info-section">
               <div className="info-row">
                 <div className="info-item">
-                  <h3>Domain</h3>
+                  <h3>Domaine</h3>
                   <p>{text.domain}</p>
                 </div>
                 <div className="info-item">
-                  <h3>Theme</h3>
+                  <h3>Thème</h3>
                   <p>{text.theme}</p>
                 </div>
                 <div className="info-item">
-                  <h3>Sub-Theme</h3>
+                  <h3>Sous-thème</h3>
                   <p>{text.subTheme || 'N/A'}</p>
                 </div>
               </div>
@@ -286,12 +287,11 @@ const handleUpdateStatus = async () => {
                   <p>{text.nature || 'N/A'}</p>
                 </div>
                 <div className="info-item">
-                  <h3>Publication Year</h3>
+                  <h3>Année de publication</h3>
                   <p>{text.publicationYear}</p>
                 </div>
                 <div className="info-item">
-                  <h3>Status</h3>
-
+                  <h3>Statut</h3>
                   {editMode ? (
                     <div className="edit-status">
                       <select 
@@ -304,11 +304,11 @@ const handleUpdateStatus = async () => {
                         <option value="Pour information">Pour information</option>
                       </select>
                       <div className="status-actions">
-                        <button className="btn-primary" onClick={handleUpdateStatus}>Save</button>
+                        <button className="btn-primary" onClick={handleUpdateStatus}>Enregistrer</button>
                         <button className="btn-secondary" onClick={() => {
                           setTextStatus(text.status);
                           setEditMode(false);
-                        }}>Cancel</button>
+                        }}>Annuler</button>
                       </div>
                     </div>
                   ) : (
@@ -317,7 +317,7 @@ const handleUpdateStatus = async () => {
                         {text.status}
                       </span>
                       {(userRole === 'SubscriptionManager') && (
-                        <button className="btn-edit-small" onClick={() => setEditMode(true)}>Edit</button>
+                        <button className="btn-edit-small" onClick={() => setEditMode(true)}>Modifier</button>
                       )}
                     </div>
                   )}
@@ -326,24 +326,24 @@ const handleUpdateStatus = async () => {
               
               <div className="info-row">
                 <div className="info-item">
-                  <h3>Penalties</h3>
-                  <p>{text.penalties || 'None'}</p>
+                  <h3>Sanctions</h3>
+                  <p>{text.penalties || 'Aucune'}</p>
                 </div>
                 <div className="info-item">
-                  <h3>Related Texts</h3>
-                  <p>{text.relatedTexts || 'None'}</p>
+                  <h3>Textes associés</h3>
+                  <p>{text.relatedTexts || 'Aucun'}</p>
                 </div>
                 <div className="info-item">
-                  <h3>Effective Date</h3>
-                  <p>{text.effectiveDate ? new Date(text.effectiveDate).toLocaleDateString() : 'N/A'}</p>
+                  <h3>Date d'effet</h3>
+                  <p>{text.effectiveDate ? new Date(text.effectiveDate).toLocaleDateString('fr-FR') : 'N/A'}</p>
                 </div>
               </div>
               
               <div className="info-row">
                 <div className="info-item full-width">
-                  <h3>Content</h3>
+                  <h3>Contenu</h3>
                   <div className="text-content">
-                    {text.content || 'No content available'}
+                    {text.content || 'Aucun contenu disponible'}
                   </div>
                 </div>
               </div>
@@ -351,28 +351,29 @@ const handleUpdateStatus = async () => {
               {text.filePath && (
                 <div className="info-row">
                   <div className="info-item full-width">
-                    <h3>PDF Document</h3>
-                    <button className="btn-primary" onClick={handleViewPdf}>View PDF</button>
+                    <h3>Document PDF</h3>
+                    <button className="btn-primary" onClick={handleViewPdf}>Voir le PDF</button>
                   </div>
                 </div>
               )}
             </div>
             
             <div className="requirements-section">
-              <h3>Requirements</h3>
+              <h3>Exigences</h3>
               
               {text.requirements.length === 0 ? (
-                <p className="no-requirements">No requirements defined for this text.</p>
+                <p className="no-requirements">Aucune exigence définie pour ce texte.</p>
               ) : (
                 <div className="requirements-list">
                   <table className="requirements-table">
                     <thead>
                       <tr>
-                        <th>Number</th>
-                        <th>Title</th>
-                        <th>Status</th>
-                         {userRole === 'SubscriptionManager' && (
-                        <th>Actions</th> )}
+                        <th>Numéro</th>
+                        <th>Titre</th>
+                        <th>Statut</th>
+                        {userRole === 'SubscriptionManager' && (
+                          <th>Actions</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -408,8 +409,8 @@ const handleUpdateStatus = async () => {
                               </td>
                               <td>
                                 <div className="req-actions">
-                                  <button className="btn-save" onClick={saveRequirement}>Save</button>
-                                  <button className="btn-cancel" onClick={cancelEditRequirement}>Cancel</button>
+                                  <button className="btn-save" onClick={saveRequirement}>Enregistrer</button>
+                                  <button className="btn-cancel" onClick={cancelEditRequirement}>Annuler</button>
                                 </div>
                               </td>
                             </>
@@ -423,26 +424,24 @@ const handleUpdateStatus = async () => {
                                   {req.status}
                                 </span>
                               </td>
-  <td>
-    {userRole === 'SubscriptionManager' && (
-      <div className="req-actions">
-        <button 
-          className="btn-edit-small" 
-          onClick={() => startEditRequirement(req)}
-        >
-          Edit
-        </button>
-        
-       
-          <button 
-            className="btn-delete-small" 
-            onClick={() => deleteRequirement(req.requirementId)}
-          >
-            Delete
-          </button>
-      </div>
-    )}
-  </td>
+                              {userRole === 'SubscriptionManager' && (
+                                <td>
+                                  <div className="req-actions">
+                                    <button 
+                                      className="btn-edit-small" 
+                                      onClick={() => startEditRequirement(req)}
+                                    >
+                                      Modifier
+                                    </button>
+                                    <button 
+                                      className="btn-delete-small" 
+                                      onClick={() => deleteRequirement(req.requirementId)}
+                                    >
+                                      Supprimer
+                                    </button>
+                                  </div>
+                                </td>
+                              )}
                             </>
                           )}
                         </tr>
@@ -453,30 +452,30 @@ const handleUpdateStatus = async () => {
               )}
               
               {/* Add new requirement section - only for SuperAdmin and SubscriptionManager */}
-              {( userRole === 'SubscriptionManager') && (
+              {(userRole === 'SubscriptionManager') && (
                 <div className="add-requirement-section">
-                  <h4>Add New Requirement</h4>
+                  <h4>Ajouter une nouvelle exigence</h4>
                   <div className="add-requirement-form">
                     <div className="form-group">
-                      <label>Number</label>
+                      <label>Numéro</label>
                       <input 
                         type="text" 
                         value={newRequirement.number}
                         onChange={(e) => handleNewRequirementChange('number', e.target.value)}
-                        placeholder="e.g., Art. 5"
+                        placeholder="ex. : Art. 5"
                       />
                     </div>
                     <div className="form-group">
-                      <label>Title</label>
+                      <label>Titre</label>
                       <input 
                         type="text" 
                         value={newRequirement.title}
                         onChange={(e) => handleNewRequirementChange('title', e.target.value)}
-                        placeholder="Requirement title"
+                        placeholder="Titre de l'exigence"
                       />
                     </div>
                     <div className="form-group">
-                      <label>Status</label>
+                      <label>Statut</label>
                       <select 
                         value={newRequirement.status}
                         onChange={(e) => handleNewRequirementChange('status', e.target.value)}
@@ -488,7 +487,7 @@ const handleUpdateStatus = async () => {
                       </select>
                     </div>
                     <button className="btn-primary" onClick={addRequirement}>
-                      Add Requirement
+                      Ajouter une exigence
                     </button>
                   </div>
                 </div>
@@ -497,10 +496,10 @@ const handleUpdateStatus = async () => {
             
             <div className="modal-footer">
               <div className="text-metadata">
-                <p>Created by: {text.createdBy || 'Unknown'}</p>
-                <p>Created on: {new Date(text.createdAt).toLocaleDateString()}</p>
+                <p>Créé par : {text.createdBy || 'Inconnu'}</p>
+                <p>Créé le : {new Date(text.createdAt).toLocaleDateString('fr-FR')}</p>
               </div>
-              <button className="btn-secondary" onClick={onClose}>Close</button>
+              <button className="btn-secondary" onClick={onClose}>Fermer</button>
             </div>
           </div>
         )}

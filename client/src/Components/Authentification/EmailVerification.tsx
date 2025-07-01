@@ -20,7 +20,7 @@ const EmailVerification: React.FC = () => {
       verifyEmail();
     } else {
       setStatus('error');
-      setMessage('Invalid verification link');
+      setMessage('Lien de vérification invalide');
     }
   }, [token, type]);
 
@@ -46,7 +46,7 @@ const EmailVerification: React.FC = () => {
           setShowResendForm(true);
         }
       } else {
-        setMessage('Verification failed. Please try again.');
+        setMessage('Échec de la vérification. Veuillez réessayer.');
       }
     }
   };
@@ -58,13 +58,13 @@ const EmailVerification: React.FC = () => {
     setIsResending(true);
     try {
       await axios.post('/api/auth/resend-verification', { email });
-      setMessage('Verification email sent successfully. Please check your inbox.');
+      setMessage('Email de vérification envoyé avec succès. Veuillez vérifier votre boîte de réception.');
       setShowResendForm(false);
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response?.data?.message) {
         setMessage(error.response.data.message);
       } else {
-        setMessage('Failed to send verification email. Please try again.');
+        setMessage('Échec de l\'envoi de l\'email de vérification. Veuillez réessayer.');
       }
     } finally {
       setIsResending(false);
@@ -86,7 +86,7 @@ const EmailVerification: React.FC = () => {
           )}
         </div>
 
-        <h1 className="verification-title">Email Verification</h1>
+        <h1 className="verification-title">Vérification de l'email</h1>
         
         <div className={`verification-message ${status}`}>
           {message}
@@ -95,25 +95,25 @@ const EmailVerification: React.FC = () => {
         {status === 'success' && (
           <div className="success-content">
             <p className="redirect-info">
-              Redirecting to login page in 3 seconds...
+              Redirection vers la page de connexion dans 3 secondes...
             </p>
             <button 
               className="btn btn-primary"
               onClick={() => navigate('/')}
             >
-              Go to Login Now
+              Aller à la connexion maintenant
             </button>
           </div>
         )}
 
         {status === 'error' && showResendForm && (
           <div className="resend-form">
-            <h3>Resend Verification Email</h3>
+            <h3>Renvoyer l'email de vérification</h3>
             <form onSubmit={handleResendVerification}>
               <div className="form-group">
                 <input
                   type="email"
-                  placeholder="Enter your email address"
+                  placeholder="Entrez votre adresse email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -125,7 +125,7 @@ const EmailVerification: React.FC = () => {
                 className="btn btn-primary"
                 disabled={isResending}
               >
-                {isResending ? 'Sending...' : 'Resend Verification Email'}
+                {isResending ? 'Envoi en cours...' : 'Renvoyer l\'email de vérification'}
               </button>
             </form>
           </div>
@@ -137,13 +137,13 @@ const EmailVerification: React.FC = () => {
               className="btn btn-secondary"
               onClick={() => navigate('/')}
             >
-              Back to Login
+              Retour à la connexion
             </button>
             <button 
               className="btn btn-outline"
               onClick={() => setShowResendForm(true)}
             >
-              Resend Verification Email
+              Renvoyer l'email de vérification
             </button>
           </div>
         )}

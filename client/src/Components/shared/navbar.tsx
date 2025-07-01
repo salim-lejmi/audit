@@ -23,7 +23,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        console.error(`Erreur lors de l'activation du mode plein écran : ${err.message}`);
       });
     } else {
       if (document.exitFullscreen) {
@@ -71,14 +71,14 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
       await axios.post('/api/auth/logout');
       navigate('/', { replace: true });
     } catch (error) {
-      console.error('Logout failed', error);
+      console.error('Échec de la déconnexion', error);
     }
   };
 
   const isDashboard = location.pathname.includes('dashboard');
   
   const getAccountExpirationDate = () => {
-    return "2025-12-31"; // Example date
+    return "2025-12-31"; // Date d'exemple
   };
 
   const getBasePath = () => {
@@ -98,42 +98,38 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
       <div className="navbar-container">
         <div className="navbar-left">
           {userRole === 'SuperAdmin' ? (
-            <Link to="/admin/dashboard" className="navbar-brand">Prevention Plus</Link>
+            <Link to="/admin/dashboard" className="navbar-brand">Prévention Plus</Link>
           ) : userRole === 'SubscriptionManager' ? (
-            <Link to="/company/dashboard" className="navbar-brand">Prevention Plus</Link>
+            <Link to="/company/dashboard" className="navbar-brand">Prévention Plus</Link>
           ) : (
-            <Link to="/user/dashboard" className="navbar-brand">Prevention Plus</Link>
+            <Link to="/user/dashboard" className="navbar-brand">Prévention Plus</Link>
           )}
         </div>
 
-    
-
         <div className="navbar-right">
           {/* Quotes link - replacing dashboard */}
-                    {(userRole === 'SuperAdmin' ) && (
-
-          <div className="nav-item">
-            <Link to={`${getBasePath()}/quotes`} className="nav-button">
-              <i className="fas fa-file-invoice-dollar"></i>
-              <span className="nav-label">Quotes</span>
-            </Link>
-          </div>
- )}
-      {(userRole === 'SubscriptionManager' ) && (
-
-          <div className="nav-item">
-            <Link to={`${getBasePath()}/payments`} className="nav-button">
-              <i className="fas fa-credit-card"></i>
-              <span className="nav-label">payment</span>
-            </Link>
-          </div>
- )}
+          {(userRole === 'SuperAdmin') && (
+            <div className="nav-item">
+              <Link to={`${getBasePath()}/quotes`} className="nav-button">
+                <i className="fas fa-file-invoice-dollar"></i>
+                <span className="nav-label">Devis</span>
+              </Link>
+            </div>
+          )}
+          {(userRole === 'SubscriptionManager') && (
+            <div className="nav-item">
+              <Link to={`${getBasePath()}/payments`} className="nav-button">
+                <i className="fas fa-credit-card"></i>
+                <span className="nav-label">Paiement</span>
+              </Link>
+            </div>
+          )}
           {/* Text Management link */}
           {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
             <div className="nav-item">
               <Link to={`${getBasePath()}/texts`} className="nav-button">
                 <i className="fas fa-file-alt"></i>
-                <span className="nav-label">Texts</span>
+                <span className="nav-label">Textes</span>
               </Link>
             </div>
           )}
@@ -143,16 +139,16 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             <div className="nav-item">
               <Link to={`${getBasePath()}/compliance`} className="nav-button">
                 <i className="fas fa-check-square"></i>
-                <span className="nav-label">Compliance</span>
+                <span className="nav-label">Conformité</span>
               </Link>
             </div>
           )}
 
-       {(userRole === 'Auditor') && (
+          {(userRole === 'Auditor') && (
             <div className="nav-item">
               <Link to={`${getBasePath()}/action-plan`} className="nav-button">
                 <i className="fas fa-tasks"></i>
-                <span className="nav-label">Action Plan</span>
+                <span className="nav-label">Plan d'action</span>
               </Link>
             </div>
           )}
@@ -161,7 +157,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
             <div className="nav-item">
               <Link to="/admin/taxonomy" className="nav-button">
                 <i className="fas fa-sitemap"></i>
-                <span className="nav-label">Taxonomy</span>
+                <span className="nav-label">Taxonomie</span>
               </Link>
             </div>
           )}
@@ -172,24 +168,24 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
               <button 
                 className="nav-button" 
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                aria-label="Management"
+                aria-label="Gestion"
               >
                 <i className="fas fa-users-cog"></i>
-                <span className="nav-label">Management</span>
+                <span className="nav-label">Gestion</span>
               </button>
               {dropdownOpen && (
                 <div className="dropdown-menu">
                   <Link to="/admin/users" className="dropdown-item">
                     <i className="fas fa-users"></i>
-                    <span>Manage Users</span>
+                    <span>Gérer les utilisateurs</span>
                   </Link>
                   <Link to="/admin/roles" className="dropdown-item">
                     <i className="fas fa-user-tag"></i>
-                    <span>Manage Roles</span>
+                    <span>Gérer les rôles</span>
                   </Link>
                   <Link to="/admin/pending-requests" className="dropdown-item">
                     <i className="fas fa-clock"></i>
-                    <span>Pending Requests</span>
+                    <span>Demandes en attente</span>
                   </Link>
                 </div>
               )}
@@ -201,27 +197,25 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
               <button 
                 className="nav-button" 
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                aria-label="Management"
+                aria-label="Gestion"
               >
                 <i className="fas fa-users-cog"></i>
-                <span className="nav-label">Management</span>
+                <span className="nav-label">Gestion</span>
               </button>
               {dropdownOpen && (
                 <div className="dropdown-menu">
                   <Link to="/company/users" className="dropdown-item">
                     <i className="fas fa-users"></i>
-                    <span>Manage Users</span>
+                    <span>Gérer les utilisateurs</span>
                   </Link>
                   <Link to="/company/roles" className="dropdown-item">
                     <i className="fas fa-user-tag"></i>
-                    <span>Manage Roles</span>
+                    <span>Gérer les rôles</span>
                   </Link>
                 </div>
               )}
             </div>
           )}
-
-      
 
           {/* Notifications - NEW */}
           <div className="nav-item">
@@ -230,10 +224,10 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
 
           {/* History button */}
           <div className="nav-item">
-              <Link to={`${getBasePath()}/history`} className="nav-button">
-                  <i className="fas fa-history"></i>
-                  <span className="nav-label">History</span>
-              </Link>
+            <Link to={`${getBasePath()}/history`} className="nav-button">
+              <i className="fas fa-history"></i>
+              <span className="nav-label">Historique</span>
+            </Link>
           </div>
 
           {/* Account dropdown */}
@@ -243,24 +237,23 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
               onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
             >
               <i className="fas fa-user-circle"></i>
-              <span className="nav-label">Account</span>
+              <span className="nav-label">Compte</span>
             </button>
             {accountDropdownOpen && (
               <div className="dropdown-menu account-menu">
                 <div className="account-info">
-                  <p><strong>Account Role:</strong> {userRole}</p>
-                  <p><strong>Expiration:</strong> {getAccountExpirationDate()}</p>
+                  <p><strong>Rôle du compte :</strong> {userRole === 'SuperAdmin' ? 'Super Administrateur' : userRole === 'SubscriptionManager' ? 'Gestionnaire d\'abonnement' : userRole === 'Auditor' ? 'Auditeur' : userRole === 'User' ? 'Utilisateur' : userRole}</p>
+                  <p><strong>Expiration :</strong> {getAccountExpirationDate()}</p>
                 </div>
                 <div className="dropdown-divider"></div>
                 <Link to={getProfilePath()} className="dropdown-item">
                   <i className="fas fa-user-cog"></i>
-                  <span>My Profile</span>
+                  <span>Mon profil</span>
                 </Link>
-          
                 <div className="dropdown-divider"></div>
                 <div className="dropdown-item" onClick={handleLogout} style={{cursor: 'pointer'}}>
                   <i className="fas fa-sign-out-alt"></i>
-                  <span>Logout</span>
+                  <span>Déconnexion</span>
                 </div>
               </div>
             )}

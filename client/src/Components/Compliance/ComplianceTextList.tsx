@@ -42,7 +42,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
         const response = await axios.get<Domain[]>('/api/taxonomy/domains');
         setDomains(response.data);
       } catch (error) {
-        console.error('Error fetching domains:', error);
+        console.error('Erreur lors de la récupération des domaines:', error);
       }
     };
     
@@ -65,7 +65,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
       queryParams.append('page', String(page + 1));
       queryParams.append('pageSize', String(rowsPerPage));
       
-      console.log("API Request URL:", `/api/compliance/texts?${queryParams.toString()}`);
+      console.log("URL de la requête API:", `/api/compliance/texts?${queryParams.toString()}`);
       
       const response = await axios.get<{
         texts: TextListItem[],
@@ -74,16 +74,16 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
         currentPage: number
       }>(`/api/compliance/texts?${queryParams.toString()}`);
       
-      console.log("API Response:", response.data);
+      console.log("Réponse de l'API:", response.data);
   
       setTexts(response.data.texts || []);
       setTotalCount(response.data.totalCount || 0);
     } catch (error) {
-      console.error('Error fetching texts:', error);
+      console.error('Erreur lors de la récupération des textes:', error);
       if (axios.isAxiosError(error) && error.response) {
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
-        console.error('Error response headers:', error.response.headers);
+        console.error('Données de l\'erreur:', error.response.data);
+        console.error('Statut de l\'erreur:', error.response.status);
+        console.error('En-têtes de l\'erreur:', error.response.headers);
       }
       // Set empty arrays as a fallback
       setTexts([]);
@@ -103,7 +103,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
           setFilters(prev => ({ ...prev, themeId: '', subThemeId: '' }));
           setSubThemes([]);
         } catch (error) {
-          console.error('Error fetching themes:', error);
+          console.error('Erreur lors de la récupération des thèmes:', error);
         }
       };
       
@@ -125,7 +125,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
           // Reset subtheme selection
           setFilters(prev => ({ ...prev, subThemeId: '' }));
         } catch (error) {
-          console.error('Error fetching subthemes:', error);
+          console.error('Erreur lors de la récupération des sous-thèmes:', error);
         }
       };
       
@@ -213,7 +213,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
           Filtres
         </Typography>
         <Grid container spacing={2}>
-          <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               select
               fullWidth
@@ -231,7 +231,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
               ))}
             </TextField>
           </Grid>
-          <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               select
               fullWidth
@@ -250,7 +250,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
               ))}
             </TextField>
           </Grid>
-          <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               select
               fullWidth
@@ -269,7 +269,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
               ))}
             </TextField>
           </Grid>
-          <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Nature"
@@ -279,10 +279,10 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
               margin="normal"
             />
           </Grid>
-          <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
-              label="Année de publication"
+              label="Année de Publication"
               name="publicationYear"
               type="number"
               value={filters.publicationYear}
@@ -290,7 +290,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
               margin="normal"
             />
           </Grid>
-          <Grid sx={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid item xs={12} sm={6} md={4}>
             <TextField
               fullWidth
               label="Mot-clé"
@@ -300,7 +300,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
               margin="normal"
             />
           </Grid>
-          <Grid sx={{ xs: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <Grid item xs={12} display="flex" justifyContent="flex-end">
             <Button variant="outlined" onClick={clearFilters} sx={{ mr: 1 }}>
               Réinitialiser
             </Button>
@@ -325,7 +325,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
                   <TableCell>Sous-thème</TableCell>
                   <TableCell>Référence</TableCell>
                   <TableCell>P/I</TableCell>
-                  <TableCell>Statut des exigences</TableCell>
+                  <TableCell>Statut des Exigences</TableCell>
                   <TableCell>% Applicable</TableCell>
                   <TableCell>Action</TableCell>
                 </TableRow>
@@ -395,7 +395,7 @@ const ComplianceTextList: React.FC<ComplianceTextListProps> = ({ onSelectText })
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Lignes par page:"
+            labelRowsPerPage="Lignes par page :"
             labelDisplayedRows={({ from, to, count }) => `${from}-${to} sur ${count}`}
           />
         </>

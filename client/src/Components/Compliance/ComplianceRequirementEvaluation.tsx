@@ -54,7 +54,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       const response = await axios.get<TextWithRequirements>(`/api/compliance/text/${textId}`);
       setData(response.data);
     } catch (error) {
-      console.error('Error fetching text with requirements:', error);
+      console.error('Erreur lors de la récupération du texte avec exigences:', error);
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       await axios.post('/api/compliance/evaluate', { requirementId, status });
       fetchTextWithRequirements();
     } catch (error) {
-      console.error('Error updating requirement status:', error);
+      console.error('Erreur lors de la mise à jour du statut de l\'exigence:', error);
     }
   };
 
@@ -79,7 +79,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       setObservationDialog({ open: false, evaluationId: null, content: '' });
       fetchTextWithRequirements();
     } catch (error) {
-      console.error('Error adding observation:', error);
+      console.error('Erreur lors de l\'ajout de l\'observation:', error);
     }
   };
 
@@ -88,7 +88,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       await axios.delete(`/api/compliance/observation/${observationId}`);
       fetchTextWithRequirements();
     } catch (error) {
-      console.error('Error deleting observation:', error);
+      console.error('Erreur lors de la suppression de l\'observation:', error);
     }
   };
 
@@ -103,7 +103,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       setMonitoringDialog({ open: false, evaluationId: null, name: '', value: '' });
       fetchTextWithRequirements();
     } catch (error) {
-      console.error('Error adding monitoring parameter:', error);
+      console.error('Erreur lors de l\'ajout du paramètre de suivi:', error);
     }
   };
 
@@ -112,7 +112,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       await axios.delete(`/api/compliance/monitoring-parameter/${parameterId}`);
       fetchTextWithRequirements();
     } catch (error) {
-      console.error('Error deleting monitoring parameter:', error);
+      console.error('Erreur lors de la suppression du paramètre de suivi:', error);
     }
   };
 
@@ -128,7 +128,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       setFileDialog({ open: false, evaluationId: null, file: null });
       fetchTextWithRequirements();
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error('Erreur lors du téléversement du fichier:', error);
     }
   };
 
@@ -137,7 +137,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       await axios.delete(`/api/compliance/attachment/${attachmentId}`);
       fetchTextWithRequirements();
     } catch (error) {
-      console.error('Error deleting attachment:', error);
+      console.error('Erreur lors de la suppression de la pièce jointe:', error);
     }
   };
 
@@ -152,16 +152,16 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       link.click();
       link.remove();
     } catch (error) {
-      console.error('Error downloading attachment:', error);
+      console.error('Erreur lors du téléchargement de la pièce jointe:', error);
     }
   };
 
   const handleSaveToHistory = async () => {
     try {
       await axios.post('/api/compliance/save-to-history', { textId });
-      alert('Évaluations sauvegardées dans l\'historique avec succès');
+      alert('Évaluations enregistrées dans l\'historique avec succès');
     } catch (error) {
-      console.error('Error saving to history:', error);
+      console.error('Erreur lors de l\'enregistrement dans l\'historique:', error);
     }
   };
 
@@ -171,12 +171,12 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(response.data));
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", `compliance_evaluation_${textId}.json`);
+      downloadAnchorNode.setAttribute("download", `evaluation_conformite_${textId}.json`);
       document.body.appendChild(downloadAnchorNode);
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
     } catch (error) {
-      console.error('Error exporting data:', error);
+      console.error('Erreur lors de l\'exportation des données:', error);
     }
   };
 
@@ -218,24 +218,23 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
 
   return (
     <Box>
-      <Button startIcon={<ArrowBack />} onClick={onBack}>Retour à la liste</Button>
+      <Button startIcon={<ArrowBack />} onClick={onBack}>Retour à la Liste</Button>
       <Paper sx={{ p: 3, mt: 2, mb: 3 }}>
         <Grid container spacing={3}>
-          <Grid sx={{ xs: 12, md: 6 }}>
+          <Grid item xs={12} md={6}>
             <Typography variant="h5" gutterBottom>{text.reference}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Domaine:</strong> {text.domain || '-'}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Thème:</strong> {text.theme || '-'}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Sous-thème:</strong> {text.subTheme || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Domaine :</strong> {text.domain || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Thème :</strong> {text.theme || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Sous-thème :</strong> {text.subTheme || '-'}</Typography>
           </Grid>
-          <Grid sx={{ xs: 12, md: 6 }}>
-            <Typography variant="body1" gutterBottom><strong>Nature:</strong> {text.nature || '-'}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Année de publication:</strong> {text.publicationYear || '-'}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Pénalités/Incitations:</strong> {text.penalties || '-'}</Typography>
+          <Grid item xs={12} md={6}>
+            <Typography variant="body1" gutterBottom><strong>Nature :</strong> {text.nature || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Année de Publication :</strong> {text.publicationYear || '-'}</Typography>
+            <Typography variant="body1" gutterBottom><strong>Pénalités/Incitations :</strong> {text.penalties || '-'}</Typography>
           </Grid>
-   
         </Grid>
       </Paper>
-      <Typography variant="h6" gutterBottom>Liste des exigences</Typography>
+      <Typography variant="h6" gutterBottom>Liste des Exigences</Typography>
       {requirements.length === 0 ? (
         <Typography>Aucune exigence trouvée pour ce texte.</Typography>
       ) : (
@@ -246,10 +245,10 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
               sx={{ borderLeft: `4px solid ${getStatusColor(req.evaluation?.status || req.status)}`, '&:hover': { bgcolor: '#f5f5f5' } }}
             >
               <Grid container spacing={1} alignItems="center">
-                <Grid sx={{ xs: 8 }}>
+                <Grid item xs={8}>
                   <Typography><strong>{req.number}.</strong> {req.title}</Typography>
                 </Grid>
-                <Grid sx={{ xs: 4 }}>
+                <Grid item xs={4}>
                   <Chip 
                     label={req.evaluation?.status || req.status}
                     size="small"
@@ -264,8 +263,8 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
             </AccordionSummary>
             <AccordionDetails sx={{ p: 3 }}>
               <Grid container spacing={3}>
-                <Grid sx={{ xs: 12 }}>
-                  <Typography variant="subtitle1" gutterBottom>Modifier statut:</Typography>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle1" gutterBottom>Modifier le Statut :</Typography>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     {['applicable', 'non-applicable', 'à vérifier', 'pour information'].map((status) => (
                       <Button
@@ -289,21 +288,21 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                     ))}
                   </Box>
                 </Grid>
-                <Grid sx={{ xs: 12 }}>
+                <Grid item xs={12}>
                   <Button 
                     variant="outlined" 
                     size="small"
                     onClick={() => navigate(`/company/action-plan?textId=${textId}&requirementId=${req.requirementId}`)}
                   >
-                    Créer une action
+                    Créer une Action
                   </Button>
                 </Grid>
                 {req.evaluation && (
                   <>
-                    <Grid sx={{ xs: 12 }}>
+                    <Grid item xs={12}>
                       <Divider sx={{ my: 2 }} />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">Observations:</Typography>
+                        <Typography variant="subtitle1">Observations :</Typography>
                         <Button 
                           startIcon={<Add />} 
                           size="small"
@@ -313,7 +312,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                             content: ''
                           })}
                         >
-                          Ajouter constat
+                          Ajouter un Constat
                         </Button>
                       </Box>
                       {req.evaluation.observations && req.evaluation.observations.length > 0 ? (
@@ -324,7 +323,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                               secondaryAction={
                                 <IconButton 
                                   edge="end" 
-                                  aria-label="delete"
+                                  aria-label="supprimer"
                                   size="small"
                                   onClick={() => handleDeleteObservation(obs.observationId)}
                                 >
@@ -334,7 +333,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                             >
                               <ListItemText
                                 primary={obs.content}
-                                secondary={`${obs.createdBy} - ${new Date(obs.createdAt).toLocaleString()}`}
+                                secondary={`${obs.createdBy} - ${new Date(obs.createdAt).toLocaleString('fr-FR')}`}
                               />
                             </ListItem>
                           ))}
@@ -345,10 +344,10 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                         </Typography>
                       )}
                     </Grid>
-                    <Grid sx={{ xs: 12 }}>
+                    <Grid item xs={12}>
                       <Divider sx={{ my: 2 }} />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">Paramètres de monitoring:</Typography>
+                        <Typography variant="subtitle1">Paramètres de Suivi :</Typography>
                         <Button 
                           startIcon={<Add />} 
                           size="small"
@@ -359,7 +358,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                             value: ''
                           })}
                         >
-                          Ajouter paramètre
+                          Ajouter un Paramètre
                         </Button>
                       </Box>
                       {req.evaluation.monitoringParameters && req.evaluation.monitoringParameters.length > 0 ? (
@@ -370,7 +369,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                               secondaryAction={
                                 <IconButton 
                                   edge="end" 
-                                  aria-label="delete"
+                                  aria-label="supprimer"
                                   size="small"
                                   onClick={() => handleDeleteMonitoring(param.parameterId)}
                                 >
@@ -380,21 +379,21 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                             >
                               <ListItemText
                                 primary={`${param.name}: ${param.value}`}
-                                secondary={`Ajouté le ${new Date(param.createdAt).toLocaleString()}`}
+                                secondary={`Ajouté le ${new Date(param.createdAt).toLocaleString('fr-FR')}`}
                               />
                             </ListItem>
                           ))}
                         </List>
                       ) : (
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                          Aucun paramètre de monitoring
+                          Aucun paramètre de suivi
                         </Typography>
                       )}
                     </Grid>
-                    <Grid sx={{ xs: 12 }}>
+                    <Grid item xs={12}>
                       <Divider sx={{ my: 2 }} />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">Pièces jointes:</Typography>
+                        <Typography variant="subtitle1">Pièces Jointes :</Typography>
                         <Button 
                           startIcon={<Add />} 
                           size="small"
@@ -404,7 +403,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                             file: null
                           })}
                         >
-                          Importer PDF
+                          Importer un PDF
                         </Button>
                       </Box>
                       {req.evaluation.attachments && req.evaluation.attachments.length > 0 ? (
@@ -416,7 +415,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                                 <Box>
                                   <IconButton 
                                     edge="end" 
-                                    aria-label="download"
+                                    aria-label="télécharger"
                                     size="small"
                                     onClick={() => handleDownloadAttachment(att.attachmentId, att.fileName)}
                                     sx={{ mr: 1 }}
@@ -425,7 +424,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                                   </IconButton>
                                   <IconButton 
                                     edge="end" 
-                                    aria-label="delete"
+                                    aria-label="supprimer"
                                     size="small"
                                     onClick={() => handleDeleteAttachment(att.attachmentId)}
                                   >
@@ -436,7 +435,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
                             >
                               <ListItemText
                                 primary={att.fileName}
-                                secondary={`Ajouté le ${new Date(att.uploadedAt).toLocaleString()}`}
+                                secondary={`Ajouté le ${new Date(att.uploadedAt).toLocaleString('fr-FR')}`}
                               />
                             </ListItem>
                           ))}
@@ -455,19 +454,27 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
         ))
       )}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, mb: 5 }}>
-        <Button startIcon={<ArrowBack />} onClick={onBack}>Textes applicables</Button>
-        <Button endIcon={<ArrowForward />} color="primary" onClick={() => navigate(`/company/action-plan?textId=${textId}`)}>
-          Plan d'action
-        </Button>
+        <Button startIcon={<ArrowBack />} onClick={onBack}>Textes Applicables</Button>
+        <Box>
+          <Button startIcon={<Save />} onClick={handleSaveToHistory} sx={{ mr: 1 }}>
+            Enregistrer dans l'Historique
+          </Button>
+          <Button startIcon={<Print />} onClick={handleExportPdf} sx={{ mr: 1 }}>
+            Exporter en PDF
+          </Button>
+          <Button endIcon={<ArrowForward />} color="primary" onClick={() => navigate(`/company/action-plan?textId=${textId}`)}>
+            Plan d'Action
+          </Button>
+        </Box>
       </Box>
       <Dialog open={observationDialog.open} onClose={() => setObservationDialog({ ...observationDialog, open: false })}>
-        <DialogTitle>Ajouter une observation</DialogTitle>
+        <DialogTitle>Ajouter une Observation</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
             id="observation"
-            label="Contenu de l'observation"
+            label="Contenu de l'Observation"
             fullWidth
             multiline
             rows={4}
@@ -481,13 +488,13 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
         </DialogActions>
       </Dialog>
       <Dialog open={monitoringDialog.open} onClose={() => setMonitoringDialog({ ...monitoringDialog, open: false })}>
-        <DialogTitle>Ajouter un paramètre de monitoring</DialogTitle>
+        <DialogTitle>Ajouter un Paramètre de Suivi</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
             id="parameterName"
-            label="Nom du paramètre"
+            label="Nom du Paramètre"
             fullWidth
             value={monitoringDialog.name}
             onChange={(e) => setMonitoringDialog({ ...monitoringDialog, name: e.target.value })}
@@ -496,7 +503,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
           <TextField
             margin="dense"
             id="parameterValue"
-            label="Valeur du paramètre"
+            label="Valeur du Paramètre"
             fullWidth
             value={monitoringDialog.value}
             onChange={(e) => setMonitoringDialog({ ...monitoringDialog, value: e.target.value })}
@@ -508,7 +515,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
         </DialogActions>
       </Dialog>
       <Dialog open={fileDialog.open} onClose={() => setFileDialog({ ...fileDialog, open: false })}>
-        <DialogTitle>Importer un fichier PDF</DialogTitle>
+        <DialogTitle>Importer un Fichier PDF</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <input
@@ -519,10 +526,10 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
               onChange={handleFileChange}
             />
             <label htmlFor="raised-button-file">
-              <Button variant="outlined" component="span">Sélectionner un fichier</Button>
+              <Button variant="outlined" component="span">Sélectionner un Fichier</Button>
             </label>
             {fileDialog.file && (
-              <Typography variant="body2" sx={{ mt: 1 }}>Fichier sélectionné: {fileDialog.file.name}</Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>Fichier sélectionné : {fileDialog.file.name}</Typography>
             )}
           </Box>
         </DialogContent>

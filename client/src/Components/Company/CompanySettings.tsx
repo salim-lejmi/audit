@@ -27,13 +27,13 @@ const CompanySettings: React.FC = () => {
   const navigate = useNavigate();
 
   const industries = [
-    'Technology',
-    'Healthcare',
-    'Manufacturing',
-    'financial services',
-    'Retail',
-    'Education',
-    'Other'
+    'Technologie',
+    'Santé',
+    'Fabrication',
+    'Services financiers',
+    'Commerce de détail',
+    'Éducation',
+    'Autre'
   ];
 
   useEffect(() => {
@@ -43,7 +43,7 @@ const CompanySettings: React.FC = () => {
         console.log('Fetched company data:', response.data);
         setCompanyData(response.data);
       } catch (error) {
-        setError('Failed to load company data');
+        setError('Échec du chargement des données de l\'entreprise');
         console.error('Error fetching company data:', error);
       } finally {
         setLoading(false);
@@ -67,12 +67,12 @@ const CompanySettings: React.FC = () => {
     setSuccess('');
     
     if (!companyData.companyName.trim()) {
-      setError('Company name is required');
+      setError('Le nom de l\'entreprise est requis');
       return;
     }
     
     if (!companyData.industry.trim()) {
-      setError('Industry is required');
+      setError('Le secteur est requis');
       return;
     }
     
@@ -85,13 +85,13 @@ const CompanySettings: React.FC = () => {
     
     try {
       const response = await axios.put('/api/company/settings', requestData);
-      setSuccess('Company settings updated successfully');
+      setSuccess('Paramètres de l\'entreprise mis à jour avec succès');
       setCompanyData(response.data);
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response) {
-        setError(error.response.data.message || 'Failed to update company settings');
+        setError(error.response.data.message || 'Échec de la mise à jour des paramètres de l\'entreprise');
       } else {
-        setError('An error occurred while updating company settings');
+        setError('Une erreur s\'est produite lors de la mise à jour des paramètres de l\'entreprise');
       }
     } finally {
       setIsSubmitting(false);
@@ -99,15 +99,15 @@ const CompanySettings: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading company settings...</div>;
+    return <div className="loading">Chargement des paramètres de l'entreprise...</div>;
   }
 
   return (
     <section className="company-settings-section">
       <div className="company-settings-container">
         <div className="settings-header">
-          <h2 className="settings-title">Company Settings</h2>
-          <p className="settings-subtitle">Manage your company information</p>
+          <h2 className="settings-title">Paramètres de l'entreprise</h2>
+          <p className="settings-subtitle">Gérer les informations de votre entreprise</p>
         </div>
         
         {error && <div className="error-message">{error}</div>}
@@ -116,7 +116,7 @@ const CompanySettings: React.FC = () => {
         <div className="settings-card">
           <form className="settings-form" onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="companyName">Company Name</label>
+              <label htmlFor="companyName">Nom de l'entreprise</label>
               <input
                 type="text"
                 id="companyName"
@@ -125,12 +125,12 @@ const CompanySettings: React.FC = () => {
                 value={companyData.companyName}
                 onChange={handleInputChange}
                 required
-                placeholder="Enter your company name"
+                placeholder="Entrez le nom de votre entreprise"
               />
             </div>
             
             <div className="form-group">
-              <label htmlFor="industry">Industry</label>
+              <label htmlFor="industry">Secteur</label>
               <select
                 id="industry"
                 name="industry"
@@ -139,7 +139,7 @@ const CompanySettings: React.FC = () => {
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Select Industry</option>
+                <option value="">Sélectionnez un secteur</option>
                 {industries.map((industry) => (
                   <option key={industry} value={industry}>
                     {industry}
@@ -150,15 +150,15 @@ const CompanySettings: React.FC = () => {
             
             <div className="readonly-info">
               <div className="info-row">
-                <span className="info-label">Status:</span>
+                <span className="info-label">Statut :</span>
                 <span className={`status-badge ${companyData.status.toLowerCase()}`}>
                   {companyData.status}
                 </span>
               </div>
               <div className="info-row">
-                <span className="info-label">Member Since:</span>
+                <span className="info-label">Membre depuis :</span>
                 <span className="info-value">
-                  {new Date(companyData.createdAt).toLocaleDateString('en-US', {
+                  {new Date(companyData.createdAt).toLocaleDateString('fr-FR', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -174,7 +174,7 @@ const CompanySettings: React.FC = () => {
                 disabled={isSubmitting}
               >
                 <i className="fas fa-save"></i>
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
               </button>
             </div>
           </form>

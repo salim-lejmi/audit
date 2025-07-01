@@ -65,7 +65,7 @@ const StatisticsPage: React.FC = () => {
       setDomains(response.data.domains);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching statistics:', error);
+      console.error('Erreur lors de la récupération des statistiques:', error);
       setLoading(false);
     }
   };
@@ -94,17 +94,17 @@ const StatisticsPage: React.FC = () => {
       const imgWidth = 190;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.text('Statistics Report', 105, 15, { align: 'center' });
+      pdf.text('Rapport de Statistiques', 105, 15, { align: 'center' });
       
-      const domainName = domains.find(d => d.domainId === domainId)?.name || 'All Domains';
-      pdf.text(`Domain: ${domainName}`, 105, 25, { align: 'center' });
-      pdf.text(`Generated: ${new Date().toLocaleDateString()}`, 105, 32, { align: 'center' });
+      const domainName = domains.find(d => d.domainId === domainId)?.name || 'Tous les Domaines';
+      pdf.text(`Domaine: ${domainName}`, 105, 25, { align: 'center' });
+      pdf.text(`Généré: ${new Date().toLocaleDateString('fr-FR')}`, 105, 32, { align: 'center' });
       
       pdf.addImage(imgData, 'PNG', 10, 40, imgWidth, imgHeight);
       
-      pdf.save('compliance-statistics.pdf');
+      pdf.save('statistiques-conformite.pdf');
     } catch (error) {
-      console.error('Error exporting PDF:', error);
+      console.error('Erreur lors de l\'exportation PDF:', error);
     }
   };
 
@@ -120,7 +120,7 @@ const StatisticsPage: React.FC = () => {
       labels: statisticsData.textsByStatus.map(item => item.status),
       datasets: [
         {
-          label: 'Number of Texts',
+          label: 'Nombre de Textes',
           data: statisticsData.textsByStatus.map(item => item.count),
           backgroundColor: chartColors,
           borderColor: '#ffffff',
@@ -138,7 +138,7 @@ const StatisticsPage: React.FC = () => {
       labels: statisticsData.requirementsByStatus.map(item => item.status),
       datasets: [
         {
-          label: 'Number of Requirements',
+          label: 'Nombre d\'Exigences',
           data: statisticsData.requirementsByStatus.map(item => item.count),
           backgroundColor: chartColors,
           borderColor: '#ffffff',
@@ -156,7 +156,7 @@ const StatisticsPage: React.FC = () => {
       labels: statisticsData.actionsByStatus.map(item => item.status),
       datasets: [
         {
-          label: 'Number of Actions',
+          label: 'Nombre d\'Actions',
           data: statisticsData.actionsByStatus.map(item => item.count),
           backgroundColor: chartColors,
           borderColor: '#ffffff',
@@ -174,7 +174,7 @@ const StatisticsPage: React.FC = () => {
       labels: statisticsData.actionProgressGroups.map(item => item.range),
       datasets: [
         {
-          label: 'Actions by Progress',
+          label: 'Actions par Progrès',
           data: statisticsData.actionProgressGroups.map(item => item.count),
           backgroundColor: chartColors.map(color => color + '80'),
           borderColor: chartColors,
@@ -195,7 +195,7 @@ const StatisticsPage: React.FC = () => {
       labels: statisticsData.actionsByResponsible.map(item => item.responsibleName),
       datasets: [
         {
-          label: 'Total Actions',
+          label: 'Total des Actions',
           data: statisticsData.actionsByResponsible.map(item => item.totalActions),
           backgroundColor: '#3B82F680',
           borderColor: '#3B82F6',
@@ -204,7 +204,7 @@ const StatisticsPage: React.FC = () => {
           borderSkipped: false,
         },
         {
-          label: 'Completed Actions',
+          label: 'Actions Terminées',
           data: statisticsData.actionsByResponsible.map(item => item.completedActions),
           backgroundColor: '#10B98180',
           borderColor: '#10B981',
@@ -225,7 +225,7 @@ const StatisticsPage: React.FC = () => {
       labels: statisticsData.actionsByResponsible.map(item => item.responsibleName),
       datasets: [
         {
-          label: 'Average Progress (%)',
+          label: 'Progrès Moyen (%)',
           data: statisticsData.actionsByResponsible.map(item => item.averageProgress),
           backgroundColor: '#EF444480',
           borderColor: '#EF4444',
@@ -294,7 +294,7 @@ const StatisticsPage: React.FC = () => {
       sx={{ 
         background: gradient,
         color: 'white',
-        height: isSmallScreen ? '70px' : '80px', // Reduced height significantly
+        height: isSmallScreen ? '70px' : '80px',
         display: 'flex',
         alignItems: 'center',
         borderRadius: 2,
@@ -311,13 +311,13 @@ const StatisticsPage: React.FC = () => {
           display: 'flex', 
           alignItems: 'center', 
           width: '100%', 
-          p: isSmallScreen ? '8px 12px' : '12px 16px', // Reduced padding
-          '&:last-child': { pb: isSmallScreen ? '8px' : '12px' } // Override default padding-bottom
+          p: isSmallScreen ? '8px 12px' : '12px 16px',
+          '&:last-child': { pb: isSmallScreen ? '8px' : '12px' }
         }}
       >
         <Box sx={{ mr: isSmallScreen ? 1 : 1.5, opacity: 0.9, display: 'flex', alignItems: 'center' }}>
           {React.cloneElement(icon as React.ReactElement, { 
-            fontSize: isSmallScreen ? "small" : "medium" // Smaller icons
+            fontSize: isSmallScreen ? "small" : "medium"
           })}
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -327,7 +327,7 @@ const StatisticsPage: React.FC = () => {
             fontWeight="bold"
             sx={{ 
               lineHeight: 1.2,
-              fontSize: isSmallScreen ? '1.1rem' : '1.25rem' // Smaller font
+              fontSize: isSmallScreen ? '1.1rem' : '1.25rem'
             }}
           >
             {value}
@@ -336,7 +336,7 @@ const StatisticsPage: React.FC = () => {
             variant="body2" 
             sx={{ 
               opacity: 0.9,
-              fontSize: isSmallScreen ? '0.7rem' : '0.8rem', // Smaller subtitle
+              fontSize: isSmallScreen ? '0.7rem' : '0.8rem',
               lineHeight: 1.1,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -363,7 +363,7 @@ const StatisticsPage: React.FC = () => {
       }}
     >
       <CardContent sx={{ p: isSmallScreen ? 2 : 3 }}>
-        <Box display="flex" alignItems="center" mb={2}>
+        <Box display="flex" intéressante="center" mb={2}>
           {icon && <Box sx={{ mr: 1, color: '#3B82F6' }}>{icon}</Box>}
           <Typography variant={isSmallScreen ? "h6" : "h5"} fontWeight="600" color="text.primary">
             {title}
@@ -380,7 +380,7 @@ const StatisticsPage: React.FC = () => {
     const texts = statisticsData.textsByStatus.reduce((sum, item) => sum + item.count, 0);
     const requirements = statisticsData.requirementsByStatus.reduce((sum, item) => sum + item.count, 0);
     const actions = statisticsData.actionsByStatus.reduce((sum, item) => sum + item.count, 0);
-    const completed = statisticsData.actionsByStatus.find(item => item.status.toLowerCase().includes('completed'))?.count || 0;
+    const completed = statisticsData.actionsByStatus.find(item => item.status.toLowerCase().includes('terminé'))?.count || 0;
     
     return { texts, requirements, actions, completed };
   };
@@ -403,10 +403,10 @@ const StatisticsPage: React.FC = () => {
           <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
             <Box>
               <Typography variant={isSmallScreen ? "h4" : "h3"} component="h1" fontWeight="bold" gutterBottom>
-                Analytics Dashboard
+                Tableau de Bord Analytique
               </Typography>
               <Typography variant={isSmallScreen ? "body2" : "body1"} sx={{ opacity: 0.9 }}>
-                Comprehensive compliance statistics and insights
+                Statistiques et informations complètes sur la conformité
               </Typography>
             </Box>
             <Stack direction={isMobile ? "column" : "row"} spacing={1} alignItems="stretch">
@@ -421,7 +421,7 @@ const StatisticsPage: React.FC = () => {
                   fontSize: isSmallScreen ? '0.8rem' : '0.875rem'
                 }}
               >
-                Export PDF
+                Exporter en PDF
               </Button>
               <Button 
                 variant="outlined" 
@@ -433,7 +433,7 @@ const StatisticsPage: React.FC = () => {
                   fontSize: isSmallScreen ? '0.8rem' : '0.875rem'
                 }}
               >
-                Back to Action Plan
+                Retour au Plan d'Action
               </Button>
             </Stack>
           </Box>
@@ -444,14 +444,14 @@ const StatisticsPage: React.FC = () => {
       <Box mb={isSmallScreen ? 2 : 3}>
         <Paper sx={{ p: isSmallScreen ? 2 : 3, borderRadius: 3, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <FormControl fullWidth variant="outlined" size={isSmallScreen ? "small" : "medium"}>
-            <InputLabel>Filter by Domain</InputLabel>
+            <InputLabel>Filtrer par Domaine</InputLabel>
             <Select
               value={domainId}
               onChange={handleDomainChange as any}
-              label="Filter by Domain"
+              label="Filtrer par Domaine"
             >
               <MenuItem value="">
-                <em>All Domains</em>
+                <em>Tous les Domaines</em>
               </MenuItem>
               {domains.map((domain) => (
                 <MenuItem key={domain.domainId} value={domain.domainId}>
@@ -475,16 +475,16 @@ const StatisticsPage: React.FC = () => {
             !statisticsData.actionsByStatus.length)) ? (
             <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
               <Typography variant="h6" color="text.secondary">
-                No data available for the selected domain
+                Aucune donnée disponible pour le domaine sélectionné
               </Typography>
             </Paper>
           ) : (
             <>
-              {/* Summary Cards - Now much more compact */}
+              {/* Summary Cards */}
               <Grid container spacing={isSmallScreen ? 1.5 : 2} mb={isSmallScreen ? 2 : 3}>
                 <Grid item xs={6} sm={3}>
                   <StatsCard 
-                    title="Total Texts" 
+                    title="Total des Textes" 
                     value={summaryStats.texts} 
                     icon={<AssignmentIcon />}
                     gradient={gradientColors[0]}
@@ -492,7 +492,7 @@ const StatisticsPage: React.FC = () => {
                 </Grid>
                 <Grid item xs={6} sm={3}>
                   <StatsCard 
-                    title="Requirements" 
+                    title="Exigences" 
                     value={summaryStats.requirements} 
                     icon={<BarChartIcon />}
                     gradient={gradientColors[1]}
@@ -500,7 +500,7 @@ const StatisticsPage: React.FC = () => {
                 </Grid>
                 <Grid item xs={6} sm={3}>
                   <StatsCard 
-                    title="Total Actions" 
+                    title="Total des Actions" 
                     value={summaryStats.actions} 
                     icon={<TrendingUpIcon />}
                     gradient={gradientColors[2]}
@@ -508,7 +508,7 @@ const StatisticsPage: React.FC = () => {
                 </Grid>
                 <Grid item xs={6} sm={3}>
                   <StatsCard 
-                    title="Completed" 
+                    title="Terminé" 
                     value={summaryStats.completed} 
                     icon={<PersonIcon />}
                     gradient={gradientColors[3]}
@@ -520,13 +520,13 @@ const StatisticsPage: React.FC = () => {
               <Grid container spacing={isSmallScreen ? 2 : 3}>
                 {/* Text Status */}
                 <Grid item xs={12} lg={6}>
-                  <ChartCard title="Text Compliance Status" icon={<AssignmentIcon />}>
+                  <ChartCard title="Statut de Conformité des Textes" icon={<AssignmentIcon />}>
                     <Box sx={{ height: isSmallScreen ? '250px' : '300px' }}>
                       {statisticsData?.textsByStatus.length ? (
                         <Doughnut data={getTextStatusChartData()} options={chartOptions} />
                       ) : (
                         <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-                          <Typography color="text.secondary">No data available</Typography>
+                          <Typography color="text.secondary">Aucune donnée disponible</Typography>
                         </Box>
                       )}
                     </Box>
@@ -535,13 +535,13 @@ const StatisticsPage: React.FC = () => {
 
                 {/* Requirement Status */}
                 <Grid item xs={12} lg={6}>
-                  <ChartCard title="Requirement Status" icon={<BarChartIcon />}>
+                  <ChartCard title="Statut des Exigences" icon={<BarChartIcon />}>
                     <Box sx={{ height: isSmallScreen ? '250px' : '300px' }}>
                       {statisticsData?.requirementsByStatus.length ? (
                         <Doughnut data={getRequirementStatusChartData()} options={chartOptions} />
                       ) : (
                         <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-                          <Typography color="text.secondary">No data available</Typography>
+                          <Typography color="text.secondary">Aucune donnée disponible</Typography>
                         </Box>
                       )}
                     </Box>
@@ -550,13 +550,13 @@ const StatisticsPage: React.FC = () => {
 
                 {/* Action Status */}
                 <Grid item xs={12} lg={6}>
-                  <ChartCard title="Action Status Distribution" icon={<TrendingUpIcon />}>
+                  <ChartCard title="Distribution du Statut des Actions" icon={<TrendingUpIcon />}>
                     <Box sx={{ height: isSmallScreen ? '250px' : '300px' }}>
                       {statisticsData?.actionsByStatus.length ? (
                         <Pie data={getActionStatusChartData()} options={chartOptions} />
                       ) : (
                         <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-                          <Typography color="text.secondary">No data available</Typography>
+                          <Typography color="text.secondary">Aucune donnée disponible</Typography>
                         </Box>
                       )}
                     </Box>
@@ -565,13 +565,13 @@ const StatisticsPage: React.FC = () => {
 
                 {/* Action Progress */}
                 <Grid item xs={12} lg={6}>
-                  <ChartCard title="Action Progress Groups" icon={<TrendingUpIcon />}>
+                  <ChartCard title="Groupes de Progrès des Actions" icon={<TrendingUpIcon />}>
                     <Box sx={{ height: isSmallScreen ? '250px' : '300px' }}>
                       {statisticsData?.actionProgressGroups.length ? (
                         <Bar data={getActionProgressChartData()} options={barOptions} />
                       ) : (
                         <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-                          <Typography color="text.secondary">No data available</Typography>
+                          <Typography color="text.secondary">Aucune donnée disponible</Typography>
                         </Box>
                       )}
                     </Box>
@@ -580,13 +580,13 @@ const StatisticsPage: React.FC = () => {
 
                 {/* Actions by Responsible */}
                 <Grid item xs={12}>
-                  <ChartCard title="Actions by Responsible Person" icon={<PersonIcon />}>
+                  <ChartCard title="Actions par Personne Responsable" icon={<PersonIcon />}>
                     <Box sx={{ height: isSmallScreen ? '300px' : '400px' }}>
                       {statisticsData?.actionsByResponsible.length ? (
                         <Bar data={getActionsByResponsibleChartData()} options={barOptions} />
                       ) : (
                         <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-                          <Typography color="text.secondary">No data available</Typography>
+                          <Typography color="text.secondary">Aucune donnée disponible</Typography>
                         </Box>
                       )}
                     </Box>
@@ -595,13 +595,13 @@ const StatisticsPage: React.FC = () => {
 
                 {/* Progress by Responsible */}
                 <Grid item xs={12}>
-                  <ChartCard title="Average Progress by Responsible Person" icon={<PersonIcon />}>
+                  <ChartCard title="Progrès Moyen par Personne Responsable" icon={<PersonIcon />}>
                     <Box sx={{ height: isSmallScreen ? '300px' : '400px' }}>
                       {statisticsData?.actionsByResponsible.length ? (
                         <Bar data={getActionProgressByResponsibleChartData()} options={barOptions} />
                       ) : (
                         <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-                          <Typography color="text.secondary">No data available</Typography>
+                          <Typography color="text.secondary">Aucune donnée disponible</Typography>
                         </Box>
                       )}
                     </Box>

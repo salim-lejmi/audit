@@ -70,7 +70,7 @@ const RevueDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [textsLoaded, setTextsLoaded] = useState(false);
-const [userRole, setUserRole] = useState<string>('');
+  const [userRole, setUserRole] = useState<string>('');
 
   // Modal states
   const [showLegalTextModal, setShowLegalTextModal] = useState(false);
@@ -97,40 +97,40 @@ const [userRole, setUserRole] = useState<string>('');
   const [stakeholderForm, setStakeholderForm] = useState({ stakeholderName: '', relationshipStatus: '', reason: '', action: '', followUp: '' });
 
   useEffect(() => {
-  // Get user role
-  const verifyAuth = async () => {
-    try {
-      const response = await axios.get('/api/auth/verify');
-      setUserRole(response.data.role);
-    } catch (err) {
-      console.error('Failed to verify auth:', err);
+    // Get user role
+    const verifyAuth = async () => {
+      try {
+        const response = await axios.get('/api/auth/verify');
+        setUserRole(response.data.role);
+      } catch (err) {
+        console.error('Échec de la vérification de l\'authentification:', err);
+      }
+    };
+    
+    verifyAuth();
+    fetchReview();
+    fetchTexts();
+  }, [id]);
+
+  const handleCompleteReview = () => {
+    if (!window.confirm('Êtes-vous sûr de vouloir finaliser cette revue ? Cette action est irréversible.')) {
+      return;
     }
+
+    axios.post(`/api/revue/${review?.revueId}/complete`)
+      .then(() => fetchReview())
+      .catch(err => alert('Échec de la finalisation de la revue'));
   };
-  
-  verifyAuth();
-  fetchReview();
-  fetchTexts();
-}, [id]);
-const handleCompleteReview = () => {
-  if (!window.confirm('Are you sure you want to complete this review? This action cannot be undone.')) {
-    return;
-  }
- 
 
-  axios.post(`/api/revue/${review?.revueId}/complete`)
-    .then(() => fetchReview())
-    .catch(err => alert('Failed to complete review'));
-};
+  const canModify = () => {
+    return userRole === 'SubscriptionManager' || userRole === 'Auditor';
+  };
 
+  const canParticipate = () => {
+    // All company members can participate (add content)
+    return true; // Since this page is already protected by authentication
+  };
 
-const canModify = () => {
-  return userRole === 'SubscriptionManager' || userRole === 'Auditor';
-};
-
-const canParticipate = () => {
-  // All company members can participate (add content)
-  return true; // Since this page is already protected by authentication
-};
   const fetchReview = () => {
     setLoading(true);
     axios.get(`/api/revue/${id}`)
@@ -140,7 +140,7 @@ const canParticipate = () => {
       })
       .catch(err => {
         console.error(err);
-        setError('Failed to load review details');
+        setError('Échec du chargement des détails de la revue');
         setLoading(false);
       });
   };
@@ -148,15 +148,15 @@ const canParticipate = () => {
   const fetchTexts = async () => {
     try {
       const response = await axios.get('/api/texts');
-      console.log('Raw Texts API response:', response.data);
+      console.log('Réponse brute de l\'API Textes:', response.data);
       
       const fetchedTexts = response.data.texts || [];
-      console.log('Fetched texts:', fetchedTexts);
+      console.log('Textes récupérés:', fetchedTexts);
       
       setTexts(fetchedTexts);
       setTextsLoaded(true);
     } catch (err) {
-      console.error('Failed to load texts', err);
+      console.error('Échec du chargement des textes', err);
       setTexts([]);
       setTextsLoaded(true);
     }
@@ -167,14 +167,14 @@ const canParticipate = () => {
       const response = await axios.get(`/api/revue/${id}/available-requirements`);
       setAvailableRequirements(response.data);
     } catch (err) {
-      console.error('Failed to load available requirements', err);
+      console.error('Échec du chargement des exigences disponibles', err);
       setAvailableRequirements([]);
     }
   };
 
   const handleAddLegalText = () => {
     if (legalTextForm.textId === 0) {
-      alert('Please select a text');
+      alert('Veuillez sélectionner un texte');
       return;
     }
     axios.post(`/api/revue/${review?.revueId}/legaltext`, legalTextForm)
@@ -183,40 +183,41 @@ const canParticipate = () => {
         setLegalTextForm({ textId: 0, penalties: '', incentives: '', risks: '', opportunities: '', followUp: '' });
         fetchReview();
       })
-      .catch(err => alert('Failed to add legal text'));
+      .catch(err => alert('Échec de l\'ajout du texte légal'));
   };
 
-const handleAddRequirement = () => {
-  if (requirementForm.textRequirementId === 0) {
-    alert('Please select a requirement');
-    return;
-  }
-  
-  const requestData = {
-    TextRequirementId: requirementForm.textRequirementId,
-    Implementation: requirementForm.implementation,
-    Communication: requirementForm.communication,
-    FollowUp: requirementForm.followUp
+  const handleAddRequirement = () => {
+    if (requirementForm.textRequirementId === 0) {
+      alert('Veuillez sélectionner une exigence');
+      return;
+    }
+    
+    const requestData = {
+      TextRequirementId: requirementForm.textRequirementId,
+      Implementation: requirementForm.implementation,
+      Communication: requirementForm.communication,
+      FollowUp: requirementForm.followUp
+    };
+    
+    console.log('Soumission du formulaire d\'exigence:', requestData);
+    
+    axios.post(`/api/revue/${review?.revueId}/requirement`, requestData)
+      .then(response => {
+        console.log('Exigence ajoutée avec succès:', response.data);
+        setShowRequirementModal(false);
+        setRequirementForm({ textRequirementId: 0, implementation: '', communication: '', followUp: '' });
+        fetchReview();
+      })
+      .catch(err => {
+        console.error('Échec de l\'ajout de l\'exigence:', err);
+        console.error('Données de la réponse d\'erreur:', err.response?.data);
+        alert(`Échec de l'ajout de l'exigence: ${err.response?.data?.message || err.message}`);
+      });
   };
-  
-  console.log('Submitting requirement form:', requestData);
-  
-  axios.post(`/api/revue/${review?.revueId}/requirement`, requestData)
-    .then(response => {
-      console.log('Requirement added successfully:', response.data);
-      setShowRequirementModal(false);
-      setRequirementForm({ textRequirementId: 0, implementation: '', communication: '', followUp: '' });
-      fetchReview();
-    })
-    .catch(err => {
-      console.error('Failed to add requirement:', err);
-      console.error('Error response data:', err.response?.data);
-      alert(`Failed to add requirement: ${err.response?.data?.message || err.message}`);
-    });
-};
+
   const handleAddAction = () => {
     if (!actionForm.description) {
-      alert('Description is required');
+      alert('La description est requise');
       return;
     }
     axios.post(`/api/revue/${review?.revueId}/action`, actionForm)
@@ -225,12 +226,12 @@ const handleAddRequirement = () => {
         setActionForm({ description: '', source: '', status: '', observation: '', followUp: '' });
         fetchReview();
       })
-      .catch(err => alert('Failed to add action'));
+      .catch(err => alert('Échec de l\'ajout de l\'action'));
   };
 
   const handleAddStakeholder = () => {
     if (!stakeholderForm.stakeholderName) {
-      alert('Stakeholder name is required');
+      alert('Le nom de la partie prenante est requis');
       return;
     }
     axios.post(`/api/revue/${review?.revueId}/stakeholder`, stakeholderForm)
@@ -239,35 +240,37 @@ const handleAddRequirement = () => {
         setStakeholderForm({ stakeholderName: '', relationshipStatus: '', reason: '', action: '', followUp: '' });
         fetchReview();
       })
-      .catch(err => alert('Failed to add stakeholder'));
+      .catch(err => alert('Échec de l\'ajout de la partie prenante'));
   };
 
-const handleGeneratePdf = () => {
-  axios.post(`/api/revue/${review?.revueId}/generate-pdf`, null, { responseType: 'blob' })
-    .then(response => {
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `review_${review?.revueId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      fetchReview();
-    })
-    .catch(err => {
-      console.error('PDF generation failed:', err);
-      alert('Failed to generate PDF. Please try again.');
-    });
-};  const handleStartReview = () => {
-    axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'In Progress' })
+  const handleGeneratePdf = () => {
+    axios.post(`/api/revue/${review?.revueId}/generate-pdf`, null, { responseType: 'blob' })
+      .then(response => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `review_${review?.revueId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        fetchReview();
+      })
+      .catch(err => {
+        console.error('Échec de la génération du PDF:', err);
+        alert('Échec de la génération du PDF. Veuillez réessayer.');
+      });
+  };
+
+  const handleStartReview = () => {
+    axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'En cours' })
       .then(() => fetchReview())
-      .catch(err => alert('Failed to start review'));
+      .catch(err => alert('Échec du démarrage de la revue'));
   };
 
   const handleCancelReview = () => {
-    axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'Canceled' })
+    axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'Annulé' })
       .then(() => fetchReview())
-      .catch(err => alert('Failed to cancel review'));
+      .catch(err => alert('Échec de l\'annulation de la revue'));
   };
 
   const handleShowRequirementModal = () => {
@@ -275,63 +278,65 @@ const handleGeneratePdf = () => {
     setShowRequirementModal(true);
   };
 
-  if (loading) return <div className="text-center p-4">Loading...</div>;
+  if (loading) return <div className="text-center p-4">Chargement...</div>;
   if (error) return <div className="text-red-500 text-center p-4">{error}</div>;
-  if (!review) return <div className="text-center p-4">Review not found</div>;
+  if (!review) return <div className="text-center p-4">Revue non trouvée</div>;
 
   return (
     <div className="revue-detail">
       <div className="container">
-        <h1 className="text-3xl font-bold mb-4">Review ID: {review.revueId}</h1>
+        <h1 className="text-3xl font-bold mb-4">ID de la revue : {review.revueId}</h1>
         
         <div className="info-card">
-          <p><strong>Domain:</strong> {review.domainName}</p>
-          <p><strong>Review Date:</strong> {new Date(review.reviewDate).toLocaleDateString()}</p>
-          <p><strong>Status:</strong> <span className={`status-badge status-${review.status.toLowerCase().replace(' ', '')}`}>{review.status}</span></p>
+          <p><strong>Domaine :</strong> {review.domainName}</p>
+          <p><strong>Date de la revue :</strong> {new Date(review.reviewDate).toLocaleDateString('fr-FR')}</p>
+          <p><strong>Statut :</strong> <span className={`status-badge status-${review.status.toLowerCase().replace(' ', '')}`}>{review.status === 'Draft' ? 'Brouillon' : review.status === 'In Progress' ? 'En cours' : review.status === 'Completed' ? 'Terminé' : review.status === 'Canceled' ? 'Annulé' : review.status}</span></p>
           {review.pdfFilePath && (
-            <p><strong>PDF:</strong> <a href={review.pdfFilePath} download>Download</a></p>
+            <p><strong>PDF :</strong> <a href={review.pdfFilePath} download>Télécharger</a></p>
           )}
         </div>
 
-<div className="action-buttons-row">
-  {review.status === 'Draft' && canModify() &&(userRole === 'SubscriptionManager') && (
-    <button onClick={handleStartReview} className="action-btn-primary btn-start">
-      Start Review
-    </button>
-  )}
-  {review.status === 'In Progress' && canModify() && (
-    <button onClick={handleCompleteReview} className="action-btn-primary btn-complete">
-      Complete Review
-    </button>
-  )}
-  {review.status !== 'Canceled' && review.status !== 'Completed' && canModify() &&(userRole === 'SubscriptionManager') && (
-    <button onClick={handleCancelReview} className="action-btn-primary btn-cancel">
-      Cancel Review
-    </button>
-  )}
-  <button onClick={handleGeneratePdf} className="action-btn-primary btn-pdf">
-    Generate PDF
-  </button>
-</div>
+        <div className="action-buttons-row">
+          {review.status === 'Draft' && canModify() && (userRole === 'SubscriptionManager') && (
+            <button onClick={handleStartReview} className="action-btn-primary btn-start">
+              Démarrer la revue
+            </button>
+          )}
+          {review.status === 'In Progress' && canModify() && (
+            <button onClick={handleCompleteReview} className="action-btn-primary btn-complete">
+              Finaliser la revue
+            </button>
+          )}
+          {review.status !== 'Canceled' && review.status !== 'Completed' && canModify() && (userRole === 'SubscriptionManager') && (
+            <button onClick={handleCancelReview} className="action-btn-primary btn-cancel">
+              Annuler la revue
+            </button>
+          )}
+          <button onClick={handleGeneratePdf} className="action-btn-primary btn-pdf">
+            Générer le PDF
+          </button>
+        </div>
+
         {/* Legal Texts */}
-<section className="section">
-  <div className="section-header">
-    <h2>Legal Texts</h2>
-    {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
-      <button onClick={() => setShowLegalTextModal(true)} className="add-btn">
-        Add Legal Text
-      </button>
-    )}
-  </div>          <div className="overflow-x-auto">
+        <section className="section">
+          <div className="section-header">
+            <h2>Textes légaux</h2>
+            {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
+              <button onClick={() => setShowLegalTextModal(true)} className="add-btn">
+                Ajouter un texte légal
+              </button>
+            )}
+          </div>
+          <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Reference</th>
-                  <th>Penalties</th>
-                  <th>Incentives</th>
-                  <th>Risks</th>
-                  <th>Opportunities</th>
-                  <th>Follow Up</th>
+                  <th>Référence</th>
+                  <th>Sanctions</th>
+                  <th>Incitations</th>
+                  <th>Risques</th>
+                  <th>Opportunités</th>
+                  <th>Suivi</th>
                 </tr>
               </thead>
               <tbody>
@@ -351,25 +356,24 @@ const handleGeneratePdf = () => {
         </section>
 
         {/* Requirements */}
-     <section className="section">
-  <div className="section-header">
-    <h2>Requirements</h2>
-    {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
-      <button onClick={handleShowRequirementModal} className="add-btn">
-        Add Requirement
-      </button>
-    )}
-  </div>
-
+        <section className="section">
+          <div className="section-header">
+            <h2>Exigences</h2>
+            {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
+              <button onClick={handleShowRequirementModal} className="add-btn">
+                Ajouter une exigence
+              </button>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Text Reference</th>
-                  <th>Requirement</th>
-                  <th>Implementation</th>
+                  <th>Référence du texte</th>
+                  <th>Exigence</th>
+                  <th>Mise en œuvre</th>
                   <th>Communication</th>
-                  <th>Follow Up</th>
+                  <th>Suivi</th>
                 </tr>
               </thead>
               <tbody>
@@ -388,24 +392,24 @@ const handleGeneratePdf = () => {
         </section>
 
         {/* Actions */}
-      <section className="section">
-  <div className="section-header">
-    <h2>Actions</h2>
-    {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
-      <button onClick={() => setShowActionModal(true)} className="add-btn">
-        Add Action
-      </button>
-    )}
-  </div>
+        <section className="section">
+          <div className="section-header">
+            <h2>Actions</h2>
+            {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
+              <button onClick={() => setShowActionModal(true)} className="add-btn">
+                Ajouter une action
+              </button>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
                   <th>Description</th>
                   <th>Source</th>
-                  <th>Status</th>
+                  <th>Statut</th>
                   <th>Observation</th>
-                  <th>Follow Up</th>
+                  <th>Suivi</th>
                 </tr>
               </thead>
               <tbody>
@@ -424,31 +428,31 @@ const handleGeneratePdf = () => {
         </section>
 
         {/* Stakeholders */}
-       <section className="section">
-  <div className="section-header">
-    <h2>Stakeholders</h2>
-    {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
-      <button onClick={() => setShowStakeholderModal(true)} className="add-btn">
-        Add Stakeholder
-      </button>
-    )}
-  </div>
+        <section className="section">
+          <div className="section-header">
+            <h2>Parties prenantes</h2>
+            {canParticipate() && review.status !== 'Completed' && review.status !== 'Canceled' && (
+              <button onClick={() => setShowStakeholderModal(true)} className="add-btn">
+                Ajouter une partie prenante
+              </button>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Relationship Status</th>
-                  <th>Reason</th>
+                  <th>Nom</th>
+                  <th>Statut de la relation</th>
+                  <th>Raison</th>
                   <th>Action</th>
-                  <th>Follow Up</th>
+                  <th>Suivi</th>
                 </tr>
               </thead>
               <tbody>
                 {review.stakeholders.map(stake => (
                   <tr key={stake.stakeholderId}>
                     <td>{stake.stakeholderName}</td>
-                    <td>{stake.relationshipStatus}</td>
+                    <td>{stake.relationshipStatus === 'Need/Expectation' ? 'Besoin/Attente' : stake.relationshipStatus === 'Complaint' ? 'Plainte' : stake.relationshipStatus === 'Observation' ? 'Observation' : stake.relationshipStatus}</td>
                     <td>{stake.reason}</td>
                     <td>{stake.action}</td>
                     <td>{stake.followUp}</td>
@@ -462,95 +466,100 @@ const handleGeneratePdf = () => {
         {/* Legal Text Modal */}
         <Modal show={showLegalTextModal} onHide={() => setShowLegalTextModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Add Legal Text</Modal.Title>
+            <Modal.Title>Ajouter un texte légal</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium">Text</label>
+                <label className="block text-sm font-medium">Texte</label>
                 <select
                   value={legalTextForm.textId}
                   onChange={e => setLegalTextForm({ ...legalTextForm, textId: parseInt(e.target.value) })}
                   className="w-full p-2 border rounded"
                 >
-                  <option value={0}>Select Text</option>
+                  <option value={0}>Sélectionner un texte</option>
                   {texts.length > 0 ? (
                     texts.map(text => (
                       <option key={text.textId} value={text.textId}>{text.reference}</option>
                     ))
                   ) : (
-                    <option value={0}>No texts available</option>
+                    <option value={0}>Aucun texte disponible</option>
                   )}
                 </select>              
               </div>
               <div>
-                <label className="block text-sm font-medium">Penalties</label>
+                <label className="block text-sm font-medium">Sanctions</label>
                 <input
                   type="text"
                   value={legalTextForm.penalties}
                   onChange={e => setLegalTextForm({ ...legalTextForm, penalties: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer les sanctions"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Incentives</label>
+                <label className="block text-sm font-medium">Incitations</label>
                 <input
                   type="text"
                   value={legalTextForm.incentives}
                   onChange={e => setLegalTextForm({ ...legalTextForm, incentives: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer les incitations"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Risks</label>
+                <label className="block text-sm font-medium">Risques</label>
                 <input
                   type="text"
                   value={legalTextForm.risks}
                   onChange={e => setLegalTextForm({ ...legalTextForm, risks: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer les risques"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Opportunities</label>
+                <label className="block text-sm font-medium">Opportunités</label>
                 <input
                   type="text"
                   value={legalTextForm.opportunities}
                   onChange={e => setLegalTextForm({ ...legalTextForm, opportunities: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer les opportunités"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Follow Up</label>
+                <label className="block text-sm font-medium">Suivi</label>
                 <input
                   type="text"
                   value={legalTextForm.followUp}
                   onChange={e => setLegalTextForm({ ...legalTextForm, followUp: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer le suivi"
                 />
               </div>
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowLegalTextModal(false)}>Close</Button>
-            <Button variant="primary" onClick={handleAddLegalText}>Add</Button>
+            <Button variant="secondary" onClick={() => setShowLegalTextModal(false)}>Fermer</Button>
+            <Button variant="primary" onClick={handleAddLegalText}>Ajouter</Button>
           </Modal.Footer>
         </Modal>
 
         {/* Requirement Modal */}
         <Modal show={showRequirementModal} onHide={() => setShowRequirementModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Add Requirement</Modal.Title>
+            <Modal.Title>Ajouter une exigence</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium">Requirement</label>
+                <label className="block text-sm font-medium">Exigence</label>
                 <select
                   value={requirementForm.textRequirementId}
                   onChange={e => setRequirementForm({ ...requirementForm, textRequirementId: parseInt(e.target.value) })}
                   className="w-full p-2 border rounded"
                 >
-                  <option value={0}>Select Requirement</option>
+                  <option value={0}>Sélectionner une exigence</option>
                   {availableRequirements.length > 0 ? (
                     availableRequirements.map(req => (
                       <option key={req.requirementId} value={req.requirementId}>
@@ -558,17 +567,18 @@ const handleGeneratePdf = () => {
                       </option>
                     ))
                   ) : (
-                    <option value={0}>No requirements available (add Legal Texts first)</option>
+                    <option value={0}>Aucune exigence disponible (ajouter des textes légaux d'abord)</option>
                   )}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium">Implementation</label>
+                <label className="block text-sm font-medium">Mise en œuvre</label>
                 <input
                   type="text"
                   value={requirementForm.implementation}
                   onChange={e => setRequirementForm({ ...requirementForm, implementation: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer la mise en œuvre"
                 />
               </div>
               <div>
@@ -578,29 +588,31 @@ const handleGeneratePdf = () => {
                   value={requirementForm.communication}
                   onChange={e => setRequirementForm({ ...requirementForm, communication: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer la communication"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Follow Up</label>
+                <label className="block text-sm font-medium">Suivi</label>
                 <input
                   type="text"
                   value={requirementForm.followUp}
                   onChange={e => setRequirementForm({ ...requirementForm, followUp: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer le suivi"
                 />
               </div>
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowRequirementModal(false)}>Close</Button>
-            <Button variant="primary" onClick={handleAddRequirement}>Add</Button>
+            <Button variant="secondary" onClick={() => setShowRequirementModal(false)}>Fermer</Button>
+            <Button variant="primary" onClick={handleAddRequirement}>Ajouter</Button>
           </Modal.Footer>
         </Modal>
 
         {/* Action Modal */}
         <Modal show={showActionModal} onHide={() => setShowActionModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Add Action</Modal.Title>
+            <Modal.Title>Ajouter une action</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <div className="space-y-4">
@@ -611,6 +623,7 @@ const handleGeneratePdf = () => {
                   value={actionForm.description}
                   onChange={e => setActionForm({ ...actionForm, description: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer la description"
                 />
               </div>
               <div>
@@ -620,15 +633,17 @@ const handleGeneratePdf = () => {
                   value={actionForm.source}
                   onChange={e => setActionForm({ ...actionForm, source: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer la source"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Status</label>
+                <label className="block text-sm font-medium">Statut</label>
                 <input
                   type="text"
                   value={actionForm.status}
                   onChange={e => setActionForm({ ...actionForm, status: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer le statut"
                 />
               </div>
               <div>
@@ -638,61 +653,65 @@ const handleGeneratePdf = () => {
                   value={actionForm.observation}
                   onChange={e => setActionForm({ ...actionForm, observation: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer l'observation"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Follow Up</label>
+                <label className="block text-sm font-medium">Suivi</label>
                 <input
                   type="text"
                   value={actionForm.followUp}
                   onChange={e => setActionForm({ ...actionForm, followUp: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer le suivi"
                 />
               </div>
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowActionModal(false)}>Close</Button>
-            <Button variant="primary" onClick={handleAddAction}>Add</Button>
+            <Button variant="secondary" onClick={() => setShowActionModal(false)}>Fermer</Button>
+            <Button variant="primary" onClick={handleAddAction}>Ajouter</Button>
           </Modal.Footer>
         </Modal>
 
         {/* Stakeholder Modal */}
         <Modal show={showStakeholderModal} onHide={() => setShowStakeholderModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Add Stakeholder</Modal.Title>
+            <Modal.Title>Ajouter une partie prenante</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium">Name</label>
+                <label className="block text-sm font-medium">Nom</label>
                 <input
                   type="text"
                   value={stakeholderForm.stakeholderName}
                   onChange={e => setStakeholderForm({ ...stakeholderForm, stakeholderName: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer le nom"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Relationship Status</label>
+                <label className="block text-sm font-medium">Statut de la relation</label>
                 <select
                   value={stakeholderForm.relationshipStatus}
                   onChange={e => setStakeholderForm({ ...stakeholderForm, relationshipStatus: e.target.value })}
                   className="w-full p-2 border rounded"
                 >
-                  <option value="">Select Status</option>
-                  <option value="Need/Expectation">Need/Expectation</option>
-                  <option value="Complaint">Complaint</option>
+                  <option value="">Sélectionner le statut</option>
+                  <option value="Need/Expectation">Besoin/Attente</option>
+                  <option value="Complaint">Plainte</option>
                   <option value="Observation">Observation</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium">Reason</label>
+                <label className="block text-sm font-medium">Raison</label>
                 <input
                   type="text"
                   value={stakeholderForm.reason}
                   onChange={e => setStakeholderForm({ ...stakeholderForm, reason: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer la raison"
                 />
               </div>
               <div>
@@ -702,22 +721,24 @@ const handleGeneratePdf = () => {
                   value={stakeholderForm.action}
                   onChange={e => setStakeholderForm({ ...stakeholderForm, action: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer l'action"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium">Follow Up</label>
+                <label className="block text-sm font-medium">Suivi</label>
                 <input
                   type="text"
                   value={stakeholderForm.followUp}
                   onChange={e => setStakeholderForm({ ...stakeholderForm, followUp: e.target.value })}
                   className="w-full p-2 border rounded"
+                  placeholder="Entrer le suivi"
                 />
               </div>
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowStakeholderModal(false)}>Close</Button>
-            <Button variant="primary" onClick={handleAddStakeholder}>Add</Button>
+            <Button variant="secondary" onClick={() => setShowStakeholderModal(false)}>Fermer</Button>
+            <Button variant="primary" onClick={handleAddStakeholder}>Ajouter</Button>
           </Modal.Footer>
         </Modal>
       </div>

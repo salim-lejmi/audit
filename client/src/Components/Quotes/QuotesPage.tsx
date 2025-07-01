@@ -14,7 +14,6 @@ interface SubscriptionPlan {
   isActive: boolean;
 }
 
-// Add a separate interface for the new plan form
 interface NewSubscriptionPlan {
   name: string;
   description: string;
@@ -34,7 +33,6 @@ const QuotesPage: React.FC = () => {
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   
-  // Use the specific interface instead of Partial<SubscriptionPlan>
   const [newPlan, setNewPlan] = useState<NewSubscriptionPlan>({
     name: '',
     description: '',
@@ -46,13 +44,12 @@ const QuotesPage: React.FC = () => {
     isActive: true
   });
 
-  // Predefined feature options
   const availableFeatures = [
-    'Compliance Management',
-    'Text Management',
-    'Action Plans',
+    'Gestion de la conformité',
+    'Gestion de texte',
+    'Plans d\'action',
     'Management Review (Revue)',
-    'Statistics & Analytics',
+    'Statistiques et analyses',
   ];
 
   useEffect(() => {
@@ -66,7 +63,7 @@ const QuotesPage: React.FC = () => {
       setPlans(response.data);
       setError('');
     } catch (err) {
-      setError('Failed to load subscription plans. Please try again.');
+      setError('Échec du chargement des plans d\'abonnement. Veuillez réessayer.');
       console.error('Error fetching plans:', err);
     } finally {
       setLoading(false);
@@ -78,9 +75,8 @@ const QuotesPage: React.FC = () => {
     try {
       const response = await axios.post('/api/subscription-plans', newPlan);
       setPlans([...plans, response.data]);
-      setSuccessMessage('Subscription plan created successfully');
+      setSuccessMessage('Plan d\'abonnement créé avec succès');
       setShowCreateForm(false);
-      // Reset form with proper typing
       setNewPlan({
         name: '',
         description: '',
@@ -93,7 +89,7 @@ const QuotesPage: React.FC = () => {
       });
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create subscription plan');
+      setError(err.response?.data?.message || 'Échec de la création du plan d\'abonnement');
     }
   };
 
@@ -104,24 +100,24 @@ const QuotesPage: React.FC = () => {
     try {
       const response = await axios.put(`/api/subscription-plans/${editingPlan.planId}`, editingPlan);
       setPlans(plans.map(plan => plan.planId === editingPlan.planId ? response.data : plan));
-      setSuccessMessage('Subscription plan updated successfully');
+      setSuccessMessage('Plan d\'abonnement mis à jour avec succès');
       setEditingPlan(null);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update subscription plan');
+      setError(err.response?.data?.message || 'Échec de la mise à jour du plan d\'abonnement');
     }
   };
 
   const handleDeletePlan = async (planId: number) => {
-    if (!window.confirm('Are you sure you want to delete this subscription plan?')) return;
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce plan d\'abonnement ?')) return;
 
     try {
       await axios.delete(`/api/subscription-plans/${planId}`);
       setPlans(plans.filter(plan => plan.planId !== planId));
-      setSuccessMessage('Subscription plan deleted successfully');
+      setSuccessMessage('Plan d\'abonnement supprimé avec succès');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete subscription plan');
+      setError(err.response?.data?.message || 'Échec de la suppression du plan d\'abonnement');
     }
   };
 
@@ -133,10 +129,10 @@ const QuotesPage: React.FC = () => {
       const updatedPlan = { ...plan, isActive: !plan.isActive };
       const response = await axios.put(`/api/subscription-plans/${planId}`, updatedPlan);
       setPlans(plans.map(p => p.planId === planId ? response.data : p));
-      setSuccessMessage(`Plan ${updatedPlan.isActive ? 'activated' : 'deactivated'} successfully`);
+      setSuccessMessage(`Plan ${updatedPlan.isActive ? 'activé' : 'désactivé'} avec succès`);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update plan status');
+      setError(err.response?.data?.message || 'Échec de la mise à jour du statut du plan');
     }
   };
 
@@ -151,7 +147,7 @@ const QuotesPage: React.FC = () => {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
@@ -174,11 +170,10 @@ const QuotesPage: React.FC = () => {
   return (
     <div className="quotes-page">
       <div className="page-header">
-        <h1 className="page-title">Subscription Plans Management</h1>
-        <p className="page-subtitle">Manage pricing and features for company subscriptions</p>
+        <h1 className="page-title">Gestion des plans d'abonnement</h1>
+        <p className="page-subtitle">Gérez les prix et les fonctionnalités pour les abonnements d'entreprise</p>
       </div>
 
-      {/* Success Message */}
       {successMessage && (
         <div className="alert alert-success">
           <i className="fas fa-check-circle"></i>
@@ -186,7 +181,6 @@ const QuotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="alert alert-danger">
           <i className="fas fa-exclamation-triangle"></i>
@@ -195,22 +189,20 @@ const QuotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="action-bar">
         <button 
           className="btn btn-primary"
           onClick={() => setShowCreateForm(!showCreateForm)}
         >
           <i className="fas fa-plus"></i>
-          Create New Plan
+          Créer un nouveau plan
         </button>
       </div>
 
-      {/* Create Plan Form */}
       {showCreateForm && (
         <div className="plan-form-card">
           <div className="card-header">
-            <h3>Create New Subscription Plan</h3>
+            <h3>Créer un nouveau plan d'abonnement</h3>
             <button 
               className="close-btn"
               onClick={() => setShowCreateForm(false)}
@@ -221,17 +213,17 @@ const QuotesPage: React.FC = () => {
           <form onSubmit={handleCreatePlan} className="plan-form">
             <div className="form-row">
               <div className="form-group">
-                <label>Plan Name</label>
+                <label>Nom du plan</label>
                 <input
                   type="text"
                   value={newPlan.name}
                   onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-                  placeholder="e.g., Basic Plan"
+                  placeholder="ex. Plan de base"
                   required
                 />
               </div>
               <div className="form-group">
-                <label>Base Price ($)</label>
+                <label>Prix de base ($)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -244,7 +236,7 @@ const QuotesPage: React.FC = () => {
 
             <div className="form-row">
               <div className="form-group">
-                <label>User Limit</label>
+                <label>Limite d'utilisateurs</label>
                 <input
                   type="number"
                   value={newPlan.userLimit}
@@ -254,7 +246,7 @@ const QuotesPage: React.FC = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Discount (%)</label>
+                <label>Réduction (%)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -265,7 +257,7 @@ const QuotesPage: React.FC = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Tax Rate (%)</label>
+                <label>Taux de taxe (%)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -282,13 +274,13 @@ const QuotesPage: React.FC = () => {
               <textarea
                 value={newPlan.description}
                 onChange={(e) => setNewPlan({ ...newPlan, description: e.target.value })}
-                placeholder="Plan description..."
+                placeholder="Description du plan..."
                 rows={3}
               />
             </div>
 
             <div className="form-group">
-              <label>Features</label>
+              <label>Fonctionnalités</label>
               <div className="features-grid">
                 {availableFeatures.map(feature => (
                   <label key={feature} className="feature-checkbox">
@@ -303,27 +295,26 @@ const QuotesPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Price Preview */}
             {newPlan.basePrice > 0 && (
               <div className="price-preview">
-                <h4>Price Preview</h4>
+                <h4>Aperçu du prix</h4>
                 <div className="price-breakdown">
                   <div className="price-item">
-                    <span>Base Price:</span>
+                    <span>Prix de base :</span>
                     <span>{formatCurrency(newPlan.basePrice)}</span>
                   </div>
                   {newPlan.discount > 0 && (
                     <div className="price-item discount">
-                      <span>Discount ({newPlan.discount}%):</span>
+                      <span>Réduction ({newPlan.discount}%) :</span>
                       <span>-{formatCurrency(newPlan.basePrice * newPlan.discount / 100)}</span>
                     </div>
                   )}
                   <div className="price-item">
-                    <span>Tax ({newPlan.taxRate}%):</span>
+                    <span>Taxe ({newPlan.taxRate}%) :</span>
                     <span>{formatCurrency(calculateFinalPrice(newPlan.basePrice, newPlan.discount, newPlan.taxRate).taxAmount)}</span>
                   </div>
                   <div className="price-item total">
-                    <span>Final Price:</span>
+                    <span>Prix final :</span>
                     <span>{formatCurrency(calculateFinalPrice(newPlan.basePrice, newPlan.discount, newPlan.taxRate).finalPrice)}</span>
                   </div>
                 </div>
@@ -332,28 +323,27 @@ const QuotesPage: React.FC = () => {
 
             <div className="form-actions">
               <button type="button" className="btn btn-secondary" onClick={() => setShowCreateForm(false)}>
-                Cancel
+                Annuler
               </button>
               <button type="submit" className="btn btn-primary">
-                Create Plan
+                Créer le plan
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Plans Grid */}
       <div className="plans-container">
         {loading ? (
           <div className="loading-spinner">
             <i className="fas fa-spinner fa-spin"></i>
-            Loading plans...
+            Chargement des plans...
           </div>
         ) : plans.length === 0 ? (
           <div className="empty-state">
             <i className="fas fa-clipboard-list"></i>
-            <h3>No subscription plans found</h3>
-            <p>Create your first subscription plan to get started.</p>
+            <h3>Aucun plan d'abonnement trouvé</h3>
+            <p>Créez votre premier plan d'abonnement pour commencer.</p>
           </div>
         ) : (
           <div className="plans-grid">
@@ -378,7 +368,7 @@ const QuotesPage: React.FC = () => {
                     </div>
                     <div className="plan-status">
                       <span className={`status-badge ${plan.isActive ? 'active' : 'inactive'}`}>
-                        {plan.isActive ? 'Active' : 'Inactive'}
+                        {plan.isActive ? 'Actif' : 'Inactif'}
                       </span>
                     </div>
                   </div>
@@ -387,12 +377,12 @@ const QuotesPage: React.FC = () => {
                     <div className="price-display">
                       <span className="currency">$</span>
                       <span className="amount">{pricing.finalPrice.toFixed(2)}</span>
-                      <span className="period">/month</span>
+                      <span className="period">/mois</span>
                     </div>
                     {plan.discount > 0 && (
                       <div className="original-price">
-                        <span>Was {formatCurrency(plan.basePrice + (plan.basePrice * plan.taxRate / 100))}</span>
-                        <span className="discount-badge">{plan.discount}% OFF</span>
+                        <span>Était {formatCurrency(plan.basePrice + (plan.basePrice * plan.taxRate / 100))}</span>
+                        <span className="discount-badge">{plan.discount}% DE RÉDUCTION</span>
                       </div>
                     )}
                   </div>
@@ -402,7 +392,7 @@ const QuotesPage: React.FC = () => {
                       <form onSubmit={handleUpdatePlan} className="edit-form">
                         <div className="form-row">
                           <div className="form-group">
-                            <label>Base Price</label>
+                            <label>Prix de base</label>
                             <input
                               type="number"
                               step="0.01"
@@ -411,7 +401,7 @@ const QuotesPage: React.FC = () => {
                             />
                           </div>
                           <div className="form-group">
-                            <label>User Limit</label>
+                            <label>Limite d'utilisateurs</label>
                             <input
                               type="number"
                               value={editingPlan.userLimit}
@@ -421,7 +411,7 @@ const QuotesPage: React.FC = () => {
                         </div>
                         <div className="form-row">
                           <div className="form-group">
-                            <label>Discount (%)</label>
+                            <label>Réduction (%)</label>
                             <input
                               type="number"
                               step="0.01"
@@ -430,7 +420,7 @@ const QuotesPage: React.FC = () => {
                             />
                           </div>
                           <div className="form-group">
-                            <label>Tax Rate (%)</label>
+                            <label>Taux de taxe (%)</label>
                             <input
                               type="number"
                               step="0.01"
@@ -448,7 +438,7 @@ const QuotesPage: React.FC = () => {
                           />
                         </div>
                         <div className="form-group">
-                          <label>Features</label>
+                          <label>Fonctionnalités</label>
                           <div className="features-grid">
                             {availableFeatures.map(feature => (
                               <label key={feature} className="feature-checkbox">
@@ -464,10 +454,10 @@ const QuotesPage: React.FC = () => {
                         </div>
                         <div className="form-actions">
                           <button type="button" className="btn btn-secondary" onClick={() => setEditingPlan(null)}>
-                            Cancel
+                            Annuler
                           </button>
                           <button type="submit" className="btn btn-primary">
-                            Save Changes
+                            Enregistrer les modifications
                           </button>
                         </div>
                       </form>
@@ -476,16 +466,16 @@ const QuotesPage: React.FC = () => {
                         <div className="plan-info">
                           <div className="info-item">
                             <i className="fas fa-users"></i>
-                            <span>Up to {plan.userLimit} users</span>
+                            <span>Jusqu'à {plan.userLimit} utilisateurs</span>
                           </div>
                           <div className="info-item">
                             <i className="fas fa-percentage"></i>
-                            <span>Tax: {plan.taxRate}%</span>
+                            <span>Taxe : {plan.taxRate}%</span>
                           </div>
                           {plan.discount > 0 && (
                             <div className="info-item">
                               <i className="fas fa-tag"></i>
-                              <span>{plan.discount}% discount applied</span>
+                              <span>Réduction de {plan.discount}% appliquée</span>
                             </div>
                           )}
                         </div>
@@ -495,7 +485,7 @@ const QuotesPage: React.FC = () => {
                         </div>
 
                         <div className="plan-features">
-                          <h4>Features included:</h4>
+                          <h4>Fonctionnalités incluses :</h4>
                           <ul>
                             {plan.features.map((feature, index) => (
                               <li key={index}>
@@ -516,21 +506,21 @@ const QuotesPage: React.FC = () => {
                         onClick={() => setEditingPlan(plan)}
                       >
                         <i className="fas fa-edit"></i>
-                        Edit
+                        Modifier
                       </button>
                       <button
                         className={`btn ${plan.isActive ? 'btn-outline-warning' : 'btn-outline-success'}`}
                         onClick={() => togglePlanStatus(plan.planId)}
                       >
                         <i className={`fas ${plan.isActive ? 'fa-pause' : 'fa-play'}`}></i>
-                        {plan.isActive ? 'Deactivate' : 'Activate'}
+                        {plan.isActive ? 'Désactiver' : 'Activer'}
                       </button>
                       <button
                         className="btn btn-outline-danger"
                         onClick={() => handleDeletePlan(plan.planId)}
                       >
                         <i className="fas fa-trash"></i>
-                        Delete
+                        Supprimer
                       </button>
                     </div>
                   )}

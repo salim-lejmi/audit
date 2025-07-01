@@ -69,7 +69,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
         const response = await axios.get('/api/taxonomy/domains');
         setDomains(response.data);
       } catch (err) {
-        console.error('Error loading domains:', err);
+        console.error('Erreur lors du chargement des domaines:', err);
       }
     };
 
@@ -91,7 +91,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
         const response = await axios.get(`/api/taxonomy/themes?domainId=${domainId}`);
         setThemes(response.data);
       } catch (err) {
-        console.error('Error loading themes:', err);
+        console.error('Erreur lors du chargement des thèmes:', err);
       }
     } else {
       setThemes([]);
@@ -113,7 +113,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
         const response = await axios.get(`/api/taxonomy/subthemes?themeId=${themeId}`);
         setSubThemes(response.data);
       } catch (err) {
-        console.error('Error loading subthemes:', err);
+        console.error('Erreur lors du chargement des sous-thèmes:', err);
       }
     } else {
       setSubThemes([]);
@@ -150,7 +150,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
   // Add requirement to the list
   const addRequirement = () => {
     if (!newRequirement.number || !newRequirement.title) {
-      alert('Please fill in both Number and Title fields for the requirement');
+      alert('Veuillez remplir les champs Numéro et Titre pour l\'exigence');
       return;
     }
 
@@ -173,11 +173,11 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log("Form submission started with data:", formData);
+    console.log("Début de la soumission du formulaire avec les données:", formData);
     
     if (!formData.domainId || !formData.reference || !formData.publicationYear) {
-      setError('Please fill in all required fields (Domain, Reference, Publication Year)');
-      console.log("Missing required fields:", { 
+      setError('Veuillez remplir tous les champs requis (Domaine, Référence, Année de publication)');
+      console.log("Champs requis manquants:", { 
         domainId: formData.domainId, 
         reference: formData.reference, 
         publicationYear: formData.publicationYear 
@@ -193,77 +193,77 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
       const submitData = new FormData();
       
       // Log each field as it's being added to the FormData
-      console.log("Adding domainId:", formData.domainId);
+      console.log("Ajout de domainId:", formData.domainId);
       submitData.append('DomainId', formData.domainId.toString());
       
       if (formData.themeId > 0) {
-        console.log("Adding themeId:", formData.themeId);
+        console.log("Ajout de themeId:", formData.themeId);
         submitData.append('ThemeId', formData.themeId.toString());
       } else {
-        console.log("themeId not added, value:", formData.themeId);
+        console.log("themeId non ajouté, valeur:", formData.themeId);
       }
       
       if (formData.subThemeId > 0) {
-        console.log("Adding subThemeId:", formData.subThemeId);
+        console.log("Ajout de subThemeId:", formData.subThemeId);
         submitData.append('SubThemeId', formData.subThemeId.toString());
       } else {
-        console.log("subThemeId not added, value:", formData.subThemeId);
+        console.log("subThemeId non ajouté, valeur:", formData.subThemeId);
       }
       
-      console.log("Adding reference:", formData.reference);
+      console.log("Ajout de reference:", formData.reference);
       submitData.append('Reference', formData.reference);
       
-      console.log("Adding nature:", formData.nature);
+      console.log("Ajout de nature:", formData.nature);
       submitData.append('Nature', formData.nature);
       
-      console.log("Adding publicationYear:", formData.publicationYear);
+      console.log("Ajout de publicationYear:", formData.publicationYear);
       submitData.append('PublicationYear', formData.publicationYear.toString());
       
-      console.log("Adding status:", formData.status);
+      console.log("Ajout de status:", formData.status);
       submitData.append('Status', formData.status);
       
-      console.log("Adding penalties:", formData.penalties);
+      console.log("Ajout de penalties:", formData.penalties);
       submitData.append('Penalties', formData.penalties);
       
-      console.log("Adding relatedTexts:", formData.relatedTexts);
+      console.log("Ajout de relatedTexts:", formData.relatedTexts);
       submitData.append('RelatedTexts', formData.relatedTexts);
       
       if (formData.effectiveDate) {
-        console.log("Adding effectiveDate:", formData.effectiveDate);
+        console.log("Ajout de effectiveDate:", formData.effectiveDate);
         submitData.append('EffectiveDate', formData.effectiveDate);
       } else {
-        console.log("effectiveDate not added, value:", formData.effectiveDate);
+        console.log("effectiveDate non ajouté, valeur:", formData.effectiveDate);
       }
       
-      console.log("Adding content:", formData.content);
+      console.log("Ajout de content:", formData.content);
       submitData.append('Content', formData.content);
       
       if (formData.file) {
-        console.log("Adding file:", formData.file.name);
+        console.log("Ajout de file:", formData.file.name);
         submitData.append('File', formData.file);
       } else {
-        console.log("No file attached");
+        console.log("Aucun fichier joint");
       }
 
       // Add requirements if any
       if (requirements.length > 0) {
-        console.log("Adding requirements:", requirements);
+        console.log("Ajout des exigences:", requirements);
         requirements.forEach((req, index) => {
           submitData.append(`Requirements[${index}].Number`, req.number);
           submitData.append(`Requirements[${index}].Title`, req.title);
           submitData.append(`Requirements[${index}].Status`, req.status);
         });
       } else {
-        console.log("No requirements to add");
+        console.log("Aucune exigence à ajouter");
       }
 
       // Log the complete FormData
-      console.log("Final FormData keys:");
+      console.log("Clés finales de FormData:");
       for (const pair of submitData.entries()) {
         console.log(pair[0], ': ', pair[1]);
       }
 
-      console.log("Sending POST request to /api/texts");
+      console.log("Envoi de la requête POST à /api/texts");
       // Send request to create text
       const response = await axios.post('/api/texts', submitData, {
         headers: {
@@ -271,26 +271,26 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
         }
       });
       
-      console.log("Request successful:", response.data);
+      console.log("Requête réussie:", response.data);
 
       // Notify parent and close modal
       onTextAdded();
       onClose();
       
     } catch (err) {
-      console.error('Error creating text:', err);
+      console.error('Erreur lors de la création du texte:', err);
       
       if (axios.isAxiosError(err) && err.response) {
-        console.error('Server error response:', err.response.data);
+        console.error('Réponse d\'erreur du serveur:', err.response.data);
         if (typeof err.response.data === 'object') {
-          console.error('Error message:', err.response.data.message || 'No specific error message');
-          console.error('Full error object:', JSON.stringify(err.response.data, null, 2));
+          console.error('Message d\'erreur:', err.response.data.message || 'Aucun message d\'erreur spécifique');
+          console.error('Objet d\'erreur complet:', JSON.stringify(err.response.data, null, 2));
         } else {
-          console.error('Raw error response:', err.response.data);
+          console.error('Réponse d\'erreur brute:', err.response.data);
         }
-        setError(`Failed to create text: ${typeof err.response.data === 'object' ? JSON.stringify(err.response.data.message || err.response.data) : err.response.data}`);
+        setError(`Échec de la création du texte : ${typeof err.response.data === 'object' ? JSON.stringify(err.response.data.message || err.response.data) : err.response.data}`);
       } else {
-        setError('Failed to create text. Please try again.');
+        setError('Échec de la création du texte. Veuillez réessayer.');
       }
     } finally {
       setLoading(false);
@@ -301,7 +301,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
     <div className="modal-overlay">
       <div className="modal-content text-detail-modal">
         <div className="modal-header">
-          <h2>Add New Text</h2>
+          <h2>Ajouter un nouveau texte</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
 
@@ -309,11 +309,11 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
           {error && <div className="error-message">{error}</div>}
           
           <div className="text-info-section">
-            <h3>Basic Information</h3>
+            <h3>Informations de base</h3>
             
             <div className="info-row">
               <div className="form-group">
-                <label htmlFor="domainId">Domain *</label>
+                <label htmlFor="domainId">Domaine *</label>
                 <select 
                   id="domainId"
                   name="domainId"
@@ -321,7 +321,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                   onChange={(e) => handleDomainChange(Number(e.target.value))}
                   required
                 >
-                  <option value="0">Select Domain</option>
+                  <option value="0">Sélectionner un domaine</option>
                   {domains.map((domain) => (
                     <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
                   ))}
@@ -329,7 +329,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
               </div>
               
               <div className="form-group">
-                <label htmlFor="themeId">Theme *</label>
+                <label htmlFor="themeId">Thème *</label>
                 <select 
                   id="themeId"
                   name="themeId"
@@ -338,7 +338,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                   required
                   disabled={formData.domainId === 0}
                 >
-                  <option value="0">Select Theme</option>
+                  <option value="0">Sélectionner un thème</option>
                   {themes.map((theme) => (
                     <option key={theme.themeId} value={theme.themeId}>{theme.name}</option>
                   ))}
@@ -346,7 +346,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
               </div>
               
               <div className="form-group">
-                <label htmlFor="subThemeId">Sub-Theme</label>
+                <label htmlFor="subThemeId">Sous-thème</label>
                 <select 
                   id="subThemeId"
                   name="subThemeId"
@@ -357,7 +357,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                   })}
                   disabled={formData.themeId === 0}
                 >
-                  <option value="0">Select Sub-Theme</option>
+                  <option value="0">Sélectionner un sous-thème</option>
                   {subThemes.map((subTheme) => (
                     <option key={subTheme.subThemeId} value={subTheme.subThemeId}>{subTheme.name}</option>
                   ))}
@@ -367,7 +367,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
             
             <div className="info-row">
               <div className="form-group">
-                <label htmlFor="reference">Reference *</label>
+                <label htmlFor="reference">Référence *</label>
                 <input 
                   type="text"
                   id="reference"
@@ -375,7 +375,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                   value={formData.reference}
                   onChange={handleInputChange}
                   required
-                  placeholder="Enter text reference"
+                  placeholder="Entrer la référence du texte"
                 />
               </div>
               
@@ -387,12 +387,12 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                   name="nature"
                   value={formData.nature}
                   onChange={handleInputChange}
-                  placeholder="Enter text nature"
+                  placeholder="Entrer la nature du texte"
                 />
               </div>
               
               <div className="form-group">
-                <label htmlFor="publicationYear">Publication Year *</label>
+                <label htmlFor="publicationYear">Année de publication *</label>
                 <input 
                   type="number"
                   id="publicationYear"
@@ -408,7 +408,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
             
             <div className="info-row">
               <div className="form-group">
-                <label htmlFor="status">Status</label>
+                <label htmlFor="status">Statut</label>
                 <select 
                   id="status"
                   name="status"
@@ -423,19 +423,19 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
               </div>
               
               <div className="form-group">
-                <label htmlFor="penalties">Penalties/Incentives</label>
+                <label htmlFor="penalties">Sanctions/Incitations</label>
                 <input 
                   type="text"
                   id="penalties"
                   name="penalties"
                   value={formData.penalties}
                   onChange={handleInputChange}
-                  placeholder="Enter penalties or incentives"
+                  placeholder="Entrer les sanctions ou incitations"
                 />
               </div>
               
               <div className="form-group">
-                <label htmlFor="relatedTexts">Related Texts</label>
+                <label htmlFor="relatedTexts">Textes associés</label>
                 <input 
                   type="text"
                   id="relatedTexts"
@@ -449,7 +449,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
             
             <div className="info-row">
               <div className="form-group">
-                <label htmlFor="effectiveDate">Effective Date</label>
+                <label htmlFor="effectiveDate">Date d'effet</label>
                 <input 
                   type="date"
                   id="effectiveDate"
@@ -460,7 +460,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
               </div>
               
               <div className="form-group">
-                <label htmlFor="file">PDF Document</label>
+                <label htmlFor="file">Document PDF</label>
                 <input 
                   type="file"
                   id="file"
@@ -473,30 +473,30 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
             
             <div className="info-row">
               <div className="form-group full-width">
-                <label htmlFor="content">Content</label>
+                <label htmlFor="content">Contenu</label>
                 <textarea 
                   id="content"
                   name="content"
                   value={formData.content}
                   onChange={handleInputChange}
                   rows={5}
-                  placeholder="Enter text content"
+                  placeholder="Entrer le contenu du texte"
                 ></textarea>
               </div>
             </div>
           </div>
           
           <div className="requirements-section">
-            <h3>Requirements</h3>
+            <h3>Exigences</h3>
             
             {requirements.length > 0 ? (
               <div className="requirements-list">
                 <table className="requirements-table">
                   <thead>
                     <tr>
-                      <th>Number</th>
-                      <th>Title</th>
-                      <th>Status</th>
+                      <th>Numéro</th>
+                      <th>Titre</th>
+                      <th>Statut</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -516,7 +516,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                             className="btn-delete-small"
                             onClick={() => removeRequirement(index)}
                           >
-                            Remove
+                            Supprimer
                           </button>
                         </td>
                       </tr>
@@ -525,34 +525,34 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                 </table>
               </div>
             ) : (
-              <p className="no-requirements">No requirements added yet.</p>
+              <p className="no-requirements">Aucune exigence ajoutée pour l'instant.</p>
             )}
             
             <div className="add-requirement-section">
-              <h4>Add Requirement</h4>
+              <h4>Ajouter une exigence</h4>
               <div className="add-requirement-form">
                 <div className="form-group">
-                  <label>Number</label>
+                  <label>Numéro</label>
                   <input 
                     type="text"
                     value={newRequirement.number}
                     onChange={(e) => handleRequirementChange('number', e.target.value)}
-                    placeholder="e.g., Art. 5"
+                    placeholder="ex. : Art. 5"
                   />
                 </div>
                 
                 <div className="form-group">
-                  <label>Title</label>
+                  <label>Titre</label>
                   <input 
                     type="text"
                     value={newRequirement.title}
                     onChange={(e) => handleRequirementChange('title', e.target.value)}
-                    placeholder="Requirement title"
+                    placeholder="Titre de l'exigence"
                   />
                 </div>
                 
                 <div className="form-group">
-                  <label>Status</label>
+                  <label>Statut</label>
                   <select 
                     value={newRequirement.status}
                     onChange={(e) => handleRequirementChange('status', e.target.value)}
@@ -569,7 +569,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                   className="btn-primary"
                   onClick={addRequirement}
                 >
-                  Add Requirement
+                  Ajouter une exigence
                 </button>
               </div>
             </div>
@@ -582,7 +582,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                 className="btn-primary"
                 disabled={loading}
               >
-                {loading ? 'Creating...' : 'Create Text'}
+                {loading ? 'Création en cours...' : 'Créer le texte'}
               </button>
               <button 
                 type="button" 
@@ -590,7 +590,7 @@ const AddTextModal: React.FC<AddTextModalProps> = ({ onClose, onTextAdded }) => 
                 onClick={onClose}
                 disabled={loading}
               >
-                Cancel
+                Annuler
               </button>
             </div>
           </div>

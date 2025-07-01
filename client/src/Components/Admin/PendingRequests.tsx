@@ -30,7 +30,7 @@ const PendingRequests: React.FC = () => {
       setPendingCompanies(response.data);
       setLoading(false);
     } catch {
-      setError('Failed to load pending requests');
+      setError('Échec du chargement des demandes en attente');
       setLoading(false);
     }
   };
@@ -40,10 +40,10 @@ const PendingRequests: React.FC = () => {
     try {
       await axios.put(`/api/admin/approve-company/${companyId}`);
       setPendingCompanies(pendingCompanies.filter(company => company.companyId !== companyId));
-      setSuccessMessage('Company approved successfully');
+      setSuccessMessage('Entreprise approuvée avec succès');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch {
-      setError('Failed to approve company');
+      setError('Échec de l\'approbation de l\'entreprise');
       setTimeout(() => setError(''), 3000);
     } finally {
       setProcessingId(null);
@@ -55,10 +55,10 @@ const PendingRequests: React.FC = () => {
     try {
       await axios.put(`/api/admin/reject-company/${companyId}`);
       setPendingCompanies(pendingCompanies.filter(company => company.companyId !== companyId));
-      setSuccessMessage('Company rejected successfully');
+      setSuccessMessage('Entreprise rejetée avec succès');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch {
-      setError('Failed to reject company');
+      setError('Échec du(policy: see response document for details) du rejet de l\'entreprise');
       setTimeout(() => setError(''), 3000);
     } finally {
       setProcessingId(null);
@@ -66,7 +66,7 @@ const PendingRequests: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="loading-container">Loading pending requests...</div>;
+    return <div className="loading-container">Chargement des demandes en attente...</div>;
   }
 
   return (
@@ -74,13 +74,13 @@ const PendingRequests: React.FC = () => {
       <div className="pending-container">
         <div className="pending-header">
           <div className="header-title">
-            <h2>Pending Company Requests</h2>
-            <p className="subtitle">Review and approve new company registrations</p>
+            <h2>Demandes d'entreprises en attente</h2>
+            <p className="subtitle">Examiner et approuver les nouvelles inscriptions d'entreprises</p>
           </div>
           <div className="header-actions">
             <Link to="/admin/dashboard" className="back-button">
               <i className="fas fa-arrow-left"></i>
-              <span>Back to Dashboard</span>
+              <span>Retour au tableau de bord</span>
             </Link>
           </div>
         </div>
@@ -96,7 +96,7 @@ const PendingRequests: React.FC = () => {
         <div className="pending-content">
           {pendingCompanies.length === 0 && !loading ? (
             <div className="info-message">
-              No pending company requests to review.
+              Aucune demande d'entreprise en attente à examiner.
             </div>
           ) : (
             <div className="table-card">
@@ -104,11 +104,11 @@ const PendingRequests: React.FC = () => {
                 <table className="requests-table">
                   <thead>
                     <tr>
-                      <th>Company Name</th>
-                      <th>Manager</th>
+                      <th>Nom de l'entreprise</th>
+                      <th>Gestionnaire</th>
                       <th>Contact</th>
-                      <th>Industry</th>
-                      <th>Requested On</th>
+                      <th>Secteur</th>
+                      <th>Date de demande</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -122,21 +122,21 @@ const PendingRequests: React.FC = () => {
                           <small className="phone-number">{company.phoneNumber}</small>
                         </td>
                         <td>{company.industry}</td>
-                        <td>{new Date(company.createdAt).toLocaleDateString()}</td>
+                        <td>{new Date(company.createdAt).toLocaleDateString('fr-FR')}</td>
                         <td className="actions-cell">
                           <button
                             className="approve-button"
                             onClick={() => handleApprove(company.companyId)}
                             disabled={processingId === company.companyId}
                           >
-                            {processingId === company.companyId ? 'Processing...' : 'Approve'}
+                            {processingId === company.companyId ? 'Traitement...' : 'Approuver'}
                           </button>
                           <button
                             className="reject-button"
                             onClick={() => handleReject(company.companyId)}
                             disabled={processingId === company.companyId}
                           >
-                            Reject
+                            Rejeter
                           </button>
                         </td>
                       </tr>

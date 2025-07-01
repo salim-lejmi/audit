@@ -36,7 +36,7 @@ const ManageUsers: React.FC = () => {
     email: '',
     phoneNumber: '',
     password: '',
-    role: 'User'
+    role: 'User' // Keep original role value
   });
 
   const [editForm, setEditForm] = useState<Partial<User>>({
@@ -59,7 +59,7 @@ const ManageUsers: React.FC = () => {
       setUsers(response.data);
       setLoading(false);
     } catch {
-      setError('Failed to load users');
+      setError('Échec du chargement des utilisateurs');
       setLoading(false);
     }
   };
@@ -78,7 +78,7 @@ const ManageUsers: React.FC = () => {
       });
       fetchUsers();
     } catch {
-      setError('Failed to create user');
+      setError('Échec de la création de l’utilisateur');
     }
   };
 
@@ -91,7 +91,7 @@ const ManageUsers: React.FC = () => {
       setShowEditModal(false);
       fetchUsers();
     } catch {
-      setError('Failed to update user');
+      setError('Échec de la mise à jour de l’utilisateur');
     }
   };
 
@@ -103,7 +103,7 @@ const ManageUsers: React.FC = () => {
       setShowDeleteModal(false);
       fetchUsers();
     } catch {
-      setError('Failed to delete user');
+      setError('Échec de la suppression de l’utilisateur');
     }
   };
 
@@ -130,7 +130,7 @@ const ManageUsers: React.FC = () => {
   );
 
   if (loading) {
-    return <div className="loading-container">Loading users...</div>;
+    return <div className="loading-container">Chargement des utilisateurs...</div>;
   }
 
   if (error) {
@@ -140,10 +140,10 @@ const ManageUsers: React.FC = () => {
   const createModalFooter = (
     <>
       <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
-        Cancel
+        Annuler
       </Button>
       <Button variant="primary" type="submit" form="createForm">
-        Create User
+        Créer un utilisateur
       </Button>
     </>
   );
@@ -151,10 +151,10 @@ const ManageUsers: React.FC = () => {
   const editModalFooter = (
     <>
       <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-        Cancel
+        Annuler
       </Button>
       <Button variant="primary" type="submit" form="editForm">
-        Update User
+        Mettre à jour l’utilisateur
       </Button>
     </>
   );
@@ -162,10 +162,10 @@ const ManageUsers: React.FC = () => {
   const deleteModalFooter = (
     <>
       <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-        Cancel
+        Annuler
       </Button>
       <Button variant="danger" onClick={handleDeleteConfirm}>
-        Delete
+        Supprimer
       </Button>
     </>
   );
@@ -174,15 +174,15 @@ const ManageUsers: React.FC = () => {
     <section className="manage-users-section">
       <div className="container">
         <div className="section-header">
-          <h2>Manage Company Users</h2>
-          <p className="text-muted">Create and manage user accounts for your company</p>
+          <h2>Gestion des utilisateurs de l’entreprise</h2>
+          <p className="text-muted">Créez et gérez les comptes utilisateurs de votre entreprise</p>
         </div>
 
         <div className="controls-row">
           <div className="search-container">
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Rechercher des utilisateurs..."
               className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -192,24 +192,24 @@ const ManageUsers: React.FC = () => {
             className="btn-create"
             onClick={() => setShowCreateModal(true)}
           >
-            <i className="fas fa-plus"></i> Add New User
+            <i className="fas fa-plus"></i> Ajouter un nouvel utilisateur
           </button>
         </div>
 
         {users.length === 0 ? (
           <div className="no-users-message">
-            <p>No users found. Create your first user to get started.</p>
+            <p>Aucun utilisateur trouvé. Créez votre premier utilisateur pour commencer.</p>
           </div>
         ) : (
           <div className="users-table-container">
             <table className="users-table">
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Nom</th>
                   <th>Email</th>
-                  <th>Phone</th>
-                  <th>Role</th>
-                  <th>Created</th>
+                  <th>Téléphone</th>
+                  <th>Rôle</th>
+                  <th>Créé le</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -224,21 +224,22 @@ const ManageUsers: React.FC = () => {
                         {user.role}
                       </span>
                     </td>
-<td>
-  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 
-   <span className="status-pending">Email Verification Pending</span>}
-</td>                    <td className="actions-cell">
+                    <td>
+                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : 
+                       <span className="status-pending">Vérification de l’email en attente</span>}
+                    </td>
+                    <td className="actions-cell">
                       <button 
                         className="action-btn edit"
                         onClick={() => openEditModal(user)}
-                        title="Edit User"
+                        title="Modifier l’utilisateur"
                       >
                         <i className="fas fa-edit"></i>
                       </button>
                       <button 
                         className="action-btn delete"
                         onClick={() => openDeleteModal(user)}
-                        title="Delete User"
+                        title="Supprimer l’utilisateur"
                       >
                         <i className="fas fa-trash"></i>
                       </button>
@@ -255,15 +256,15 @@ const ManageUsers: React.FC = () => {
       <Modal 
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)} 
-        title="Create New User"
+        title="Créer un nouvel utilisateur"
         footer={createModalFooter}
       >
         <Form id="createForm" onSubmit={handleCreateSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Name</Form.Label>
+            <Form.Label>Nom</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Full Name"
+              placeholder="Nom complet"
               value={createForm.name}
               onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
               required
@@ -273,41 +274,45 @@ const ManageUsers: React.FC = () => {
             <Form.Label>Email</Form.Label>
             <Form.Control
               type="email"
-              placeholder="Email Address"
+              placeholder="Adresse email"
               value={createForm.email}
               onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
               required
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Phone Number</Form.Label>
+            <Form.Label>Numéro de téléphone</Form.Label>
             <Form.Control
               type="tel"
-              placeholder="Phone Number"
+              placeholder="Numéro de téléphone"
               value={createForm.phoneNumber}
               onChange={(e) => setCreateForm({...createForm, phoneNumber: e.target.value})}
               required
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Password</Form.Label>
+            <Form.Label>Mot de passe</Form.Label>
             <Form.Control
               type="password"
-              placeholder="Password"
+              placeholder="Mot de passe"
               value={createForm.password}
               onChange={(e) => setCreateForm({...createForm, password: e.target.value})}
               required
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Role</Form.Label>
+            <Form.Label>Rôle</Form.Label>
             <Form.Select
               value={createForm.role}
               onChange={(e) => setCreateForm({...createForm, role: e.target.value})}
               required
             >
               {availableRoles.map(role => (
-                <option key={role} value={role}>{role}</option>
+                <option key={role} value={role}>
+                  {role === 'User' ? 'Utilisateur' : 
+                   role === 'Auditor' ? 'Auditeur' : 
+                   role === 'Manager' ? 'Gestionnaire' : role}
+                </option>
               ))}
             </Form.Select>
           </Form.Group>
@@ -318,15 +323,15 @@ const ManageUsers: React.FC = () => {
       <Modal 
         isOpen={showEditModal} 
         onClose={() => setShowEditModal(false)} 
-        title="Edit User"
+        title="Modifier l'utilisateur"
         footer={editModalFooter}
       >
         <Form id="editForm" onSubmit={handleEditSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Name</Form.Label>
+            <Form.Label>Nom</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Full Name"
+              placeholder="Nom complet"
               value={editForm.name || ''}
               onChange={(e) => setEditForm({...editForm, name: e.target.value})}
               required
@@ -336,31 +341,35 @@ const ManageUsers: React.FC = () => {
             <Form.Label>Email</Form.Label>
             <Form.Control
               type="email"
-              placeholder="Email Address"
+              placeholder="Adresse email"
               value={editForm.email || ''}
               onChange={(e) => setEditForm({...editForm, email: e.target.value})}
               required
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Phone Number</Form.Label>
+            <Form.Label>Numéro de téléphone</Form.Label>
             <Form.Control
               type="tel"
-              placeholder="Phone Number"
+              placeholder="Numéro de téléphone"
               value={editForm.phoneNumber || ''}
               onChange={(e) => setEditForm({...editForm, phoneNumber: e.target.value})}
               required
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Role</Form.Label>
+            <Form.Label>Rôle</Form.Label>
             <Form.Select
               value={editForm.role || ''}
               onChange={(e) => setEditForm({...editForm, role: e.target.value})}
               required
             >
               {availableRoles.map(role => (
-                <option key={role} value={role}>{role}</option>
+                <option key={role} value={role}>
+                  {role === 'User' ? 'Utilisateur' : 
+                   role === 'Auditor' ? 'Auditeur' : 
+                   role === 'Manager' ? 'Gestionnaire' : role}
+                </option>
               ))}
             </Form.Select>
           </Form.Group>
@@ -371,12 +380,12 @@ const ManageUsers: React.FC = () => {
       <Modal 
         isOpen={showDeleteModal} 
         onClose={() => setShowDeleteModal(false)} 
-        title="Delete User"
+        title="Supprimer l’utilisateur"
         footer={deleteModalFooter}
         size="sm"
       >
-        <p>Are you sure you want to delete {selectedUser?.name}?</p>
-        <p className="text-danger">This action cannot be undone.</p>
+        <p>Êtes-vous sûr de vouloir supprimer {selectedUser?.name} ?</p>
+        <p className="text-danger">Cette action est irréversible.</p>
       </Modal>
     </section>
   );

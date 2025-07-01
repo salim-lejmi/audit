@@ -29,8 +29,8 @@ const AdminManageUsers: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [companyFilter, setCompanyFilter] = useState('All');
-  const [roleFilter, setRoleFilter] = useState('All');
+  const [companyFilter, setCompanyFilter] = useState('Tous');
+  const [roleFilter, setRoleFilter] = useState('Tous');
   const [companies, setCompanies] = useState<{companyId: number, companyName: string}[]>([]);
 
   const [editForm, setEditForm] = useState<UpdateUserForm>({
@@ -40,7 +40,7 @@ const AdminManageUsers: React.FC = () => {
     role: ''
   });
 
-  const availableRoles = ['User', 'Auditor', 'Manager', 'SubscriptionManager'];
+  const availableRoles = ['Utilisateur', 'Auditeur', 'Gestionnaire', 'Gestionnaire d\'abonnement'];
 
   useEffect(() => {
     fetchUsers();
@@ -54,7 +54,7 @@ const AdminManageUsers: React.FC = () => {
       setUsers(response.data);
       setLoading(false);
     } catch  {
-      setError('Failed to load users');
+      setError('Échec du chargement des utilisateurs');
       setLoading(false);
     }
   };
@@ -64,7 +64,7 @@ const AdminManageUsers: React.FC = () => {
       const response = await axios.get('/api/admin/companies');
       setCompanies(response.data);
     } catch  {
-      console.error('Failed to fetch companies');
+      console.error('Échec de la récupération des entreprises');
     }
   };
 
@@ -77,7 +77,7 @@ const AdminManageUsers: React.FC = () => {
       setShowEditModal(false);
       fetchUsers();
     } catch  {
-      setError('Failed to update user');
+      setError('Échec de la mise à jour de l\'utilisateur');
     }
   };
 
@@ -89,7 +89,7 @@ const AdminManageUsers: React.FC = () => {
       setShowDeleteModal(false);
       fetchUsers();
     } catch {
-      setError('Failed to delete user');
+      setError('Échec de la suppression de l\'utilisateur');
     }
   };
 
@@ -115,14 +115,14 @@ const AdminManageUsers: React.FC = () => {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.role.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCompany = companyFilter === 'All' || user.companyId.toString() === companyFilter;
-    const matchesRole = roleFilter === 'All' || user.role === roleFilter;
+    const matchesCompany = companyFilter === 'Tous' || user.companyId.toString() === companyFilter;
+    const matchesRole = roleFilter === 'Tous' || user.role === roleFilter;
     
     return matchesSearch && matchesCompany && matchesRole;
   });
 
   if (loading) {
-    return <div className="loading-container">Loading users...</div>;
+    return <div className="loading-container">Chargement des utilisateurs...</div>;
   }
 
   if (error) {
@@ -132,10 +132,10 @@ const AdminManageUsers: React.FC = () => {
   const editModalFooter = (
     <>
       <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-        Cancel
+        Annuler
       </Button>
       <Button variant="primary" type="submit" form="editForm">
-        Update User
+        Mettre à jour l'utilisateur
       </Button>
     </>
   );
@@ -143,29 +143,29 @@ const AdminManageUsers: React.FC = () => {
   const deleteModalFooter = (
     <>
       <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-        Cancel
+        Annuler
       </Button>
       <Button variant="danger" onClick={handleDeleteConfirm}>
-        Delete
+        Supprimer
       </Button>
     </>
   );
 
-  const uniqueRoles = ['All', ...new Set(users.map(user => user.role))];
+  const uniqueRoles = ['Tous', ...new Set(users.map(user => user.role))];
 
   return (
     <section className="manage-users-section">
       <div className="container">
         <div className="section-header">
-          <h2>Manage All Users</h2>
-          <p className="text-muted">View and manage users across all companies</p>
+          <h2>Gérer tous les utilisateurs</h2>
+          <p className="text-muted">Voir et gérer les utilisateurs de toutes les entreprises</p>
         </div>
 
         <div className="controls-row">
           <div className="search-container">
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Rechercher des utilisateurs..."
               className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -178,7 +178,7 @@ const AdminManageUsers: React.FC = () => {
               value={companyFilter}
               onChange={(e) => setCompanyFilter(e.target.value)}
             >
-              <option value="All">All Companies</option>
+              <option value="Tous">Toutes les entreprises</option>
               {companies.map(company => (
                 <option key={company.companyId} value={company.companyId.toString()}>
                   {company.companyName}
@@ -200,19 +200,19 @@ const AdminManageUsers: React.FC = () => {
 
         {users.length === 0 ? (
           <div className="no-users-message">
-            <p>No users found.</p>
+            <p>Aucun utilisateur trouvé.</p>
           </div>
         ) : (
           <div className="users-table-container">
             <table className="users-table">
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Nom</th>
                   <th>Email</th>
-                  <th>Phone</th>
-                  <th>Company</th>
-                  <th>Role</th>
-                  <th>Created</th>
+                  <th>Téléphone</th>
+                  <th>Entreprise</th>
+                  <th>Rôle</th>
+                  <th>Créé le</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -228,14 +228,13 @@ const AdminManageUsers: React.FC = () => {
                         {user.role}
                       </span>
                     </td>
-                    <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td>{new Date(user.createdAt).toLocaleDateString('fr-FR')}</td>
                     <td className="actions-cell">
-                    
                       <button 
                         className="action-btn delete"
                         onClick={() => openDeleteModal(user)}
-                        title="Delete User"
-                        disabled={user.role === "SubscriptionManager"}
+                        title="Supprimer l'utilisateur"
+                        disabled={user.role === "Gestionnaire d'abonnement"}
                       >
                         <i className="fas fa-trash"></i>
                       </button>
@@ -252,15 +251,15 @@ const AdminManageUsers: React.FC = () => {
       <Modal 
         isOpen={showEditModal} 
         onClose={() => setShowEditModal(false)} 
-        title="Edit User"
+        title="Modifier l'utilisateur"
         footer={editModalFooter}
       >
         <Form id="editForm" onSubmit={handleEditSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Name</Form.Label>
+            <Form.Label>Nom</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Full Name"
+              placeholder="Nom complet"
               value={editForm.name}
               onChange={(e) => setEditForm({...editForm, name: e.target.value})}
               required
@@ -270,38 +269,38 @@ const AdminManageUsers: React.FC = () => {
             <Form.Label>Email</Form.Label>
             <Form.Control
               type="email"
-              placeholder="Email Address"
+              placeholder="Adresse email"
               value={editForm.email}
               onChange={(e) => setEditForm({...editForm, email: e.target.value})}
               required
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Phone Number</Form.Label>
+            <Form.Label>Numéro de téléphone</Form.Label>
             <Form.Control
               type="tel"
-              placeholder="Phone Number"
+              placeholder="Numéro de téléphone"
               value={editForm.phoneNumber}
               onChange={(e) => setEditForm({...editForm, phoneNumber: e.target.value})}
             />
           </Form.Group>
-          {selectedUser && selectedUser.role !== "SubscriptionManager" && (
+          {selectedUser && selectedUser.role !== "Gestionnaire d'abonnement" && (
             <Form.Group className="mb-3">
-              <Form.Label>Role</Form.Label>
+              <Form.Label>Rôle</Form.Label>
               <Form.Select
                 value={editForm.role}
                 onChange={(e) => setEditForm({...editForm, role: e.target.value})}
                 required
               >
-                {availableRoles.filter(role => role !== "SubscriptionManager").map(role => (
+                {availableRoles.filter(role => role !== "Gestionnaire d'abonnement").map(role => (
                   <option key={role} value={role}>{role}</option>
                 ))}
               </Form.Select>
             </Form.Group>
           )}
-          {selectedUser && selectedUser.role === "SubscriptionManager" && (
+          {selectedUser && selectedUser.role === "Gestionnaire d'abonnement" && (
             <div className="alert alert-info">
-              Subscription Manager role cannot be changed
+              Le rôle Gestionnaire d'abonnement ne peut pas être modifié
             </div>
           )}
         </Form>
@@ -311,12 +310,12 @@ const AdminManageUsers: React.FC = () => {
       <Modal 
         isOpen={showDeleteModal} 
         onClose={() => setShowDeleteModal(false)} 
-        title="Delete User"
+        title="Supprimer l'utilisateur"
         footer={deleteModalFooter}
         size="sm"
       >
-        <p>Are you sure you want to delete {selectedUser?.name}?</p>
-        <p className="text-danger">This action cannot be undone.</p>
+        <p>Êtes-vous sûr de vouloir supprimer {selectedUser?.name} ?</p>
+        <p className="text-danger">Cette action est irréversible.</p>
       </Modal>
     </section>
   );

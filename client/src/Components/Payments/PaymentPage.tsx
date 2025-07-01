@@ -57,7 +57,7 @@ const PaymentPage: React.FC = () => {
       await verifyPayment(sessionId);
       setVerifyingPayment(false);
     } else if (paymentStatus === 'canceled') {
-      setError('Payment was canceled. Please try again.');
+      setError('Le paiement a été annulé. Veuillez réessayer.');
     }
   };
 
@@ -67,22 +67,18 @@ const PaymentPage: React.FC = () => {
       const response = await axios.get(`/api/payments/verify-session/${sessionId}`);
       
       if (response.data.success) {
-        setSuccessMessage('Payment successful! Your subscription has been activated.');
-        await fetchPlansAndSubscription(); // Refresh data
-        
-        // Clean URL
+        setSuccessMessage('Paiement réussi ! Votre abonnement a été activé.');
+        await fetchPlansAndSubscription();
         window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Refresh the page after a delay to ensure all data is updated
         setTimeout(() => {
           window.location.reload();
         }, 2000);
       } else {
-        setError('Payment verification failed. Please contact support if your payment was processed.');
+        setError('La vérification du paiement a échoué. Veuillez contacter le support si votre paiement a été traité.');
       }
     } catch (err: any) {
       console.error('Payment verification error:', err);
-      setError('Failed to verify payment. Please contact support if your payment was processed.');
+      setError('Échec de la vérification du paiement. Veuillez contacter le support si votre paiement a été traité.');
     }
   };
 
@@ -101,7 +97,7 @@ const PaymentPage: React.FC = () => {
       setError('');
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to load subscription data. Please try again.');
+      setError('Échec du chargement des données d\'abonnement. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -121,12 +117,12 @@ const PaymentPage: React.FC = () => {
         });
 
         if (error) {
-          setError('Payment failed: ' + error.message);
+          setError('Échec du paiement : ' + error.message);
         }
       }
     } catch (err: any) {
       console.error('Subscription error:', err);
-      setError(err.response?.data?.message || 'Failed to initiate payment');
+      setError(err.response?.data?.message || 'Échec de l\'initialisation du paiement');
     } finally {
       setProcessingPayment(null);
     }
@@ -143,14 +139,14 @@ const PaymentPage: React.FC = () => {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -162,7 +158,7 @@ const PaymentPage: React.FC = () => {
       <div className="payment-page">
         <div className="loading-spinner">
           <i className="fas fa-spinner fa-spin"></i>
-          Loading subscription data...
+          Chargement des données d'abonnement...
         </div>
       </div>
     );
@@ -173,7 +169,7 @@ const PaymentPage: React.FC = () => {
       <div className="payment-page">
         <div className="loading-spinner">
           <i className="fas fa-spinner fa-spin"></i>
-          Verifying your payment and activating subscription...
+          Vérification de votre paiement et activation de l'abonnement...
         </div>
       </div>
     );
@@ -182,11 +178,10 @@ const PaymentPage: React.FC = () => {
   return (
     <div className="payment-page">
       <div className="page-header">
-        <h1 className="page-title">Subscription Management</h1>
-        <p className="page-subtitle">Choose the perfect plan for your business needs</p>
+        <h1 className="page-title">Gestion des abonnements</h1>
+        <p className="page-subtitle">Choisissez le plan idéal pour vos besoins professionnels</p>
       </div>
 
-      {/* Messages */}
       {successMessage && (
         <div className="alert alert-success">
           <i className="fas fa-check-circle"></i>
@@ -203,32 +198,31 @@ const PaymentPage: React.FC = () => {
         </div>
       )}
 
-      {/* Current Subscription Status */}
       {currentSubscription.hasSubscription && (
         <div className="current-subscription">
           <div className="subscription-card">
             <div className="subscription-header">
-              <h3>Current Subscription</h3>
+              <h3>Abonnement actuel</h3>
               <span className={`status-badge ${currentSubscription.subscription?.status}`}>
                 {currentSubscription.subscription?.status}
               </span>
             </div>
             <div className="subscription-details">
               <div className="detail-item">
-                <span className="label">Plan:</span>
+                <span className="label">Plan :</span>
                 <span className="value">{currentSubscription.subscription?.planName}</span>
               </div>
               <div className="detail-item">
-                <span className="label">User Limit:</span>
-                <span className="value">{currentSubscription.subscription?.userLimit} users</span>
+                <span className="label">Limite d'utilisateurs :</span>
+                <span className="value">{currentSubscription.subscription?.userLimit} utilisateurs</span>
               </div>
               <div className="detail-item">
-                <span className="label">Valid Until:</span>
+                <span className="label">Valable jusqu'au :</span>
                 <span className="value">{formatDate(currentSubscription.subscription?.endDate || '')}</span>
               </div>
             </div>
             <div className="subscription-features">
-              <h4>Active Features:</h4>
+              <h4>Fonctionnalités actives :</h4>
               <div className="features-list">
                 {currentSubscription.subscription?.features.map((feature, index) => (
                   <span key={index} className="feature-tag">
@@ -242,9 +236,8 @@ const PaymentPage: React.FC = () => {
         </div>
       )}
 
-      {/* Available Plans */}
       <div className="plans-section">
-        <h2>Available Plans</h2>
+        <h2>Plans disponibles</h2>
         <div className="plans-grid">
           {plans.map(plan => {
             const pricing = calculateFinalPrice(plan.basePrice, plan.discount, plan.taxRate);
@@ -255,19 +248,19 @@ const PaymentPage: React.FC = () => {
               <div key={plan.planId} className={`plan-card ${isCurrentPlan ? 'current-plan' : ''}`}>
                 <div className="plan-header">
                   <h3 className="plan-name">{plan.name}</h3>
-                  {isCurrentPlan && <span className="current-badge">Current Plan</span>}
+                  {isCurrentPlan && <span className="current-badge">Plan actuel</span>}
                 </div>
 
                 <div className="plan-pricing">
                   <div className="price-display">
                     <span className="currency">$</span>
                     <span className="amount">{pricing.finalPrice.toFixed(2)}</span>
-                    <span className="period">/month</span>
+                    <span className="period">/mois</span>
                   </div>
                   {plan.discount > 0 && (
                     <div className="original-price">
-                      <span>Was {formatCurrency(plan.basePrice + (plan.basePrice * plan.taxRate / 100))}</span>
-                      <span className="discount-badge">{plan.discount}% OFF</span>
+                      <span>Était {formatCurrency(plan.basePrice + (plan.basePrice * plan.taxRate / 100))}</span>
+                      <span className="discount-badge">{plan.discount}% DE RÉDUCTION</span>
                     </div>
                   )}
                 </div>
@@ -278,20 +271,20 @@ const PaymentPage: React.FC = () => {
                   <div className="plan-specs">
                     <div className="spec-item">
                       <i className="fas fa-users"></i>
-                      <span>Up to {plan.userLimit} users</span>
+                      <span>Jusqu'à {plan.userLimit} utilisateurs</span>
                     </div>
                     <div className="spec-item">
                       <i className="fas fa-shield-alt"></i>
-                      <span>Enterprise Security</span>
+                      <span>Sécurité d'entreprise</span>
                     </div>
                     <div className="spec-item">
                       <i className="fas fa-headset"></i>
-                      <span>24/7 Support</span>
+                      <span>Support 24/7</span>
                     </div>
                   </div>
 
                   <div className="plan-features">
-                    <h4>Features included:</h4>
+                    <h4>Fonctionnalités incluses :</h4>
                     <ul>
                       {plan.features.map((feature, index) => (
                         <li key={index}>
@@ -304,21 +297,21 @@ const PaymentPage: React.FC = () => {
 
                   <div className="price-breakdown">
                     <div className="breakdown-item">
-                      <span>Base Price:</span>
+                      <span>Prix de base :</span>
                       <span>{formatCurrency(plan.basePrice)}</span>
                     </div>
                     {plan.discount > 0 && (
                       <div className="breakdown-item discount">
-                        <span>Discount ({plan.discount}%):</span>
+                        <span>Réduction ({plan.discount}%) :</span>
                         <span>-{formatCurrency(plan.basePrice * plan.discount / 100)}</span>
                       </div>
                     )}
                     <div className="breakdown-item">
-                      <span>Tax ({plan.taxRate}%):</span>
+                      <span>Taxe ({plan.taxRate}%) :</span>
                       <span>{formatCurrency(pricing.taxAmount)}</span>
                     </div>
                     <div className="breakdown-item total">
-                      <span>Total:</span>
+                      <span>Total :</span>
                       <span>{formatCurrency(pricing.finalPrice)}</span>
                     </div>
                   </div>
@@ -328,7 +321,7 @@ const PaymentPage: React.FC = () => {
                   {isCurrentPlan ? (
                     <button className="btn btn-current" disabled>
                       <i className="fas fa-check"></i>
-                      Current Plan
+                      Plan actuel
                     </button>
                   ) : (
                     <button 
@@ -339,12 +332,12 @@ const PaymentPage: React.FC = () => {
                       {isProcessing ? (
                         <>
                           <i className="fas fa-spinner fa-spin"></i>
-                          Processing...
+                          Traitement...
                         </>
                       ) : (
                         <>
                           <i className="fas fa-credit-card"></i>
-                          Subscribe Now
+                          S'abonner maintenant
                         </>
                       )}
                     </button>
@@ -356,13 +349,12 @@ const PaymentPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Security Notice */}
       <div className="security-notice">
         <div className="notice-content">
           <i className="fas fa-shield-alt"></i>
           <div>
-            <h4>Secure Payments</h4>
-            <p>All payments are processed securely through Stripe. We never store your payment information.</p>
+            <h4>Paiements sécurisés</h4>
+            <p>Tous les paiements sont traités de manière sécurisée via Stripe. Nous ne stockons jamais vos informations de paiement.</p>
           </div>
         </div>
       </div>

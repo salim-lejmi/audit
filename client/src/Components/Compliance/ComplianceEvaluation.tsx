@@ -55,7 +55,7 @@ const ComplianceEvaluation: React.FC = () => {
               <Tab label={
                 isSmallScreen 
                   ? `${selectedText.reference.substring(0, 15)}${selectedText.reference.length > 15 ? '...' : ''}`
-                  : `Exigences: ${selectedText.reference}`
+                  : `Exigences : ${selectedText.reference}`
               } />
             )}
           </Tabs>

@@ -94,7 +94,7 @@ const ActionPlan: React.FC = () => {
       const response = await axios.get<{ role: string }>('/api/auth/verify');
       setUserRole(response.data.role);
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('Erreur lors de la récupération du rôle utilisateur:', error);
     }
   };
   
@@ -103,7 +103,7 @@ const ActionPlan: React.FC = () => {
       const response = await axios.get('/api/taxonomy/domains');
       setDomains(response.data);
     } catch (error) {
-      console.error('Error fetching domains:', error);
+      console.error('Erreur lors de la récupération des domaines:', error);
     }
   };
   
@@ -112,7 +112,7 @@ const ActionPlan: React.FC = () => {
       const response = await axios.get(`/api/taxonomy/themes?domainId=${domainId}`);
       setThemes(response.data);
     } catch (error) {
-      console.error('Error fetching themes:', error);
+      console.error('Erreur lors de la récupération des thèmes:', error);
     }
   };
   
@@ -121,7 +121,7 @@ const ActionPlan: React.FC = () => {
       const response = await axios.get(`/api/taxonomy/subthemes?themeId=${themeId}`);
       setSubThemes(response.data);
     } catch (error) {
-      console.error('Error fetching subthemes:', error);
+      console.error('Erreur lors de la récupération des sous-thèmes:', error);
     }
   };
   
@@ -130,7 +130,7 @@ const ActionPlan: React.FC = () => {
       const response = await axios.get('/api/company/users');
       setUsers(response.data);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Erreur lors de la récupération des utilisateurs:', error);
     }
   };
   
@@ -139,7 +139,7 @@ const ActionPlan: React.FC = () => {
       const response = await axios.get(`/api/compliance/text/${textId}`);
       setRequirements(response.data.requirements);
     } catch (error) {
-      console.error('Error fetching requirements:', error);
+      console.error('Erreur lors de la récupération des exigences:', error);
     }
   };
   
@@ -165,7 +165,7 @@ const ActionPlan: React.FC = () => {
       setTotalPages(response.data.totalPages);
       setCurrentPage(page);
     } catch (error) {
-      console.error('Error fetching actions:', error);
+      console.error('Erreur lors de la récupération des actions:', error);
     } finally {
       setLoading(false);
     }
@@ -262,7 +262,7 @@ const ActionPlan: React.FC = () => {
     try {
       const { mode, actionId, textId, data } = actionDialog;
 
-      console.log('Submitting Action Dialog:', {
+      console.log('Soumission du dialogue d\'action:', {
         mode,
         actionId,
         textId,
@@ -271,7 +271,7 @@ const ActionPlan: React.FC = () => {
       });
 
       if (mode === 'create') {
-        console.log('Creating action with data:', {
+        console.log('Création d\'une action avec les données:', {
           textId,
           requirementId: data.requirementId,
           description: data.description,
@@ -295,7 +295,7 @@ const ActionPlan: React.FC = () => {
 
       } else {
         if (isAuditor) {
-          console.log('Auditor updating action with data:', {
+          console.log('Auditeur met à jour l\'action avec les données:', {
             actionId,
             description: data.description,
             responsibleId: data.responsibleId,
@@ -315,7 +315,7 @@ const ActionPlan: React.FC = () => {
           });
 
         } else {
-          console.log('Editor updating action with data:', {
+          console.log('Éditeur met à jour l\'action avec les données:', {
             actionId,
             description: data.description,
             responsibleId: data.responsibleId,
@@ -339,15 +339,15 @@ const ActionPlan: React.FC = () => {
       setActionDialog(prev => ({ ...prev, open: false }));
       fetchActions(currentPage);
     } catch (error: any) {
-      console.error('Error saving action:', error);
+      console.error('Erreur lors de la sauvegarde de l\'action:', error);
       if (error.response) {
-        console.error('Server response data:', error.response.data);
-        console.error('Server response status:', error.response.status);
-        console.error('Server response headers:', error.response.headers);
+        console.error('Données de la réponse du serveur:', error.response.data);
+        console.error('Statut de la réponse du serveur:', error.response.status);
+        console.error('En-têtes de la réponse du serveur:', error.response.headers);
       } else if (error.request) {
-        console.error('No response received. Request was:', error.request);
+        console.error('Aucune réponse reçue. La requête était:', error.request);
       } else {
-        console.error('Error setting up the request:', error.message);
+        console.error('Erreur lors de la configuration de la requête:', error.message);
       }
     }
   };
@@ -359,7 +359,7 @@ const ActionPlan: React.FC = () => {
       await axios.delete(`/api/action-plan/${actionId}`);
       fetchActions(currentPage);
     } catch (error) {
-      console.error('Error deleting action:', error);
+      console.error('Erreur lors de la suppression de l\'action:', error);
     }
   };
   
@@ -374,12 +374,12 @@ const ActionPlan: React.FC = () => {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(response.data));
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", `action_plan_${new Date().toISOString()}.json`);
+      downloadAnchorNode.setAttribute("download", `plan_action_${new Date().toISOString()}.json`);
       document.body.appendChild(downloadAnchorNode);
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
     } catch (error) {
-      console.error('Error exporting action plan:', error);
+      console.error('Erreur lors de l\'exportation du plan d\'action:', error);
     }
   };
   
@@ -413,21 +413,21 @@ const ActionPlan: React.FC = () => {
           gutterBottom 
           sx={{ fontSize: { xs: '1.5rem', md: '2rem' }, fontWeight: 600, mb: 3 }}
         >
-          Plan d'action
+          Plan d'Action
         </Typography>
         
         <Paper elevation={0} sx={{ width: '100%', overflow: 'hidden', p: { xs: 2, md: 3 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
             <Button startIcon={<ArrowBack />} onClick={handleNavigateToEvaluation}>
-              Évaluation de conformité
+              Évaluation de Conformité
             </Button>
             <Box>
               <Button startIcon={<PictureAsPdf />} onClick={handleExportPdf} sx={{ mr: 1 }}>
-                Exporter PDF
+                Exporter en PDF
               </Button>
               {!isAuditor && (
                 <Button startIcon={<Add />} variant="contained" onClick={handleCreateAction}>
-                  Nouvelle action
+                  Nouvelle Action
                 </Button>
               )}
             </Box>
@@ -438,7 +438,7 @@ const ActionPlan: React.FC = () => {
               startIcon={showFilters ? <Clear /> : <FilterAlt />}
               onClick={() => setShowFilters(!showFilters)}
             >
-              {showFilters ? 'Masquer les filtres' : 'Afficher les filtres'}
+              {showFilters ? 'Masquer les Filtres' : 'Afficher les Filtres'}
             </Button>
             
             {showFilters && (
@@ -526,7 +526,7 @@ const ActionPlan: React.FC = () => {
                     size="small"
                     id="publicationYear"
                     name="publicationYear"
-                    label="Année de publication"
+                    label="Année de Publication"
                     type="number"
                     value={filters.publicationYear}
                     onChange={handleFilterChange}
@@ -550,25 +550,25 @@ const ActionPlan: React.FC = () => {
                           {user.name}
                         </MenuItem>
                       ))}
-                      <MenuItem value="null">Non assigné</MenuItem>
+                      <MenuItem value="null">Non Assigné</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
                 
                 <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth size="small">
-                    <InputLabel id="status-label">Status</InputLabel>
+                    <InputLabel id="status-label">Statut</InputLabel>
                     <Select
                       labelId="status-label"
                       id="status-select"
                       name="status"
                       value={filters.status}
-                      label="Status"
+                      label="Statut"
                       onChange={handleFilterChange}
                     >
                       <MenuItem value="">Tous</MenuItem>
                       <MenuItem value="active">Active</MenuItem>
-                      <MenuItem value="completed">Complétée</MenuItem>
+                      <MenuItem value="completed">Terminée</MenuItem>
                       <MenuItem value="canceled">Annulée</MenuItem>
                     </Select>
                   </FormControl>
@@ -610,7 +610,7 @@ const ActionPlan: React.FC = () => {
             </Box>
           ) : actions.length === 0 ? (
             <Typography variant="body1" sx={{ textAlign: 'center', my: 4 }}>
-              Aucune action trouvée. {!isAuditor && "Créez votre première action en cliquant sur \"Nouvelle action\"."}
+              Aucune action trouvée. {!isAuditor && "Créez votre première action en cliquant sur \"Nouvelle Action\"."}
             </Typography>
           ) : (
             <>
@@ -635,10 +635,10 @@ const ActionPlan: React.FC = () => {
                         <td>{action.textReference}</td>
                         <td>{action.requirementTitle || '-'}</td>
                         <td>{action.description}</td>
-                        <td>{action.responsibleName || 'Non assigné'}</td>
+                        <td>{action.responsibleName || 'Non Assigné'}</td>
                         <td>
-                          <Tooltip title={`Créée le ${new Date(action.createdAt).toLocaleDateString()}`}>
-                            <span>{new Date(action.deadline).toLocaleDateString()}</span>
+                          <Tooltip title={`Créée le ${new Date(action.createdAt).toLocaleDateString('fr-FR')}`}>
+                            <span>{new Date(action.deadline).toLocaleDateString('fr-FR')}</span>
                           </Tooltip>
                         </td>
                         <td>
@@ -663,7 +663,7 @@ const ActionPlan: React.FC = () => {
                           <IconButton 
                             size="small" 
                             onClick={() => handleEditAction(action)}
-                            aria-label="Edit"
+                            aria-label="Modifier"
                           >
                             <Edit fontSize="small" />
                           </IconButton>
@@ -671,7 +671,7 @@ const ActionPlan: React.FC = () => {
                             <IconButton 
                               size="small" 
                               onClick={() => handleDeleteAction(action.actionId)}
-                              aria-label="Delete"
+                              aria-label="Supprimer"
                             >
                               <Delete fontSize="small" />
                             </IconButton>
@@ -710,13 +710,13 @@ const ActionPlan: React.FC = () => {
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, mb: 5 }}>
           <Button startIcon={<ArrowBack />} onClick={handleNavigateToEvaluation}>
-            Évaluation de conformité
+            Évaluation de Conformité
           </Button>
           <Button endIcon={<ArrowForward />} onClick={handleNavigateToStatistics}>
             Statistiques
           </Button>
           <Button startIcon={<KeyboardReturn />} onClick={() => window.scrollTo(0, 0)}>
-            Haut de page
+            Haut de Page
           </Button>
         </Box>
       </Box>
@@ -743,8 +743,8 @@ const ActionPlan: React.FC = () => {
           borderBottom: '1px solid #e0e0e0'
         }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {actionDialog.mode === 'create' ? 'Créer une nouvelle action' : 
-             isAuditor ? 'Mettre à jour le statut de l\'action' : 'Modifier une action'}
+            {actionDialog.mode === 'create' ? 'Créer une Nouvelle Action' : 
+             isAuditor ? 'Mettre à Jour le Statut de l\'Action' : 'Modifier une Action'}
           </Typography>
           <IconButton 
             onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}
@@ -805,7 +805,7 @@ const ActionPlan: React.FC = () => {
               {isAuditor && actionDialog.mode === 'edit' ? (
                 <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Description de l'action
+                    Description de l'Action
                   </Typography>
                   <Typography variant="body1">{actionDialog.data.description}</Typography>
                 </Box>
@@ -815,7 +815,7 @@ const ActionPlan: React.FC = () => {
                   multiline
                   rows={3}
                   id="description"
-                  label="Description de l'action"
+                  label="Description de l'Action"
                   value={actionDialog.data.description}
                   onChange={(e) => handleActionDialogChange('description', e.target.value)}
                   required
@@ -832,7 +832,7 @@ const ActionPlan: React.FC = () => {
                     Responsable
                   </Typography>
                   <Typography variant="body1">
-                    {users.find(u => u.userId === actionDialog.data.responsibleId)?.name || 'Non assigné'}
+                    {users.find(u => u.userId === actionDialog.data.responsibleId)?.name || 'Non Assigné'}
                   </Typography>
                 </Box>
               ) : (
@@ -845,7 +845,7 @@ const ActionPlan: React.FC = () => {
                     label="Responsable"
                     onChange={(e) => handleActionDialogChange('responsibleId', e.target.value === '' ? null : e.target.value)}
                   >
-                    <MenuItem value="">Sélectionner un responsable</MenuItem>
+                    <MenuItem value="">Sélectionner un Responsable</MenuItem>
                     {users.map(user => (
                       <MenuItem key={user.userId} value={user.userId}>
                         {user.name}
@@ -860,17 +860,17 @@ const ActionPlan: React.FC = () => {
               {isAuditor && actionDialog.mode === 'edit' ? (
                 <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Date d'échéance
+                    Date d'Échéance
                   </Typography>
                   <Typography variant="body1">
-                    {new Date(actionDialog.data.deadline).toLocaleDateString()}
+                    {new Date(actionDialog.data.deadline).toLocaleDateString('fr-FR')}
                   </Typography>
                 </Box>
               ) : (
                 <TextField
                   fullWidth
                   id="deadline"
-                  label="Date d'échéance"
+                  label="Date d'Échéance"
                   type="date"
                   value={actionDialog.data.deadline}
                   onChange={(e) => handleActionDialogChange('deadline', e.target.value)}
@@ -947,7 +947,7 @@ const ActionPlan: React.FC = () => {
                   required
                 >
                   <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="completed">Complétée</MenuItem>
+                  <MenuItem value="completed">Terminée</MenuItem>
                   <MenuItem value="canceled">Annulée</MenuItem>
                 </Select>
               </FormControl>

@@ -209,10 +209,7 @@ const HistoryPage: React.FC = () => {
         {/* Header */}
         <div className="page-header">
           <h1>📋 Historique des Documents</h1>
-          
         </div>
-
-    
 
         {/* Filters Section */}
         <div className="filters-section">
@@ -258,7 +255,7 @@ const HistoryPage: React.FC = () => {
             </div>
 
             <div className="filter-group">
-              <label>📅 Date début</label>
+              <label>📅 Date de début</label>
               <input
                 type="date"
                 value={dateFromFilter}
@@ -268,7 +265,7 @@ const HistoryPage: React.FC = () => {
             </div>
 
             <div className="filter-group">
-              <label>📅 Date fin</label>
+              <label>📅 Date de fin</label>
               <input
                 type="date"
                 value={dateToFilter}
@@ -312,8 +309,8 @@ const HistoryPage: React.FC = () => {
                     <th>👤 Utilisateur</th>
                     <th>📄 Document</th>
                     <th>📂 Source</th>
-                    <th>📅 Date création</th>
-                    <th>📝 Date modification</th>
+                    <th>📅 Date de création</th>
+                    <th>📝 Date de modification</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -341,7 +338,6 @@ const HistoryPage: React.FC = () => {
                       <td className="date-cell">
                         {formatDate(item.modifiedAt)}
                       </td>
-                
                     </tr>
                   ))}
                 </tbody>

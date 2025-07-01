@@ -73,7 +73,7 @@ const TaxonomyManager: React.FC = () => {
       setDomains(response.data);
     } catch (err) {
       console.error('Error loading domains:', err);
-      setError('Failed to load domains. Please try again.');
+      setError('Échec du chargement des domaines. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ const TaxonomyManager: React.FC = () => {
       setThemes(response.data);
     } catch (err) {
       console.error('Error loading themes:', err);
-      setError('Failed to load themes. Please try again.');
+      setError('Échec du chargement des thèmes. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -105,7 +105,7 @@ const TaxonomyManager: React.FC = () => {
       setSubThemes(response.data);
     } catch (err) {
       console.error('Error loading subthemes:', err);
-      setError('Failed to load subthemes. Please try again.');
+      setError('Échec du chargement des sous-thèmes. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -114,7 +114,7 @@ const TaxonomyManager: React.FC = () => {
   // Create a new domain
   const createDomain = async (): Promise<void> => {
     if (!newDomainName.trim()) {
-      setError('Domain name cannot be empty');
+      setError('Le nom du domaine ne peut pas être vide');
       return;
     }
 
@@ -127,7 +127,7 @@ const TaxonomyManager: React.FC = () => {
       loadDomains();
     } catch (err) {
       console.error('Error creating domain:', err);
-      setError('Failed to create domain. Please try again.');
+      setError('Échec de la création du domaine. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -136,12 +136,12 @@ const TaxonomyManager: React.FC = () => {
   // Create a new theme
   const createTheme = async (): Promise<void> => {
     if (!selectedDomain) {
-      setError('Please select a domain first');
+      setError('Veuillez d\'abord sélectionner un domaine');
       return;
     }
 
     if (!newThemeName.trim()) {
-      setError('Theme name cannot be empty');
+      setError('Le nom du thème ne peut pas être vide');
       return;
     }
 
@@ -157,7 +157,7 @@ const TaxonomyManager: React.FC = () => {
       loadThemes(selectedDomain.domainId);
     } catch (err) {
       console.error('Error creating theme:', err);
-      setError('Failed to create theme. Please try again.');
+      setError('Échec de la création du thème. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -166,12 +166,12 @@ const TaxonomyManager: React.FC = () => {
   // Create a new subtheme
   const createSubTheme = async (): Promise<void> => {
     if (!selectedTheme) {
-      setError('Please select a theme first');
+      setError('Veuillez d\'abord sélectionner un thème');
       return;
     }
 
     if (!newSubThemeName.trim()) {
-      setError('SubTheme name cannot be empty');
+      setError('Le nom du sous-thème ne peut pas être vide');
       return;
     }
 
@@ -187,7 +187,7 @@ const TaxonomyManager: React.FC = () => {
       loadSubThemes(selectedTheme.themeId);
     } catch (err) {
       console.error('Error creating subtheme:', err);
-      setError('Failed to create subtheme. Please try again.');
+      setError('Échec de la création du sous-thème. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -195,7 +195,7 @@ const TaxonomyManager: React.FC = () => {
 
   // Delete handlers for each taxonomy level
   const deleteDomain = async (domainId: number): Promise<void> => {
-    if (!window.confirm('Are you sure you want to delete this domain?')) {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce domaine ?')) {
       return;
     }
 
@@ -212,7 +212,7 @@ const TaxonomyManager: React.FC = () => {
       if (axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data) {
         setError(axiosError.response.data.message as string);
       } else {
-        setError('Failed to delete domain. Please try again.');
+        setError('Échec de la suppression du domaine. Veuillez réessayer.');
       }
     } finally {
       setLoading(false);
@@ -221,7 +221,7 @@ const TaxonomyManager: React.FC = () => {
 
   // Delete theme handler
   const deleteTheme = async (themeId: number): Promise<void> => {
-    if (!window.confirm('Are you sure you want to delete this theme?')) {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce thème ?')) {
       return;
     }
 
@@ -240,7 +240,7 @@ const TaxonomyManager: React.FC = () => {
       if (axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data) {
         setError(axiosError.response.data.message as string);
       } else {
-        setError('Failed to delete theme. Please try again.');
+        setError('Échec de la suppression du thème. Veuillez réessayer.');
       }
     } finally {
       setLoading(false);
@@ -249,7 +249,7 @@ const TaxonomyManager: React.FC = () => {
 
   // Delete subtheme handler
   const deleteSubTheme = async (subThemeId: number): Promise<void> => {
-    if (!window.confirm('Are you sure you want to delete this sub-theme?')) {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce sous-thème ?')) {
       return;
     }
 
@@ -267,7 +267,7 @@ const TaxonomyManager: React.FC = () => {
       if (axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data) {
         setError(axiosError.response.data.message as string);
       } else {
-        setError('Failed to delete sub-theme. Please try again.');
+        setError('Échec de la suppression du sous-thème. Veuillez réessayer.');
       }
     } finally {
       setLoading(false);
@@ -277,28 +277,28 @@ const TaxonomyManager: React.FC = () => {
   // Render the component
   return (
     <div className="taxonomy-manager">
-      <h2>Manage Taxonomy</h2>
+      <h2>Gérer la taxonomie</h2>
       
       {error && <div className="error-message">{error}</div>}
       
       <div className="taxonomy-container">
         {/* Domain Management */}
         <div className="taxonomy-section">
-          <h3>Domains</h3>
+          <h3>Domaines</h3>
           
           <div className="add-item-form">
             <input 
               type="text"
               value={newDomainName}
               onChange={(e) => setNewDomainName(e.target.value)}
-              placeholder="New domain name"
+              placeholder="Nouveau nom de domaine"
               disabled={loading}
             />
             <button 
               onClick={createDomain}
               disabled={loading || !newDomainName.trim()}
             >
-              Add Domain
+              Ajouter un domaine
             </button>
           </div>
           
@@ -318,38 +318,38 @@ const TaxonomyManager: React.FC = () => {
                   }}
                   disabled={loading}
                 >
-                  Delete
+                  Supprimer
                 </button>
               </div>
             ))}
             
             {domains.length === 0 && !loading && (
-              <div className="no-items">No domains available</div>
+              <div className="no-items">Aucun domaine disponible</div>
             )}
             
             {loading && domains.length === 0 && (
-              <div className="loading">Loading domains...</div>
+              <div className="loading">Chargement des domaines...</div>
             )}
           </div>
         </div>
         
         {/* Theme Management */}
         <div className="taxonomy-section">
-          <h3>Themes</h3>
+          <h3>Thèmes</h3>
           
           <div className="add-item-form">
             <input 
               type="text"
               value={newThemeName}
               onChange={(e) => setNewThemeName(e.target.value)}
-              placeholder="New theme name"
+              placeholder="Nouveau nom de thème"
               disabled={loading || !selectedDomain}
             />
             <button 
               onClick={createTheme}
               disabled={loading || !selectedDomain || !newThemeName.trim()}
             >
-              Add Theme
+              Ajouter un thème
             </button>
           </div>
           
@@ -369,42 +369,42 @@ const TaxonomyManager: React.FC = () => {
                   }}
                   disabled={loading}
                 >
-                  Delete
+                  Supprimer
                 </button>
               </div>
             ))}
             
             {selectedDomain && themes.length === 0 && !loading && (
-              <div className="no-items">No themes available for this domain</div>
+              <div className="no-items">Aucun thème disponible pour ce domaine</div>
             )}
             
             {!selectedDomain && (
-              <div className="info-message">Select a domain to view themes</div>
+              <div className="info-message">Sélectionnez un domaine pour voir les thèmes</div>
             )}
             
             {loading && selectedDomain && themes.length === 0 && (
-              <div className="loading">Loading themes...</div>
+              <div className="loading">Chargement des thèmes...</div>
             )}
           </div>
         </div>
         
         {/* SubTheme Management */}
         <div className="taxonomy-section">
-          <h3>Sub-Themes</h3>
+          <h3>Sous-thèmes</h3>
           
           <div className="add-item-form">
             <input 
               type="text"
               value={newSubThemeName}
               onChange={(e) => setNewSubThemeName(e.target.value)}
-              placeholder="New sub-theme name"
+              placeholder="Nouveau nom de sous-thème"
               disabled={loading || !selectedTheme}
             />
             <button 
               onClick={createSubTheme}
               disabled={loading || !selectedTheme || !newSubThemeName.trim()}
             >
-              Add Sub-Theme
+              Ajouter un sous-thème
             </button>
           </div>
           
@@ -423,21 +423,21 @@ const TaxonomyManager: React.FC = () => {
                   }}
                   disabled={loading}
                 >
-                  Delete
+                  Supprimer
                 </button>
               </div>
             ))}
             
             {selectedTheme && subThemes.length === 0 && !loading && (
-              <div className="no-items">No sub-themes available for this theme</div>
+              <div className="no-items">Aucun sous-thème disponible pour ce thème</div>
             )}
             
             {!selectedTheme && (
-              <div className="info-message">Select a theme to view sub-themes</div>
+              <div className="info-message">Sélectionnez un thème pour voir les sous-thèmes</div>
             )}
             
             {loading && selectedTheme && subThemes.length === 0 && (
-              <div className="loading">Loading sub-themes...</div>
+              <div className="loading">Chargement des sous-thèmes...</div>
             )}
           </div>
         </div>

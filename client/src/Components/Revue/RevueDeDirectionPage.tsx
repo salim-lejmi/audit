@@ -20,7 +20,7 @@ interface Domain {
 }
 
 interface RevueDeDirectionPageProps {
-  userRole?: string; // Add userRole prop
+  userRole?: string;
 }
 
 const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
@@ -37,7 +37,6 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
   const [userRole, setUserRole] = useState<string>('');
 
   useEffect(() => {
-    // Get user role from auth verification
     const verifyAuth = async () => {
       try {
         const response = await axios.get('/api/auth/verify');
@@ -51,7 +50,7 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
     
     axios.get('/api/taxonomy/domains')
       .then(response => setDomains(response.data))
-      .catch(err => setError('Failed to load domains'));
+      .catch(err => setError('Échec du chargement des domaines'));
   }, []);
 
   useEffect(() => {
@@ -71,14 +70,14 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
       })
       .catch(err => {
         console.error(err);
-        setError('Failed to load reviews');
+        setError('Échec du chargement des revues');
         setLoading(false);
       });
   };
 
   const handleCreateReview = () => {
     if (newReview.domainId === 0 || !newReview.reviewDate) {
-      alert('Please select a domain and set a review date');
+      alert('Veuillez sélectionner un domaine et définir une date de revue');
       return;
     }
     axios.post('/api/revue', newReview)
@@ -90,18 +89,18 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
       .catch(err => {
         console.error('Create review error:', err);
         if (err.response) {
-          alert(`Failed to create review: ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
+          alert(`Échec de la création de la revue : ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
         } else if (err.request) {
-          alert('Failed to create review: No response from server');
+          alert('Échec de la création de la revue : aucune réponse du serveur');
         } else {
-          alert(`Failed to create review: ${err.message}`);
+          alert(`Échec de la création de la revue : ${err.message}`);
         }
       });
   };
 
   const handleEditReview = () => {
     if (!editReview || editReview.domainId === 0 || !editReview.reviewDate) {
-      alert('Please select a domain and set a review date');
+      alert('Veuillez sélectionner un domaine et définir une date de revue');
       return;
     }
     axios.put(`/api/revue/${editReview.revueId}`, {
@@ -113,22 +112,20 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
         setEditReview(null);
         fetchReviews();
       })
-      .catch(err => alert('Failed to update review'));
+      .catch(err => alert('Échec de la mise à jour de la revue'));
   };
 
   const handleDeleteReview = (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this review?')) return;
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette revue ?')) return;
     axios.delete(`/api/revue/${id}`)
       .then(() => fetchReviews())
-      .catch(err => alert('Failed to delete review'));
+      .catch(err => alert('Échec de la suppression de la revue'));
   };
 
-  // Helper function to check if user can create/delete
   const canCreateDelete = () => {
     return userRole === 'SubscriptionManager';
   };
 
-  // Helper function to check if user can edit
   const canEdit = () => {
     return userRole === 'SubscriptionManager' || userRole === 'Auditor';
   };
@@ -142,7 +139,7 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
           onChange={e => setFilterDomainId(e.target.value ? parseInt(e.target.value) : null)}
           className="p-2 border rounded"
         >
-          <option value="">All Domains</option>
+          <option value="">Tous les domaines</option>
           {domains.map(domain => (
             <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
           ))}
@@ -154,12 +151,12 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
           className="p-2 border rounded"
         />
         <button onClick={fetchReviews} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-          Apply Filters
+          Appliquer les filtres
         </button>
       </div>
       
       {loading ? (
-        <p>Loading...</p>
+        <p>Chargement...</p>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : (
@@ -167,10 +164,10 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
           <thead>
             <tr className="bg-gray-200">
               <th className="p-2">ID</th>
-              <th className="p-2">Domain</th>
-              <th className="p-2">Review Date</th>
-              <th className="p-2">Status</th>
-              <th className="p-2">Created At</th>
+              <th className="p-2">Domaine</th>
+              <th className="p-2">Date de revue</th>
+              <th className="p-2">Statut</th>
+              <th className="p-2">Créé le</th>
               <th className="p-2">PDF</th>
               <th className="p-2">Actions</th>
             </tr>
@@ -180,36 +177,31 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
               <tr key={review.revueId} className="border-b">
                 <td className="p-2">{review.revueId}</td>
                 <td className="p-2">{review.domainName}</td>
-                <td className="p-2">{new Date(review.reviewDate).toLocaleDateString()}</td>
+                <td className="p-2">{new Date(review.reviewDate).toLocaleDateString('fr-FR')}</td>
                 <td className="p-2">{review.status}</td>
-                <td className="p-2">{new Date(review.createdAt).toLocaleDateString()}</td>
+                <td className="p-2">{new Date(review.createdAt).toLocaleDateString('fr-FR')}</td>
                 <td className="p-2">
                   {review.pdfFilePath ? (
-                    <a href={review.pdfFilePath} download className="text-blue-500">Download</a>
+                    <a href={review.pdfFilePath} download className="text-blue-500">Télécharger</a>
                   ) : 'N/A'}
                 </td>
                 <td className="p-2">
                   <div className="action-buttons">
-                    {/* All company members can view */}
-                    <Link to={`${review.revueId}`} className="action-btn view">View</Link>
-                    
-                    {/* Only SubscriptionManager and Auditor can edit */}
-                    {canEdit()  &&(userRole === 'SubscriptionManager') && (
+                    <Link to={`${review.revueId}`} className="action-btn view">Voir</Link>
+                    {canEdit() && (userRole === 'SubscriptionManager') && (
                       <button
                         onClick={() => { setEditReview(review); setShowEditModal(true); }}
                         className="action-btn edit"
                       >
-                        Edit
+                        Modifier
                       </button>
                     )}
-                    
-                    {/* Only SubscriptionManager can delete */}
                     {canCreateDelete() && (
                       <button
                         onClick={() => handleDeleteReview(review.revueId)}
                         className="action-btn delete"
                       >
-                        Delete
+                        Supprimer
                       </button>
                     )}
                   </div>
@@ -220,39 +212,37 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
         </table>
       )}
       
-      {/* Only SubscriptionManager can create new reviews */}
       {canCreateDelete() && (
         <button
           className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
           onClick={() => setShowCreateModal(true)}
         >
-          + Create New Review
+          + Créer une nouvelle revue
         </button>
       )}
 
-      {/* Create Modal - only shown to SubscriptionManager */}
       {canCreateDelete() && (
         <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Create New Review</Modal.Title>
+            <Modal.Title>Créer une nouvelle revue</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium">Domain</label>
+                <label className="block text-sm font-medium">Domaine</label>
                 <select
                   value={newReview.domainId}
                   onChange={e => setNewReview({ ...newReview, domainId: parseInt(e.target.value) })}
                   className="w-full p-2 border rounded"
                 >
-                  <option value={0}>Select Domain</option>
+                  <option value={0}>Sélectionner un domaine</option>
                   {domains.map(domain => (
                     <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium">Review Date</label>
+                <label className="block text-sm font-medium">Date de revue</label>
                 <input
                   type="date"
                   value={newReview.reviewDate}
@@ -263,23 +253,22 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Close</Button>
-            <Button variant="primary" onClick={handleCreateReview}>Create</Button>
+            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Fermer</Button>
+            <Button variant="primary" onClick={handleCreateReview}>Créer</Button>
           </Modal.Footer>
         </Modal>
       )}
 
-      {/* Edit Modal - only shown to SubscriptionManager and Auditor */}
       {canEdit() && (
         <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Edit Review</Modal.Title>
+            <Modal.Title>Modifier la revue</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             {editReview && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium">Domain</label>
+                  <label className="block text-sm font-medium">Domaine</label>
                   <select
                     value={editReview.domainId}
                     onChange={e => setEditReview({ ...editReview, domainId: parseInt(e.target.value) })}
@@ -292,7 +281,7 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Review Date</label>
+                  <label className="block text-sm font-medium">Date de revue</label>
                   <input
                     type="date"
                     value={editReview.reviewDate.split('T')[0]}
@@ -304,8 +293,8 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Close</Button>
-            <Button variant="primary" onClick={handleEditReview}>Save</Button>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Fermer</Button>
+            <Button variant="primary" onClick={handleEditReview}>Enregistrer</Button>
           </Modal.Footer>
         </Modal>
       )}
