@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/notifications.css';
-import { useTranslation } from '../../TranslationContext';
 
 interface Notification {
   notificationId: number;
@@ -15,7 +14,6 @@ interface Notification {
 }
 
 const NotificationDropdown: React.FC = () => {
-  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -51,7 +49,7 @@ const NotificationDropdown: React.FC = () => {
 
   const fetchNotifications = async () => {
     if (loading) return;
-    
+
     setLoading(true);
     try {
       const response = await axios.get('/api/notifications');
@@ -67,10 +65,10 @@ const NotificationDropdown: React.FC = () => {
     if (!notification.isRead) {
       try {
         await axios.put(`/api/notifications/${notification.notificationId}/read`);
-        setNotifications(prev => 
-          prev.map(n => 
-            n.notificationId === notification.notificationId 
-              ? { ...n, isRead: true } 
+        setNotifications(prev =>
+          prev.map(n =>
+            n.notificationId === notification.notificationId
+              ? { ...n, isRead: true }
               : n
           )
         );
@@ -113,15 +111,15 @@ const NotificationDropdown: React.FC = () => {
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-    if (diffInMinutes < 1) return t('notifications.just_now');
-    if (diffInMinutes < 60) return `${diffInMinutes} ${t('notifications.minutes_ago')}`;
-    
+    if (diffInMinutes < 1) return 'À l’instant';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes auparavant`;
+
     const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours} ${t('notifications.hours_ago')}`;
-    
+    if (diffInHours < 24) return `${diffInHours} heures auparavant`;
+
     const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays} ${t('notifications.days_ago')}`;
-    
+    if (diffInDays < 7) return `${diffInDays} jours auparavant`;
+
     return date.toLocaleDateString('fr-FR');
   };
 
@@ -138,10 +136,10 @@ const NotificationDropdown: React.FC = () => {
 
   return (
     <div className="notification-container" ref={dropdownRef}>
-      <button 
+      <button
         className="notification-button"
         onClick={handleDropdownToggle}
-        aria-label={t('notifications.title')}
+        aria-label="Notifications"
       >
         <i className="fas fa-bell"></i>
         {unreadCount > 0 && (
@@ -152,13 +150,13 @@ const NotificationDropdown: React.FC = () => {
       {isOpen && (
         <div className="notification-dropdown">
           <div className="notification-header">
-            <h3>{t('notifications.title')}</h3>
+            <h3>Notifications</h3>
             {unreadCount > 0 && (
-              <button 
+              <button
                 className="mark-all-read-btn"
                 onClick={handleMarkAllAsRead}
               >
-                {t('notifications.mark_all_read')}
+                Tout marquer comme lu
               </button>
             )}
           </div>
@@ -167,12 +165,12 @@ const NotificationDropdown: React.FC = () => {
             {loading ? (
               <div className="notification-loading">
                 <i className="fas fa-spinner fa-spin"></i>
-                <span>{t('notifications.loading')}</span>
+                <span>Chargement...</span>
               </div>
             ) : notifications.length === 0 ? (
               <div className="no-notifications">
                 <i className="fas fa-bell-slash"></i>
-                <span>{t('notifications.no_notifications')}</span>
+                <span>Aucune notification</span>
               </div>
             ) : (
               notifications.map((notification) => (
@@ -198,7 +196,7 @@ const NotificationDropdown: React.FC = () => {
           {notifications.length > 0 && (
             <div className="notification-footer">
               <button className="view-all-btn">
-                {t('notifications.view_all')}
+                Voir toutes les notifications
               </button>
             </div>
           )}

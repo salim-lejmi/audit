@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { X, FileText, Edit3, Save, Plus, Trash2 } from 'lucide-react';
 import '../../styles/TextModal.css';
 
 interface Requirement {
@@ -54,7 +55,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     status: 'À vérifier'
   });
 
-  // Fetch text details
   useEffect(() => {
     const fetchTextDetail = async () => {
       try {
@@ -72,14 +72,12 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     fetchTextDetail();
   }, [textId]);
 
-  // Download PDF file
   const handleViewPdf = async () => {
     try {
       const response = await axios.get(`/api/texts/${textId}/file`, {
         responseType: 'blob'
       });
       
-      // Create a URL for the blob
       const file = new Blob([response.data], { type: 'application/pdf' });
       const fileURL = URL.createObjectURL(file);
       
@@ -91,7 +89,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     }
   };
 
-  // Update text status
   const handleUpdateStatus = async () => {
     if (!text) return;
     
@@ -106,17 +103,14 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     }
   };
 
-  // Start editing a requirement
   const startEditRequirement = (requirement: Requirement) => {
     setEditingRequirement(requirement);
   };
 
-  // Cancel editing a requirement
   const cancelEditRequirement = () => {
     setEditingRequirement(null);
   };
 
-  // Save edited requirement
   const saveRequirement = async () => {
     if (!editingRequirement) return;
     
@@ -127,7 +121,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
         title: editingRequirement.title
       });
       
-      // Update the requirement in the local state
       if (text) {
         const updatedRequirements = text.requirements.map(req => 
           req.requirementId === editingRequirement.requirementId ? editingRequirement : req
@@ -143,7 +136,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     }
   };
 
-  // Add new requirement
   const addRequirement = async () => {
     if (!text) return;
     
@@ -155,7 +147,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     try {
       const response = await axios.post(`/api/texts/${textId}/requirement`, newRequirement);
       
-      // Add the new requirement to the local state
       const addedRequirement = {
         requirementId: response.data.requirementId,
         ...newRequirement
@@ -166,7 +157,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
         requirements: [...text.requirements, addedRequirement]
       });
       
-      // Reset the form
       setNewRequirement({
         number: '',
         title: '',
@@ -180,7 +170,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     }
   };
 
-  // Delete requirement
   const deleteRequirement = async (requirementId: number) => {
     if (!text) return;
     
@@ -188,7 +177,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
       try {
         await axios.delete(`/api/texts/${textId}/requirement/${requirementId}`);
         
-        // Remove the requirement from the local state
         setText({
           ...text,
           requirements: text.requirements.filter(req => req.requirementId !== requirementId)
@@ -202,7 +190,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     }
   };
 
-  // Handle requirement field changes when editing
   const handleRequirementChange = (field: keyof Requirement, value: string) => {
     if (!editingRequirement) return;
     
@@ -212,7 +199,6 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
     });
   };
 
-  // Handle new requirement field changes
   const handleNewRequirementChange = (field: string, value: string) => {
     setNewRequirement({
       ...newRequirement,
@@ -223,8 +209,11 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
   if (loading) {
     return (
       <div className="modal-overlay">
-        <div className="modal-content">
-          <div className="loading">Chargement des détails du texte...</div>
+        <div className="modal-container">
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Chargement des détails du texte...</p>
+          </div>
         </div>
       </div>
     );
@@ -233,10 +222,10 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
   if (error || !text) {
     return (
       <div className="modal-overlay">
-        <div className="modal-content">
-          <div className="error">{error || 'Texte non trouvé'}</div>
-          <div className="modal-actions">
-            <button onClick={onClose}>Fermer</button>
+        <div className="modal-container">
+          <div className="error-state">
+            <p>{error || 'Texte non trouvé'}</p>
+            <button className="btn-primary" onClick={onClose}>Fermer</button>
           </div>
         </div>
       </div>
@@ -244,17 +233,21 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content text-detail-modal">
+    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-container">
         <div className="modal-header">
           <h2>{text.reference}</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="btn-close" onClick={onClose}>
+            <X size={20} />
+          </button>
         </div>
 
         {showPdf ? (
           <div className="pdf-viewer">
             <div className="pdf-viewer-header">
-              <button onClick={() => setShowPdf(false)}>Retour aux détails</button>
+              <button className="btn-secondary" onClick={() => setShowPdf(false)}>
+                Retour aux détails
+              </button>
             </div>
             <iframe 
               src={`${pdfUrl}#toolbar=0`} 
@@ -264,234 +257,249 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
             />
           </div>
         ) : (
-          <div className="text-detail-content">
-            <div className="text-info-section">
-              <div className="info-row">
-                <div className="info-item">
-                  <h3>Domaine</h3>
-                  <p>{text.domain}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Thème</h3>
-                  <p>{text.theme}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Sous-thème</h3>
-                  <p>{text.subTheme || 'N/A'}</p>
-                </div>
-              </div>
-              
-              <div className="info-row">
-                <div className="info-item">
-                  <h3>Nature</h3>
-                  <p>{text.nature || 'N/A'}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Année de publication</h3>
-                  <p>{text.publicationYear}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Statut</h3>
-                  {editMode ? (
-                    <div className="edit-status">
-                      <select 
-                        value={textStatus} 
-                        onChange={(e) => setTextStatus(e.target.value)}
-                      >
-                        <option value="À vérifier">À vérifier</option>
-                        <option value="Applicable">Applicable</option>
-                        <option value="Non applicable">Non applicable</option>
-                        <option value="Pour information">Pour information</option>
-                      </select>
-                      <div className="status-actions">
-                        <button className="btn-primary" onClick={handleUpdateStatus}>Enregistrer</button>
-                        <button className="btn-secondary" onClick={() => {
-                          setTextStatus(text.status);
-                          setEditMode(false);
-                        }}>Annuler</button>
+          <>
+            <div className="modal-body">
+              {/* Text Information */}
+              <div className="form-section">
+                <h3>Informations du texte</h3>
+                
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Domaine</label>
+                    <div className="info-value">{text.domain}</div>
+                  </div>
+                  <div className="form-group">
+                    <label>Thème</label>
+                    <div className="info-value">{text.theme}</div>
+                  </div>
+                  <div className="form-group">
+                    <label>Sous-thème</label>
+                    <div className="info-value">{text.subTheme || 'N/A'}</div>
+                  </div>
+                  <div className="form-group">
+                    <label>Nature</label>
+                    <div className="info-value">{text.nature || 'N/A'}</div>
+                  </div>
+                  <div className="form-group">
+                    <label>Année de publication</label>
+                    <div className="info-value">{text.publicationYear}</div>
+                  </div>
+                  <div className="form-group">
+                    <label>Statut</label>
+                    {editMode ? (
+                      <div className="status-edit">
+                        <select 
+                          value={textStatus} 
+                          onChange={(e) => setTextStatus(e.target.value)}
+                        >
+                          <option value="À vérifier">À vérifier</option>
+                          <option value="Applicable">Applicable</option>
+                          <option value="Non applicable">Non applicable</option>
+                          <option value="Pour information">Pour information</option>
+                        </select>
+                        <div className="status-actions">
+                          <button className="btn-save" onClick={handleUpdateStatus}>
+                            <Save size={14} />
+                          </button>
+                          <button className="btn-cancel-small" onClick={() => {
+                            setTextStatus(text.status);
+                            setEditMode(false);
+                          }}>
+                            <X size={14} />
+                          </button>
+                        </div>
                       </div>
+                    ) : (
+                      <div className="status-display">
+                        <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {text.status}
+                        </span>
+                        {userRole === 'SubscriptionManager' && (
+                          <button className="btn-edit" onClick={() => setEditMode(true)}>
+                            <Edit3 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label>Sanctions</label>
+                    <div className="info-value">{text.penalties || 'Aucune'}</div>
+                  </div>
+                  <div className="form-group">
+                    <label>Textes associés</label>
+                    <div className="info-value">{text.relatedTexts || 'Aucun'}</div>
+                  </div>
+                  <div className="form-group">
+                    <label>Date d'effet</label>
+                    <div className="info-value">
+                      {text.effectiveDate ? new Date(text.effectiveDate).toLocaleDateString('fr-FR') : 'N/A'}
                     </div>
-                  ) : (
-                    <div className="status-display">
-                      <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                        {text.status}
-                      </span>
-                      {(userRole === 'SubscriptionManager') && (
-                        <button className="btn-edit-small" onClick={() => setEditMode(true)}>Modifier</button>
-                      )}
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="info-row">
-                <div className="info-item">
-                  <h3>Sanctions</h3>
-                  <p>{text.penalties || 'Aucune'}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Textes associés</h3>
-                  <p>{text.relatedTexts || 'Aucun'}</p>
-                </div>
-                <div className="info-item">
-                  <h3>Date d'effet</h3>
-                  <p>{text.effectiveDate ? new Date(text.effectiveDate).toLocaleDateString('fr-FR') : 'N/A'}</p>
-                </div>
-              </div>
-              
-              <div className="info-row">
-                <div className="info-item full-width">
-                  <h3>Contenu</h3>
-                  <div className="text-content">
+                
+                <div className="form-group form-group-full">
+                  <label>Contenu</label>
+                  <div className="content-box">
                     {text.content || 'Aucun contenu disponible'}
                   </div>
                 </div>
+                
+                {text.filePath && (
+                  <div className="form-group form-group-full">
+                    <label>Document PDF</label>
+                    <button className="btn-secondary" onClick={handleViewPdf}>
+                      <FileText size={16} />
+                      Voir le PDF
+                    </button>
+                  </div>
+                )}
               </div>
               
-              {text.filePath && (
-                <div className="info-row">
-                  <div className="info-item full-width">
-                    <h3>Document PDF</h3>
-                    <button className="btn-primary" onClick={handleViewPdf}>Voir le PDF</button>
+              {/* Requirements Section */}
+              <div className="form-section">
+                <h3>Exigences</h3>
+                
+                {text.requirements.length === 0 ? (
+                  <div className="empty-requirements">
+                    <p>Aucune exigence définie pour ce texte</p>
                   </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="requirements-section">
-              <h3>Exigences</h3>
-              
-              {text.requirements.length === 0 ? (
-                <p className="no-requirements">Aucune exigence définie pour ce texte.</p>
-              ) : (
-                <div className="requirements-list">
-                  <table className="requirements-table">
-                    <thead>
-                      <tr>
-                        <th>Numéro</th>
-                        <th>Titre</th>
-                        <th>Statut</th>
-                        {userRole === 'SubscriptionManager' && (
-                          <th>Actions</th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {text.requirements.map((req) => (
-                        <tr key={req.requirementId}>
-                          {editingRequirement && editingRequirement.requirementId === req.requirementId ? (
-                            // Editing mode
-                            <>
-                              <td>
-                                <input 
-                                  type="text" 
-                                  value={editingRequirement.number} 
-                                  onChange={(e) => handleRequirementChange('number', e.target.value)}
-                                />
-                              </td>
-                              <td>
-                                <input 
-                                  type="text" 
-                                  value={editingRequirement.title} 
-                                  onChange={(e) => handleRequirementChange('title', e.target.value)}
-                                />
-                              </td>
-                              <td>
-                                <select 
-                                  value={editingRequirement.status} 
-                                  onChange={(e) => handleRequirementChange('status', e.target.value)}
-                                >
-                                  <option value="À vérifier">À vérifier</option>
-                                  <option value="Applicable">Applicable</option>
-                                  <option value="Non applicable">Non applicable</option>
-                                  <option value="Pour information">Pour information</option>
-                                </select>
-                              </td>
-                              <td>
-                                <div className="req-actions">
-                                  <button className="btn-save" onClick={saveRequirement}>Enregistrer</button>
-                                  <button className="btn-cancel" onClick={cancelEditRequirement}>Annuler</button>
-                                </div>
-                              </td>
-                            </>
-                          ) : (
-                            // Display mode
-                            <>
-                              <td>{req.number}</td>
-                              <td>{req.title}</td>
-                              <td>
-                                <span className={`status-badge status-${req.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                                  {req.status}
-                                </span>
-                              </td>
-                              {userRole === 'SubscriptionManager' && (
+                ) : (
+                  <div className="table-container">
+                    <table className="requirements-table">
+                      <thead>
+                        <tr>
+                          <th>Numéro</th>
+                          <th>Titre</th>
+                          <th>Statut</th>
+                          {userRole === 'SubscriptionManager' && <th>Actions</th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {text.requirements.map((req) => (
+                          <tr key={req.requirementId}>
+                            {editingRequirement && editingRequirement.requirementId === req.requirementId ? (
+                              <>
                                 <td>
-                                  <div className="req-actions">
-                                    <button 
-                                      className="btn-edit-small" 
-                                      onClick={() => startEditRequirement(req)}
-                                    >
-                                      Modifier
+                                  <input 
+                                    type="text" 
+                                    value={editingRequirement.number} 
+                                    onChange={(e) => handleRequirementChange('number', e.target.value)}
+                                    className="table-input"
+                                  />
+                                </td>
+                                <td>
+                                  <input 
+                                    type="text" 
+                                    value={editingRequirement.title} 
+                                    onChange={(e) => handleRequirementChange('title', e.target.value)}
+                                    className="table-input"
+                                  />
+                                </td>
+                                <td>
+                                  <select 
+                                    value={editingRequirement.status} 
+                                    onChange={(e) => handleRequirementChange('status', e.target.value)}
+                                    className="table-select"
+                                  >
+                                    <option value="À vérifier">À vérifier</option>
+                                    <option value="Applicable">Applicable</option>
+                                    <option value="Non applicable">Non applicable</option>
+                                    <option value="Pour information">Pour information</option>
+                                  </select>
+                                </td>
+                                <td>
+                                  <div className="table-actions">
+                                    <button className="btn-save" onClick={saveRequirement}>
+                                      <Save size={14} />
                                     </button>
-                                    <button 
-                                      className="btn-delete-small" 
-                                      onClick={() => deleteRequirement(req.requirementId)}
-                                    >
-                                      Supprimer
+                                    <button className="btn-cancel-small" onClick={cancelEditRequirement}>
+                                      <X size={14} />
                                     </button>
                                   </div>
                                 </td>
-                              )}
-                            </>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              
-              {/* Add new requirement section - only for SuperAdmin and SubscriptionManager */}
-              {(userRole === 'SubscriptionManager') && (
-                <div className="add-requirement-section">
-                  <h4>Ajouter une nouvelle exigence</h4>
-                  <div className="add-requirement-form">
-                    <div className="form-group">
-                      <label>Numéro</label>
-                      <input 
-                        type="text" 
-                        value={newRequirement.number}
-                        onChange={(e) => handleNewRequirementChange('number', e.target.value)}
-                        placeholder="ex. : Art. 5"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Titre</label>
-                      <input 
-                        type="text" 
-                        value={newRequirement.title}
-                        onChange={(e) => handleNewRequirementChange('title', e.target.value)}
-                        placeholder="Titre de l'exigence"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Statut</label>
-                      <select 
-                        value={newRequirement.status}
-                        onChange={(e) => handleNewRequirementChange('status', e.target.value)}
-                      >
-                        <option value="À vérifier">À vérifier</option>
-                        <option value="Applicable">Applicable</option>
-                        <option value="Non applicable">Non applicable</option>
-                        <option value="Pour information">Pour information</option>
-                      </select>
-                    </div>
-                    <button className="btn-primary" onClick={addRequirement}>
-                      Ajouter une exigence
-                    </button>
+                              </>
+                            ) : (
+                              <>
+                                <td>{req.number}</td>
+                                <td>{req.title}</td>
+                                <td>
+                                  <span className={`status-badge status-${req.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                                    {req.status}
+                                  </span>
+                                </td>
+                                {userRole === 'SubscriptionManager' && (
+                                  <td>
+                                    <div className="table-actions">
+                                      <button 
+                                        className="btn-edit" 
+                                        onClick={() => startEditRequirement(req)}
+                                      >
+                                        <Edit3 size={14} />
+                                      </button>
+                                      <button 
+                                        className="btn-action btn-delete" 
+                                        onClick={() => deleteRequirement(req.requirementId)}
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  </td>
+                                )}
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                </div>
-              )}
+                )}
+                
+                {userRole === 'SubscriptionManager' && (
+                  <div className="add-requirement">
+                    <h4>Ajouter une nouvelle exigence</h4>
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label>Numéro</label>
+                        <input 
+                          type="text" 
+                          value={newRequirement.number}
+                          onChange={(e) => handleNewRequirementChange('number', e.target.value)}
+                          placeholder="ex. : Art. 5"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Titre</label>
+                        <input 
+                          type="text" 
+                          value={newRequirement.title}
+                          onChange={(e) => handleNewRequirementChange('title', e.target.value)}
+                          placeholder="Titre de l'exigence"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Statut</label>
+                        <select 
+                          value={newRequirement.status}
+                          onChange={(e) => handleNewRequirementChange('status', e.target.value)}
+                        >
+                          <option value="À vérifier">À vérifier</option>
+                          <option value="Applicable">Applicable</option>
+                          <option value="Non applicable">Non applicable</option>
+                          <option value="Pour information">Pour information</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>&nbsp;</label>
+                        <button className="btn-secondary" onClick={addRequirement}>
+                          <Plus size={16} />
+                          Ajouter
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="modal-footer">
@@ -499,9 +507,9 @@ const TextModal: React.FC<TextModalProps> = ({ textId, onClose, userRole }) => {
                 <p>Créé par : {text.createdBy || 'Inconnu'}</p>
                 <p>Créé le : {new Date(text.createdAt).toLocaleDateString('fr-FR')}</p>
               </div>
-              <button className="btn-secondary" onClick={onClose}>Fermer</button>
+              <button className="btn-cancel" onClick={onClose}>Fermer</button>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>

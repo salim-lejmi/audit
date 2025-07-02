@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { 
+  Search, 
+  Filter, 
+  RefreshCw, 
+  Plus, 
+  Eye, 
+  Trash2, 
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronsLeft, 
+  ChevronsRight 
+} from 'lucide-react';
 import '../../styles/TextManagement.css';
 import TextModal from './TextModal';
 import AddTextModal from './AddTextModal';
@@ -20,7 +32,7 @@ interface Text {
   companyId?: number; 
   companyName?: string;
 }
-
+  
 interface TextFilters {
   domainId: number | null;
   themeId: number | null;
@@ -32,7 +44,6 @@ interface TextFilters {
   textType: string;
 }
 
-// Type definitions for dropdown options
 interface DomainOption {
   domainId: number;
   name: string;
@@ -60,8 +71,8 @@ const TextManagement: React.FC = () => {
   const [selectedText, setSelectedText] = useState<number | null>(null);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string>('');
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   
-  // Filter states
   const [filters, setFilters] = useState<TextFilters>({
     domainId: null,
     themeId: null,
@@ -73,13 +84,11 @@ const TextManagement: React.FC = () => {
     textType: ''
   });
 
-  // Domain, theme, subtheme options for dropdown
   const [domains, setDomains] = useState<DomainOption[]>([]);
   const [themes, setThemes] = useState<ThemeOption[]>([]);
   const [subThemes, setSubThemes] = useState<SubThemeOption[]>([]);
 
   useEffect(() => {
-    // Check user authentication and get role
     const checkAuth = async () => {
       try {
         const response = await axios.get('/api/auth/verify');
@@ -94,7 +103,6 @@ const TextManagement: React.FC = () => {
     loadTexts();
   }, [navigate, currentPage]);
 
-  // Load domain options
   const loadDomains = async () => {
     try {
       const response = await axios.get('/api/taxonomy/domains');
@@ -104,7 +112,6 @@ const TextManagement: React.FC = () => {
     }
   };
 
-  // Load theme options based on selected domain
   const loadThemes = async (domainId: number) => {
     try {
       const response = await axios.get(`/api/taxonomy/themes?domainId=${domainId}`);
@@ -114,7 +121,6 @@ const TextManagement: React.FC = () => {
     }
   };
 
-  // Load subtheme options based on selected theme
   const loadSubThemes = async (themeId: number) => {
     try {
       const response = await axios.get(`/api/taxonomy/subthemes?themeId=${themeId}`);
@@ -124,13 +130,11 @@ const TextManagement: React.FC = () => {
     }
   };
 
-  // Load texts with filters and pagination
   const loadTexts = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Build query parameters
       const params = new URLSearchParams();
       if (filters.domainId) params.append('domainId', filters.domainId.toString());
       if (filters.themeId) params.append('themeId', filters.themeId.toString());
@@ -156,9 +160,7 @@ const TextManagement: React.FC = () => {
     }
   };
 
-  // Handle filter changes
   const handleFilterChange = (name: keyof TextFilters, value: string | number | null) => {
-    // Special handling for domain change
     if (name === 'domainId') {
       setFilters({
         ...filters,
@@ -173,7 +175,6 @@ const TextManagement: React.FC = () => {
         setSubThemes([]);
       }
     } 
-    // Special handling for theme change
     else if (name === 'themeId') {
       setFilters({
         ...filters,
@@ -186,7 +187,6 @@ const TextManagement: React.FC = () => {
         setSubThemes([]);
       }
     }
-    // Default handling for other filters
     else {
       setFilters({
         ...filters,
@@ -195,13 +195,11 @@ const TextManagement: React.FC = () => {
     }
   };
 
-  // Apply filters
   const applyFilters = () => {
     setCurrentPage(1);
     loadTexts();
   };
 
-  // Reset filters
   const resetFilters = () => {
     setFilters({
       domainId: null,
@@ -217,26 +215,21 @@ const TextManagement: React.FC = () => {
     loadTexts();
   };
 
-  // Pagination handlers
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
 
-  // Open text detail modal
   const openTextDetail = (textId: number) => {
     setSelectedText(textId);
   };
 
-  // Close text detail modal
   const closeTextDetail = () => {
     setSelectedText(null);
-    // Reload texts to update isConsulted status
     loadTexts();
   };
 
-  // Delete text handler
   const handleDeleteText = async (textId: number) => {
     if (userRole !== 'SuperAdmin' && userRole !== 'SubscriptionManager') {
       alert('Seuls les super administrateurs et les gestionnaires d\'abonnement peuvent supprimer des textes.');
@@ -256,223 +249,278 @@ const TextManagement: React.FC = () => {
   };
 
   return (
-    <div className="text-management-container">
-      <h1>Gestion des textes</h1>
-      
-      {/* Filter section */}
-      <div className="filters-container">
-        <h2>Filtres</h2>
-        <div className="filters-grid">
-          <div className="filter-item">
-            <label>Domaine</label>
-            <select 
-              value={filters.domainId || ''}
-              onChange={(e) => handleFilterChange('domainId', e.target.value ? Number(e.target.value) : null)}
-            >
-              <option value="">Tous les domaines</option>
-              {domains.map((domain) => (
-                <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="filter-item">
-            <label>Thème</label>
-            <select 
-              value={filters.themeId || ''}
-              onChange={(e) => handleFilterChange('themeId', e.target.value ? Number(e.target.value) : null)}
-              disabled={!filters.domainId}
-            >
-              <option value="">Tous les thèmes</option>
-              {themes.map((theme) => (
-                <option key={theme.themeId} value={theme.themeId}>{theme.name}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="filter-item">
-            <label>Sous-thème</label>
-            <select 
-              value={filters.subThemeId || ''}
-              onChange={(e) => handleFilterChange('subThemeId', e.target.value ? Number(e.target.value) : null)}
-              disabled={!filters.themeId}
-            >
-              <option value="">Tous les sous-thèmes</option>
-              {subThemes.map((subTheme) => (
-                <option key={subTheme.subThemeId} value={subTheme.subThemeId}>{subTheme.name}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="filter-item">
-            <label>Nature</label>
-            <input 
-              type="text" 
-              value={filters.nature} 
-              onChange={(e) => handleFilterChange('nature', e.target.value)}
-              placeholder="Entrer la nature"
-            />
-          </div>
-          
-          <div className="filter-item">
-            <label>Année de publication</label>
-            <input 
-              type="number" 
-              value={filters.publicationYear || ''} 
-              onChange={(e) => handleFilterChange('publicationYear', e.target.value ? parseInt(e.target.value) : null)}
-              placeholder="Entrer l'année"
-            />
-          </div>
-          
-          <div className="filter-item">
-            <label>Mot-clé</label>
-            <input 
-              type="text" 
-              value={filters.keyword} 
-              onChange={(e) => handleFilterChange('keyword', e.target.value)}
-              placeholder="Rechercher par mot-clé"
-            />
-          </div>
-          
-          <div className="filter-item">
-            <label>Statut</label>
-            <select 
-              value={filters.status} 
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-            >
-              <option value="">Tous les statuts</option>
-              <option value="À vérifier">À vérifier</option>
-              <option value="Applicable">Applicable</option>
-              <option value="Non applicable">Non applicable</option>
-              <option value="Pour information">Pour information</option>
-            </select>
-          </div>
-          
-          <div className="filter-item">
-            <label>Type de texte</label>
-            <select 
-              value={filters.textType} 
-              onChange={(e) => handleFilterChange('textType', e.target.value)}
-            >
-              <option value="">Tous les types</option>
-              <option value="À vérifier">Textes à vérifier</option>
-              <option value="Pour information">Textes informatifs</option>
-            </select>
-          </div>
-        </div>
-        
-        <div className="filters-actions">
-          <button className="btn-primary" onClick={applyFilters}>Appliquer les filtres</button>
-          <button className="btn-secondary" onClick={resetFilters}>Réinitialiser les filtres</button>
-          
-          {/* Only show Add Text button for SuperAdmin or SubscriptionManager */}
-          {(userRole === 'SubscriptionManager') && (
-            <button className="btn-add" onClick={() => setShowAddModal(true)}>Ajouter un nouveau texte</button>
-          )}
-        </div>
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <h1>Gestion des textes</h1>
+    
       </div>
 
-      {/* Texts table */}
-      <div className="texts-table-container">
-        <h2>Textes ({totalCount})</h2>
-        
-        {loading ? (
-          <div className="loading">Chargement des textes...</div>
-        ) : error ? (
-          <div className="error">{error}</div>
-        ) : texts.length === 0 ? (
-          <div className="no-results">Aucun texte trouvé correspondant à vos critères.</div>
-        ) : (
-          <>
-            <table className="texts-table">
-              <thead>
-                <tr>
-                  {userRole === 'SuperAdmin' && <th>Entreprise</th>}
-                  <th>Domaine</th>
-                  <th>Thème</th>
-                  <th>Référence</th>
-                  <th>Nature</th>
-                  <th>Année</th>
-                  <th>Statut</th>
-                  <th>Créé par</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {texts.map((text) => (
-                  <tr key={text.textId} className={text.isConsulted ? 'consulted' : ''}>
-                    {userRole === 'SuperAdmin' && <td>{text.companyName}</td>}
-                    <td>{text.domain}</td>
-                    <td>{text.theme}</td>
-                    <td>{text.reference}</td>
-                    <td>{text.nature}</td>
-                    <td>{text.publicationYear}</td>
-                    <td>
-                      <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                        {text.status}
-                      </span>
-                    </td>
-                    <td>{text.createdBy}</td>
-                    <td className="actions-cell">
-                      <button 
-                        className="btn-view" 
-                        onClick={() => openTextDetail(text.textId)}
-                        title="Voir les détails du texte"
-                      >
-                        Consulter
-                      </button>
-                      {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
-                        <button 
-                          className="btn-delete" 
-                          onClick={() => handleDeleteText(text.textId)}
-                          title="Supprimer le texte"
-                        >
-                          Supprimer
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-            {/* Pagination */}
-            <div className="pagination">
+      {/* Search and Filters */}
+      <div className="controls-section">
+        <div className="search-row">
+          <div className="search-box">
+            <Search className="search-icon" size={20} />
+            <input 
+              type="text" 
+              placeholder="Rechercher par mot-clé, référence..." 
+              value={filters.keyword}
+              onChange={(e) => handleFilterChange('keyword', e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
+            />
+            {filters.keyword && (
               <button 
-                onClick={() => goToPage(1)} 
-                disabled={currentPage === 1}
+                className="search-clear" 
+                onClick={() => handleFilterChange('keyword', '')}
               >
-                «
+                ×
               </button>
-              <button 
-                onClick={() => goToPage(currentPage - 1)} 
-                disabled={currentPage === 1}
-              >
-                ‹
-              </button>
-              
-              <span className="page-info">
-                Page {currentPage} sur {totalPages}
-              </span>
-              
-              <button 
-                onClick={() => goToPage(currentPage + 1)} 
-                disabled={currentPage === totalPages}
-              >
-                ›
-              </button>
-              <button 
-                onClick={() => goToPage(totalPages)} 
-                disabled={currentPage === totalPages}
-              >
-                »
+            )}
+          </div>
+          <button 
+            className={`btn-filter ${showFilters ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={18} />
+            Filtres
+          </button>
+              <div className="header-actions">
+          {(userRole === 'SubscriptionManager') && (
+            <button 
+              className="btn-primary"
+              onClick={() => setShowAddModal(true)}
+            >
+              <Plus size={18} />
+              Nouveau texte
+            </button>
+          )}
+        </div>
+        </div>
+
+        {showFilters && (
+          <div className="filters-panel">
+            <div className="filters-header">
+              <h3>Filtres avancés</h3>
+              <button className="btn-reset" onClick={resetFilters}>
+                <RefreshCw size={16} />
+                Réinitialiser
               </button>
             </div>
+            
+            <div className="filters-grid">
+              <div className="form-group">
+                <label>Domaine</label>
+                <select 
+                  value={filters.domainId || ''}
+                  onChange={(e) => handleFilterChange('domainId', e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">Tous les domaines</option>
+                  {domains.map((domain) => (
+                    <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Thème</label>
+                <select 
+                  value={filters.themeId || ''}
+                  onChange={(e) => handleFilterChange('themeId', e.target.value ? Number(e.target.value) : null)}
+                  disabled={!filters.domainId}
+                >
+                  <option value="">Tous les thèmes</option>
+                  {themes.map((theme) => (
+                    <option key={theme.themeId} value={theme.themeId}>{theme.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Sous-thème</label>
+                <select 
+                  value={filters.subThemeId || ''}
+                  onChange={(e) => handleFilterChange('subThemeId', e.target.value ? Number(e.target.value) : null)}
+                  disabled={!filters.themeId}
+                >
+                  <option value="">Tous les sous-thèmes</option>
+                  {subThemes.map((subTheme) => (
+                    <option key={subTheme.subThemeId} value={subTheme.subThemeId}>{subTheme.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Nature</label>
+                <input 
+                  type="text" 
+                  value={filters.nature} 
+                  onChange={(e) => handleFilterChange('nature', e.target.value)}
+                  placeholder="Nature du texte"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Année de publication</label>
+                <input 
+                  type="number" 
+                  value={filters.publicationYear || ''} 
+                  onChange={(e) => handleFilterChange('publicationYear', e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="Année"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Statut</label>
+                <select 
+                  value={filters.status} 
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                >
+                  <option value="">Tous les statuts</option>
+                  <option value="À vérifier">À vérifier</option>
+                  <option value="Applicable">Applicable</option>
+                  <option value="Non applicable">Non applicable</option>
+                  <option value="Pour information">Pour information</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Type de texte</label>
+                <select 
+                  value={filters.textType} 
+                  onChange={(e) => handleFilterChange('textType', e.target.value)}
+                >
+                  <option value="">Tous les types</option>
+                  <option value="À vérifier">Textes à vérifier</option>
+                  <option value="Pour information">Textes informatifs</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="filters-actions">
+              <button className="btn-apply" onClick={applyFilters}>
+                Appliquer les filtres
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Results */}
+      <div className="results-section">
+        <div className="results-info">
+          {totalCount > 0 ? `${totalCount} texte${totalCount > 1 ? 's' : ''} trouvé${totalCount > 1 ? 's' : ''}` : 'Aucun résultat'}
+        </div>
+        
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Chargement...</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <p>{error}</p>
+          </div>
+        ) : texts.length === 0 ? (
+          <div className="empty-state">
+            <p>Aucun texte trouvé</p>
+          </div>
+        ) : (
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    {userRole === 'SuperAdmin' && <th>Entreprise</th>}
+                    <th>Domaine</th>
+                    <th>Thème</th>
+                    <th>Référence</th>
+                    <th>Nature</th>
+                    <th>Année</th>
+                    <th>Statut</th>
+                    <th>Créé par</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {texts.map((text) => (
+                    <tr key={text.textId} className={text.isConsulted ? 'consulted' : ''}>
+                      {userRole === 'SuperAdmin' && <td>{text.companyName}</td>}
+                      <td>{text.domain}</td>
+                      <td>{text.theme}</td>
+                      <td>{text.reference}</td>
+                      <td>{text.nature}</td>
+                      <td>{text.publicationYear}</td>
+                      <td>
+                        <span className={`status-badge status-${text.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {text.status}
+                        </span>
+                      </td>
+                      <td>{text.createdBy}</td>
+                      <td>
+                        <button 
+                          className="btn-action btn-view" 
+                          onClick={() => openTextDetail(text.textId)}
+                          title="Consulter"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
+                          <button 
+                            className="btn-action btn-delete" 
+                            onClick={() => handleDeleteText(text.textId)}
+                            title="Supprimer"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft size={16} />
+                </button>
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(currentPage - 1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                <span className="page-info">
+                  Page {currentPage} sur {totalPages}
+                </span>
+                
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(currentPage + 1)} 
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(totalPages)} 
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight size={16} />
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
       
-      {/* Text Detail Modal */}
       {selectedText && (
         <TextModal 
           textId={selectedText} 
@@ -481,7 +529,6 @@ const TextManagement: React.FC = () => {
         />
       )}
       
-      {/* Add Text Modal */}
       {showAddModal && (
         <AddTextModal 
           onClose={() => setShowAddModal(false)}

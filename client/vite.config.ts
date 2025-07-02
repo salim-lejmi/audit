@@ -1,12 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    tailwindcss(),
+    react()
+  ],
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5148', // change to your server's URL if different
+        target: 'http://localhost:5148',
         changeOrigin: true,
         secure: false,
       }
