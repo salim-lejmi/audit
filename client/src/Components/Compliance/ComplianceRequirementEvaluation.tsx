@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import '../../styles/compliance.css';
 import { 
-  Box, Paper, Typography, Button, Divider, 
-  TextField, CircularProgress, Grid,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  IconButton, Accordion, AccordionSummary, 
-  AccordionDetails, Chip, List, ListItem, ListItemText
-} from '@mui/material';
-import { 
-  ArrowBack, KeyboardArrowDown, Add, Delete, 
-  PictureAsPdf, Save, Print, ArrowForward
-} from '@mui/icons-material';
+  ArrowLeft, ArrowRight, ChevronDown, Plus, 
+  Trash2, FileText, Save, Printer 
+} from 'lucide-react';
 import axios from 'axios';
 import { TextWithRequirements, ObservationDialogState, MonitoringDialogState, FileDialogState } from '../shared/types';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +17,7 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<TextWithRequirements | null>(null);
   const navigate = useNavigate();
+  const [expandedRequirement, setExpandedRequirement] = useState<number | null>(null);
 
   const [observationDialog, setObservationDialog] = useState<ObservationDialogState>({
     open: false,
@@ -197,348 +191,413 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
     }
   };
 
+  const toggleAccordion = (requirementId: number) => {
+    if (expandedRequirement === requirementId) {
+      setExpandedRequirement(null);
+    } else {
+      setExpandedRequirement(requirementId);
+    }
+  };
+
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="loading-state">
+        <div className="spinner"></div>
+        <p>Chargement des exigences...</p>
+      </div>
     );
   }
 
   if (!data || !data.text) {
     return (
-      <Box>
-        <Button startIcon={<ArrowBack />} onClick={onBack}>Retour</Button>
-        <Typography variant="h6" sx={{ mt: 2 }}>Texte non trouvé</Typography>
-      </Box>
+      <div>
+        <button className="back-link" onClick={onBack}>
+          <ArrowLeft size={18} />
+          <span>Retour</span>
+        </button>
+        <h2>Texte non trouvé</h2>
+      </div>
     );
   }
 
   const { text, requirements } = data;
 
   return (
-    <Box>
-      <Button startIcon={<ArrowBack />} onClick={onBack}>Retour à la Liste</Button>
-      <Paper sx={{ p: 3, mt: 2, mb: 3 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="h5" gutterBottom>{text.reference}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Domaine :</strong> {text.domain || '-'}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Thème :</strong> {text.theme || '-'}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Sous-thème :</strong> {text.subTheme || '-'}</Typography>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="body1" gutterBottom><strong>Nature :</strong> {text.nature || '-'}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Année de Publication :</strong> {text.publicationYear || '-'}</Typography>
-            <Typography variant="body1" gutterBottom><strong>Pénalités/Incitations :</strong> {text.penalties || '-'}</Typography>
-          </Grid>
-        </Grid>
-      </Paper>
-      <Typography variant="h6" gutterBottom>Liste des Exigences</Typography>
+    <div className="requirement-evaluation">
+      <button className="back-link" onClick={onBack}>
+        <ArrowLeft size={18} />
+        <span>Retour à la Liste</span>
+      </button>
+      
+      <div className="info-card-c">
+        <div className="info-grid">
+          <div className="info-column">
+            <h2>{text.reference}</h2>
+            <p><strong>Domaine :</strong> {text.domain || '-'}</p>
+            <p><strong>Thème :</strong> {text.theme || '-'}</p>
+            <p><strong>Sous-thème :</strong> {text.subTheme || '-'}</p>
+          </div>
+          <div className="info-column">
+            <p><strong>Nature :</strong> {text.nature || '-'}</p>
+            <p><strong>Année de Publication :</strong> {text.publicationYear || '-'}</p>
+            <p><strong>Pénalités/Incitations :</strong> {text.penalties || '-'}</p>
+          </div>
+        </div>
+      </div>
+      
+      <h3 className="section-title">Liste des Exigences</h3>
+      
       {requirements.length === 0 ? (
-        <Typography>Aucune exigence trouvée pour ce texte.</Typography>
+        <div className="empty-state">
+          <p>Aucune exigence trouvée pour ce texte.</p>
+        </div>
       ) : (
-        requirements.map((req) => (
-          <Accordion key={req.requirementId} sx={{ mb: 2 }}>
-            <AccordionSummary
-              expandIcon={<KeyboardArrowDown />}
-              sx={{ borderLeft: `4px solid ${getStatusColor(req.evaluation?.status || req.status)}`, '&:hover': { bgcolor: '#f5f5f5' } }}
-            >
-              <Grid container spacing={1} alignItems="center">
-                <Grid item xs={8}>
-                  <Typography><strong>{req.number}.</strong> {req.title}</Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Chip 
-                    label={req.evaluation?.status || req.status}
-                    size="small"
-                    sx={{ 
-                      bgcolor: getStatusColor(req.evaluation?.status || req.status) + '1A', 
-                      color: getStatusColor(req.evaluation?.status || req.status),
-                      borderRadius: 1
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </AccordionSummary>
-            <AccordionDetails sx={{ p: 3 }}>
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>Modifier le Statut :</Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    {['applicable', 'non-applicable', 'à vérifier', 'pour information'].map((status) => (
-                      <Button
-                        key={status}
-                        variant={(req.evaluation?.status || req.status) === status ? "contained" : "outlined"}
-                        size="small"
-                        sx={{ 
-                          borderColor: getStatusColor(status),
-                          bgcolor: (req.evaluation?.status || req.status) === status ? getStatusColor(status) : 'transparent',
-                          color: (req.evaluation?.status || req.status) === status ? 'white' : getStatusColor(status),
-                          '&:hover': { 
-                            bgcolor: (req.evaluation?.status || req.status) === status 
-                              ? getStatusColor(status) 
-                              : getStatusColor(status) + '1A'
-                          }
-                        }}
-                        onClick={() => handleStatusChange(req.requirementId, status)}
+        <div className="requirements-list">
+          {requirements.map((req) => {
+            const isExpanded = expandedRequirement === req.requirementId;
+            const statusColor = getStatusColor(req.evaluation?.status || req.status);
+            
+            return (
+              <div 
+                key={req.requirementId} 
+                className={`requirement-card ${isExpanded ? 'expanded' : ''}`}
+              >
+                <div 
+                  className="requirement-header"
+                  onClick={() => toggleAccordion(req.requirementId)}
+                  style={{ borderLeftColor: statusColor }}
+                >
+                  <div className="requirement-title">
+                    <span className="requirement-number">{req.number}.</span> {req.title}
+                  </div>
+                  <div className="requirement-info">
+                    <span className={`status-badge status-${(req.evaluation?.status || req.status).toLowerCase().replace(/\s+/g, '-')}`}>
+                      {req.evaluation?.status || req.status}
+                    </span>
+                    <ChevronDown className={`accordion-icon ${isExpanded ? 'expanded' : ''}`} size={20} />
+                  </div>
+                </div>
+                
+                {isExpanded && (
+                  <div className="requirement-content">
+                    <div className="status-actions">
+                      <h4>Modifier le Statut :</h4>
+                      <div className="status-buttons">
+                        {['applicable', 'non-applicable', 'à vérifier', 'pour information'].map((status) => (
+                          <button
+                            key={status}
+                            className={`status-button ${status} ${(req.evaluation?.status || req.status) === status ? 'active' : ''}`}
+                            onClick={() => handleStatusChange(req.requirementId, status)}
+                          >
+                            {status}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="action-row">
+                      <button 
+                        className="btn-secondary"
+                        onClick={() => navigate(`/company/action-plan?textId=${textId}&requirementId=${req.requirementId}`)}
                       >
-                        {status}
-                      </Button>
-                    ))}
-                  </Box>
-                </Grid>
-                <Grid item xs={12}>
-                  <Button 
-                    variant="outlined" 
-                    size="small"
-                    onClick={() => navigate(`/company/action-plan?textId=${textId}&requirementId=${req.requirementId}`)}
-                  >
-                    Créer une Action
-                  </Button>
-                </Grid>
-                {req.evaluation && (
-                  <>
-                    <Grid item xs={12}>
-                      <Divider sx={{ my: 2 }} />
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">Observations :</Typography>
-                        <Button 
-                          startIcon={<Add />} 
-                          size="small"
-                          onClick={() => req.evaluation?.evaluationId && setObservationDialog({
-                            open: true,
-                            evaluationId: req.evaluation.evaluationId,
-                            content: ''
-                          })}
-                        >
-                          Ajouter un Constat
-                        </Button>
-                      </Box>
-                      {req.evaluation.observations && req.evaluation.observations.length > 0 ? (
-                        <List>
-                          {req.evaluation.observations.map((obs) => (
-                            <ListItem 
-                              key={obs.observationId}
-                              secondaryAction={
-                                <IconButton 
-                                  edge="end" 
-                                  aria-label="supprimer"
-                                  size="small"
-                                  onClick={() => handleDeleteObservation(obs.observationId)}
-                                >
-                                  <Delete fontSize="small" />
-                                </IconButton>
-                              }
+                        Créer une Action
+                      </button>
+                    </div>
+                    
+                    {req.evaluation && (
+                      <>
+                        <div className="section-divider"></div>
+                        <div className="observations-section">
+                          <div className="section-header">
+                            <h4>Observations :</h4>
+                            <button 
+                              className="btn-add"
+                              onClick={() => req.evaluation?.evaluationId && setObservationDialog({
+                                open: true,
+                                evaluationId: req.evaluation.evaluationId,
+                                content: ''
+                              })}
                             >
-                              <ListItemText
-                                primary={obs.content}
-                                secondary={`${obs.createdBy} - ${new Date(obs.createdAt).toLocaleString('fr-FR')}`}
-                              />
-                            </ListItem>
-                          ))}
-                        </List>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                          Aucune observation
-                        </Typography>
-                      )}
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Divider sx={{ my: 2 }} />
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">Paramètres de Suivi :</Typography>
-                        <Button 
-                          startIcon={<Add />} 
-                          size="small"
-                          onClick={() => req.evaluation?.evaluationId && setMonitoringDialog({
-                            open: true,
-                            evaluationId: req.evaluation.evaluationId,
-                            name: '',
-                            value: ''
-                          })}
-                        >
-                          Ajouter un Paramètre
-                        </Button>
-                      </Box>
-                      {req.evaluation.monitoringParameters && req.evaluation.monitoringParameters.length > 0 ? (
-                        <List>
-                          {req.evaluation.monitoringParameters.map((param) => (
-                            <ListItem 
-                              key={param.parameterId}
-                              secondaryAction={
-                                <IconButton 
-                                  edge="end" 
-                                  aria-label="supprimer"
-                                  size="small"
-                                  onClick={() => handleDeleteMonitoring(param.parameterId)}
-                                >
-                                  <Delete fontSize="small" />
-                                </IconButton>
-                              }
-                            >
-                              <ListItemText
-                                primary={`${param.name}: ${param.value}`}
-                                secondary={`Ajouté le ${new Date(param.createdAt).toLocaleString('fr-FR')}`}
-                              />
-                            </ListItem>
-                          ))}
-                        </List>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                          Aucun paramètre de suivi
-                        </Typography>
-                      )}
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Divider sx={{ my: 2 }} />
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle1">Pièces Jointes :</Typography>
-                        <Button 
-                          startIcon={<Add />} 
-                          size="small"
-                          onClick={() => req.evaluation?.evaluationId && setFileDialog({
-                            open: true,
-                            evaluationId: req.evaluation.evaluationId,
-                            file: null
-                          })}
-                        >
-                          Importer un PDF
-                        </Button>
-                      </Box>
-                      {req.evaluation.attachments && req.evaluation.attachments.length > 0 ? (
-                        <List>
-                          {req.evaluation.attachments.map((att) => (
-                            <ListItem 
-                              key={att.attachmentId}
-                              secondaryAction={
-                                <Box>
-                                  <IconButton 
-                                    edge="end" 
-                                    aria-label="télécharger"
-                                    size="small"
-                                    onClick={() => handleDownloadAttachment(att.attachmentId, att.fileName)}
-                                    sx={{ mr: 1 }}
+                              <Plus size={16} />
+                              Ajouter un Constat
+                            </button>
+                          </div>
+                          
+                          {req.evaluation.observations && req.evaluation.observations.length > 0 ? (
+                            <ul className="data-list">
+                              {req.evaluation.observations.map((obs) => (
+                                <li key={obs.observationId} className="data-list-item">
+                                  <div className="item-content">
+                                    <div className="item-primary">{obs.content}</div>
+                                    <div className="item-secondary">
+                                      {obs.createdBy} - {new Date(obs.createdAt).toLocaleString('fr-FR')}
+                                    </div>
+                                  </div>
+                                  <button 
+                                    className="btn-icon btn-delete" 
+                                    onClick={() => handleDeleteObservation(obs.observationId)}
                                   >
-                                    <PictureAsPdf fontSize="small" />
-                                  </IconButton>
-                                  <IconButton 
-                                    edge="end" 
-                                    aria-label="supprimer"
-                                    size="small"
-                                    onClick={() => handleDeleteAttachment(att.attachmentId)}
-                                  >
-                                    <Delete fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              }
+                                    <Trash2 size={16} />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="empty-notice">
+                              Aucune observation
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="section-divider"></div>
+                        <div className="monitoring-section">
+                          <div className="section-header">
+                            <h4>Paramètres de Suivi :</h4>
+                            <button 
+                              className="btn-add"
+                              onClick={() => req.evaluation?.evaluationId && setMonitoringDialog({
+                                open: true,
+                                evaluationId: req.evaluation.evaluationId,
+                                name: '',
+                                value: ''
+                              })}
                             >
-                              <ListItemText
-                                primary={att.fileName}
-                                secondary={`Ajouté le ${new Date(att.uploadedAt).toLocaleString('fr-FR')}`}
-                              />
-                            </ListItem>
-                          ))}
-                        </List>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                          Aucune pièce jointe
-                        </Typography>
-                      )}
-                    </Grid>
-                  </>
+                              <Plus size={16} />
+                              Ajouter un Paramètre
+                            </button>
+                          </div>
+                          
+                          {req.evaluation.monitoringParameters && req.evaluation.monitoringParameters.length > 0 ? (
+                            <ul className="data-list">
+                              {req.evaluation.monitoringParameters.map((param) => (
+                                <li key={param.parameterId} className="data-list-item">
+                                  <div className="item-content">
+                                    <div className="item-primary">{param.name}: {param.value}</div>
+                                    <div className="item-secondary">
+                                      Ajouté le {new Date(param.createdAt).toLocaleString('fr-FR')}
+                                    </div>
+                                  </div>
+                                  <button 
+                                    className="btn-icon btn-delete" 
+                                    onClick={() => handleDeleteMonitoring(param.parameterId)}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="empty-notice">
+                              Aucun paramètre de suivi
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="section-divider"></div>
+                        <div className="attachments-section">
+                          <div className="section-header">
+                            <h4>Pièces Jointes :</h4>
+                            <button 
+                              className="btn-add"
+                              onClick={() => req.evaluation?.evaluationId && setFileDialog({
+                                open: true,
+                                evaluationId: req.evaluation.evaluationId,
+                                file: null
+                              })}
+                            >
+                              <Plus size={16} />
+                              Importer un PDF
+                            </button>
+                          </div>
+                          
+                          {req.evaluation.attachments && req.evaluation.attachments.length > 0 ? (
+                            <ul className="data-list">
+                              {req.evaluation.attachments.map((att) => (
+                                <li key={att.attachmentId} className="data-list-item">
+                                  <div className="item-content">
+                                    <div className="item-primary">{att.fileName}</div>
+                                    <div className="item-secondary">
+                                      Ajouté le {new Date(att.uploadedAt).toLocaleString('fr-FR')}
+                                    </div>
+                                  </div>
+                                  <div className="item-actions">
+                                    <button 
+                                      className="btn-icon btn-download" 
+                                      onClick={() => handleDownloadAttachment(att.attachmentId, att.fileName)}
+                                    >
+                                      <FileText size={16} />
+                                    </button>
+                                    <button 
+                                      className="btn-icon btn-delete" 
+                                      onClick={() => handleDeleteAttachment(att.attachmentId)}
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="empty-notice">
+                              Aucune pièce jointe
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
-        ))
+              </div>
+            );
+          })}
+        </div>
       )}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, mb: 5 }}>
-        <Button startIcon={<ArrowBack />} onClick={onBack}>Textes Applicables</Button>
-        <Box>
-          <Button startIcon={<Save />} onClick={handleSaveToHistory} sx={{ mr: 1 }}>
+      
+      <div className="footer-actions">
+        <button className="btn-secondary" onClick={onBack}>
+          <ArrowLeft size={16} />
+          Textes Applicables
+        </button>
+        <div className="right-actions">
+          <button className="btn-secondary" onClick={handleSaveToHistory}>
+            <Save size={16} />
             Enregistrer dans l'Historique
-          </Button>
-          <Button startIcon={<Print />} onClick={handleExportPdf} sx={{ mr: 1 }}>
+          </button>
+          <button className="btn-secondary" onClick={handleExportPdf}>
+            <Printer size={16} />
             Exporter en PDF
-          </Button>
-          <Button endIcon={<ArrowForward />} color="primary" onClick={() => navigate(`/company/action-plan?textId=${textId}`)}>
+          </button>
+          <button className="btn-primary" onClick={() => navigate(`/company/action-plan?textId=${textId}`)}>
             Plan d'Action
-          </Button>
-        </Box>
-      </Box>
-      <Dialog open={observationDialog.open} onClose={() => setObservationDialog({ ...observationDialog, open: false })}>
-        <DialogTitle>Ajouter une Observation</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="observation"
-            label="Contenu de l'Observation"
-            fullWidth
-            multiline
-            rows={4}
-            value={observationDialog.content}
-            onChange={(e) => setObservationDialog({ ...observationDialog, content: e.target.value })}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setObservationDialog({ ...observationDialog, open: false })}>Annuler</Button>
-          <Button onClick={handleAddObservation} variant="contained">Ajouter</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={monitoringDialog.open} onClose={() => setMonitoringDialog({ ...monitoringDialog, open: false })}>
-        <DialogTitle>Ajouter un Paramètre de Suivi</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="parameterName"
-            label="Nom du Paramètre"
-            fullWidth
-            value={monitoringDialog.name}
-            onChange={(e) => setMonitoringDialog({ ...monitoringDialog, name: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            id="parameterValue"
-            label="Valeur du Paramètre"
-            fullWidth
-            value={monitoringDialog.value}
-            onChange={(e) => setMonitoringDialog({ ...monitoringDialog, value: e.target.value })}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMonitoringDialog({ ...monitoringDialog, open: false })}>Annuler</Button>
-          <Button onClick={handleAddMonitoring} variant="contained">Ajouter</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={fileDialog.open} onClose={() => setFileDialog({ ...fileDialog, open: false })}>
-        <DialogTitle>Importer un Fichier PDF</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <input
-              accept="application/pdf"
-              style={{ display: 'none' }}
-              id="raised-button-file"
-              type="file"
-              onChange={handleFileChange}
-            />
-            <label htmlFor="raised-button-file">
-              <Button variant="outlined" component="span">Sélectionner un Fichier</Button>
-            </label>
-            {fileDialog.file && (
-              <Typography variant="body2" sx={{ mt: 1 }}>Fichier sélectionné : {fileDialog.file.name}</Typography>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setFileDialog({ ...fileDialog, open: false })}>Annuler</Button>
-          <Button onClick={handleFileUpload} variant="contained" disabled={!fileDialog.file}>Importer</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+      
+      {/* Dialogs */}
+      {observationDialog.open && (
+        <div className="modal-overlay" onClick={() => setObservationDialog({ ...observationDialog, open: false })}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Ajouter une Observation</h3>
+            </div>
+            <div className="modal-content">
+              <div className="form-group">
+                <label>Contenu de l'Observation</label>
+                <textarea
+                  rows={4}
+                  value={observationDialog.content}
+                  onChange={(e) => setObservationDialog({ ...observationDialog, content: e.target.value })}
+                  placeholder="Saisir votre observation ici..."
+                  autoFocus
+                ></textarea>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn-secondary" 
+                onClick={() => setObservationDialog({ ...observationDialog, open: false })}
+              >
+                Annuler
+              </button>
+              <button 
+                className="btn-primary" 
+                onClick={handleAddObservation}
+              >
+                Ajouter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {monitoringDialog.open && (
+        <div className="modal-overlay" onClick={() => setMonitoringDialog({ ...monitoringDialog, open: false })}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Ajouter un Paramètre de Suivi</h3>
+            </div>
+            <div className="modal-content">
+              <div className="form-group">
+                <label>Nom du Paramètre</label>
+                <input
+                  type="text"
+                  value={monitoringDialog.name}
+                  onChange={(e) => setMonitoringDialog({ ...monitoringDialog, name: e.target.value })}
+                  placeholder="Entrer le nom du paramètre"
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label>Valeur du Paramètre</label>
+                <input
+                  type="text"
+                  value={monitoringDialog.value}
+                  onChange={(e) => setMonitoringDialog({ ...monitoringDialog, value: e.target.value })}
+                  placeholder="Entrer la valeur du paramètre"
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn-secondary" 
+                onClick={() => setMonitoringDialog({ ...monitoringDialog, open: false })}
+              >
+                Annuler
+              </button>
+              <button 
+                className="btn-primary" 
+                onClick={handleAddMonitoring}
+              >
+                Ajouter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {fileDialog.open && (
+        <div className="modal-overlay" onClick={() => setFileDialog({ ...fileDialog, open: false })}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Importer un Fichier PDF</h3>
+            </div>
+            <div className="modal-content">
+              <div className="file-upload">
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+                <label htmlFor="file-upload" className="file-upload-btn">
+                  Sélectionner un Fichier
+                </label>
+                {fileDialog.file && (
+                  <p className="file-name">Fichier sélectionné : {fileDialog.file.name}</p>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn-secondary" 
+                onClick={() => setFileDialog({ ...fileDialog, open: false })}
+              >
+                Annuler
+              </button>
+              <button 
+                className="btn-primary" 
+                onClick={handleFileUpload}
+                disabled={!fileDialog.file}
+              >
+                Importer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

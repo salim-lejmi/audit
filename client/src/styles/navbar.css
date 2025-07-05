@@ -1,3 +1,22 @@
+/* src/styles/navbar.css */
+
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  padding-top: 64px;
+  min-height: calc(100vh - 64px - 49px); /* 64px navbar + 49px footer */
+}
+@media (max-width: 576px) {
+  .content {
+    padding-top: 56px;
+    min-height: calc(100vh - 56px - 37px); /* 56px navbar + 37px footer on mobile */
+  }
+}
 /* Modern Navbar Styles */
 .navbar {
   background-color: #ffffff;
@@ -24,21 +43,33 @@
 .navbar-left {
   display: flex;
   align-items: center;
+  height: 100%; /* Ensure left section takes full height to align logo */
 }
 
 .navbar-brand {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #2563eb;
+  /* Removed font styles as logo is an image */
+  color: #2563eb; /* Keep color for potential hover effects or if text is ever re-added */
   text-decoration: none;
   display: flex;
   align-items: center;
+  height: 100%; /* Ensure brand link takes full height for vertical alignment */
   transition: color 0.2s ease;
 }
 
 .navbar-brand:hover {
   color: #1d4ed8;
 }
+
+/* Logo specific styles */
+.navbar-logo {
+  height: 44px; /* Base height for desktop */
+  width: auto; /* Maintain aspect ratio */
+  max-width: 100%; /* Ensure it doesn't overflow its container */
+  vertical-align: middle; /* Align with other inline elements if any */
+  padding: 5px 0; /* Add some vertical padding to fit within 64px navbar */
+  box-sizing: border-box; /* Include padding in the element's total width and height */
+}
+
 
 /* Navbar Center Section */
 .navbar-center {
@@ -251,11 +282,11 @@
   .nav-label {
     display: inline;
   }
-  
+
   .navbar-right {
     gap: 12px;
   }
-  
+
   .nav-button {
     padding: 8px 12px;
   }
@@ -265,7 +296,7 @@
   .navbar-center {
     padding: 0 10px;
   }
-  
+
   .domain-selector span {
     display: none;
   }
@@ -275,15 +306,15 @@
   .navbar-container {
     padding: 0 16px;
   }
-  
+
   .search-input {
     width: 150px;
   }
-  
+
   .domain-selector {
     gap: 6px;
   }
-  
+
   .domain-select {
     padding: 6px 10px;
     font-size: 0.8rem;
@@ -292,25 +323,30 @@
 
 @media (max-width: 576px) {
   .navbar {
-    height: 56px;
+    height: 56px; /* Navbar height on mobile */
   }
-  
+
+  .navbar-logo {
+    height: 30px; /* Adjust logo height for mobile navbar */
+    padding: 3px 0; /* Adjust padding for mobile */
+  }
+
   .navbar-center {
     display: none;
   }
-  
+
   .search-input {
     width: 120px;
   }
-  
+
   .nav-button {
     padding: 6px 8px;
   }
-  
+
   .navbar-right {
     gap: 4px;
   }
-  
+
   .content {
     padding-top: 56px;
   }

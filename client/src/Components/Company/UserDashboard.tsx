@@ -15,10 +15,27 @@ interface UserInfo {
   createdAt: string;
 }
 
+interface ActionTip {
+  actionId: number;
+  description: string;
+  analysis: {
+    priority_level: string;
+    risk_assessment: string;
+    recommended_tips: string[];
+    estimated_effort: string;
+    suggested_timeline: string;
+    compliance_areas?: string[];
+    key_stakeholders?: string[];
+    success_metrics?: string[];
+  };
+}
+
 const UserDashboard: React.FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [actionTips, setActionTips] = useState<ActionTip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [loadingTips, setLoadingTips] = useState(false);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -26,6 +43,9 @@ const UserDashboard: React.FC = () => {
         const response = await axios.get('/api/company/user-dashboard-info');
         setUserInfo(response.data);
         setLoading(false);
+        
+        // Fetch AI tips for user's actions
+        await fetchActionTips();
       } catch (error) {
         setError('Échec du chargement des informations utilisateur');
         setLoading(false);
@@ -35,6 +55,52 @@ const UserDashboard: React.FC = () => {
 
     fetchUserInfo();
   }, []);
+
+  const fetchActionTips = async () => {
+    try {
+      setLoadingTips(true);
+      // Get user's recent actions
+      const actionsResponse = await axios.get('/api/action-plan?pageSize=5');
+      
+      if (actionsResponse.data.actions && actionsResponse.data.actions.length > 0) {
+        const tips: ActionTip[] = [];
+        
+        // Get tips for each action
+        for (const action of actionsResponse.data.actions.slice(0, 3)) { // Limit to 3 most recent
+          try {
+            const tipsResponse = await axios.get(`/api/action-plan/${action.actionId}/tips`);
+            if (tipsResponse.data.success && tipsResponse.data.tips && tipsResponse.data.tips.analysis) {
+              tips.push({
+                actionId: action.actionId,
+                description: action.description,
+                analysis: tipsResponse.data.tips.analysis
+              });
+            }
+          } catch (tipError) {
+            console.error(`Error fetching tips for action ${action.actionId}:`, tipError);
+          }
+        }
+        
+        setActionTips(tips);
+      }
+    } catch (error) {
+      console.error('Error fetching action tips:', error);
+    } finally {
+      setLoadingTips(false);
+    }
+  };
+
+  // Helper function to safely get priority level class
+  const getPriorityClass = (priority: string) => {
+    if (!priority) return 'medium';
+    return priority.toLowerCase();
+  };
+
+  // Helper function to safely get status class
+  const getStatusClass = (status: string) => {
+    if (!status) return 'pending';
+    return status.toLowerCase();
+  };
 
   if (loading) {
     return <div className="loading-container">Chargement du tableau de bord...</div>;
@@ -93,7 +159,7 @@ const UserDashboard: React.FC = () => {
                 </div>
                 <div className="info-item">
                   <span className="info-label">Statut :</span>
-                  <span className={`status-badge ${userInfo?.status?.toLowerCase() || ''}`}>
+                  <span className={`status-badge ${getStatusClass(userInfo?.status || '')}`}>
                     {userInfo?.status}
                   </span>
                 </div>
@@ -103,6 +169,73 @@ const UserDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* AI-Powered Tips Section */}
+        <div className="overview-card">
+          <div className="card-header">
+            <h5>
+              <i className="fas fa-robot" style={{ marginRight: '8px', color: '#007bff' }}></i>
+              Conseils IA pour vos Actions
+            </h5>
+          </div>
+          <div className="card-body">
+            {loadingTips ? (
+              <div className="loading-tips">
+                <i className="fas fa-spinner fa-spin"></i> Analyse en cours...
+              </div>
+            ) : actionTips.length > 0 ? (
+              <div className="tips-grid">
+                {actionTips.map((tip, index) => (
+                  <div key={tip.actionId} className="tip-card">
+                    <div className="tip-header">
+                      <span className={`priority-badge ${getPriorityClass(tip.analysis.priority_level)}`}>
+                        {tip.analysis.priority_level || 'Medium'}
+                      </span>
+                      <span className="effort-badge">
+                        {tip.analysis.estimated_effort || 'Medium'} effort
+                      </span>
+                    </div>
+                    <div className="tip-content">
+                      <h6>{tip.description && tip.description.length > 50 ? `${tip.description.substring(0, 50)}...` : tip.description}</h6>
+                      <p className="risk-assessment">{tip.analysis.risk_assessment || 'Analyse en cours...'}</p>
+                      
+                      {tip.analysis.recommended_tips && tip.analysis.recommended_tips.length > 0 && (
+                        <div className="recommended-tips">
+                          <strong>Conseils recommandés:</strong>
+                          <ul>
+                            {tip.analysis.recommended_tips.slice(0, 3).map((tipText, i) => (
+                              <li key={i}>{tipText}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <div className="timeline">
+                        <strong>Délai suggéré:</strong> {tip.analysis.suggested_timeline || '2-4 semaines'}
+                      </div>
+                      
+                      {tip.analysis.compliance_areas && tip.analysis.compliance_areas.length > 0 && (
+                        <div className="compliance-areas">
+                          <strong>Domaines de conformité:</strong>
+                          <div className="areas-tags">
+                            {tip.analysis.compliance_areas.map((area, i) => (
+                              <span key={i} className="area-tag">{area}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-tips">
+                <i className="fas fa-info-circle"></i>
+                <p>Aucune action récente à analyser. Vos prochaines actions assignées apparaîtront ici avec des conseils IA.</p>
+              </div>
+            )}
           </div>
         </div>
 

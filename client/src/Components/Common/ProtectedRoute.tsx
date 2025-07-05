@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, Navigate, useNavigate }from 'react-router-dom';
 import axios from 'axios';
-import Navbar from '../shared/navbar'; // Ensure this path is correct
+import Navbar from '../shared/navbar';
+import Footer from '../shared/Footer'; // Add this import
 
 interface ProtectedRouteProps {
-  role: string; // This 'role' prop defines the access requirement for the route group
+  role: string;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ role }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState(''); // This is the actual role of the logged-in user
+  const [userRole, setUserRole] = useState('');
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -61,12 +62,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ role }) => {
   }
   
   return (
-    <>
+    <div className="app-layout">
       <Navbar userRole={userRole} />
-      <main className="content"> {}
+      <main className="content">
         <Outlet />
       </main>
-    </>
+      <Footer />
+    </div>
   );
 };
 

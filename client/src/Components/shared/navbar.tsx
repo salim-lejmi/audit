@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import NotificationDropdown from '../Notifications/NotificationDropdown';
 import '../../styles/navbar.css';
+import logo from '../../../public/logo.jpg'; 
 
 interface NavbarProps {
   userRole?: string; // e.g., 'SuperAdmin', 'SubscriptionManager', 'User'
@@ -94,17 +95,24 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
   };
 
   return (
-    <nav className="navbar">
+   <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-left">
           {userRole === 'SuperAdmin' ? (
-            <Link to="/admin/dashboard" className="navbar-brand">Prévention Plus</Link>
+            <Link to="/admin/dashboard" className="navbar-brand">
+              <img src={logo} alt="Prévention Plus Logo" className="navbar-logo" />
+            </Link>
           ) : userRole === 'SubscriptionManager' ? (
-            <Link to="/company/dashboard" className="navbar-brand">Prévention Plus</Link>
+            <Link to="/company/dashboard" className="navbar-brand">
+              <img src={logo} alt="Prévention Plus Logo" className="navbar-logo" />
+            </Link>
           ) : (
-            <Link to="/user/dashboard" className="navbar-brand">Prévention Plus</Link>
+            <Link to="/user/dashboard" className="navbar-brand">
+              <img src={logo} alt="Prévention Plus Logo" className="navbar-logo" />
+            </Link>
           )}
         </div>
+
 
         <div className="navbar-right">
           {/* Quotes link - replacing dashboard */}

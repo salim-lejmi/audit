@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Modal, Button } from 'react-bootstrap';
-import '../../styles/revueDirection.css';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Search, 
+  Filter, 
+  RefreshCw, 
+  Plus, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  FileText,
+  Calendar,
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronsLeft, 
+  ChevronsRight 
+} from 'lucide-react';
+import '../../styles/RevueDirection.css';
 
 interface Review {
   revueId: number;
@@ -19,107 +33,160 @@ interface Domain {
   name: string;
 }
 
-interface RevueDeDirectionPageProps {
-  userRole?: string;
+interface ReviewFilters {
+  domainId: number | null;
+  reviewDate: string;
 }
 
-const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
+const RevueDeDirectionPage: React.FC = () => {
+  const navigate = useNavigate();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
-  const [filterDomainId, setFilterDomainId] = useState<number | null>(null);
-  const [filterLastReviewDate, setFilterLastReviewDate] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newReview, setNewReview] = useState({ domainId: 0, reviewDate: '' });
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editReview, setEditReview] = useState<Review | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [pageSize] = useState<number>(10);
   const [userRole, setUserRole] = useState<string>('');
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [newReview, setNewReview] = useState({ domainId: 0, reviewDate: '' });
+  const [editReview, setEditReview] = useState<Review | null>(null);
+  
+  const [filters, setFilters] = useState<ReviewFilters>({
+    domainId: null,
+    reviewDate: '',
+  });
 
   useEffect(() => {
-    const verifyAuth = async () => {
+    const checkAuth = async () => {
       try {
         const response = await axios.get('/api/auth/verify');
         setUserRole(response.data.role);
-      } catch (err) {
-        console.error('Failed to verify auth:', err);
+      } catch {
+        navigate('/', { replace: true });
       }
     };
-    
-    verifyAuth();
-    
-    axios.get('/api/taxonomy/domains')
-      .then(response => setDomains(response.data))
-      .catch(err => setError('Échec du chargement des domaines'));
-  }, []);
 
-  useEffect(() => {
-    fetchReviews();
-  }, [filterDomainId, filterLastReviewDate]);
+    checkAuth();
+    loadDomains();
+    loadReviews();
+  }, [navigate, currentPage]);
 
-  const fetchReviews = () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (filterDomainId) params.append('domainId', filterDomainId.toString());
-    if (filterLastReviewDate) params.append('lastReviewDate', filterLastReviewDate);
-
-    axios.get(`/api/revue?${params.toString()}`)
-      .then(response => {
-        setReviews(response.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setError('Échec du chargement des revues');
-        setLoading(false);
-      });
+  const loadDomains = async () => {
+    try {
+      const response = await axios.get('/api/taxonomy/domains');
+      setDomains(response.data);
+    } catch (err) {
+      console.error('Erreur lors du chargement des domaines:', err);
+    }
   };
 
-  const handleCreateReview = () => {
+  const loadReviews = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams();
+      if (filters.domainId) params.append('domainId', filters.domainId.toString());
+      if (filters.reviewDate) params.append('lastReviewDate', filters.reviewDate);
+      params.append('page', currentPage.toString());
+      params.append('pageSize', pageSize.toString());
+
+      const response = await axios.get(`/api/revue?${params.toString()}`);
+      setReviews(response.data);
+      setTotalCount(response.data.length);
+      setTotalPages(Math.ceil(response.data.length / pageSize));
+    } catch (err) {
+      setError('Échec du chargement des revues. Veuillez réessayer plus tard.');
+      console.error('Erreur lors du chargement des revues:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFilterChange = (name: keyof ReviewFilters, value: string | number | null) => {
+    setFilters({
+      ...filters,
+      [name]: value
+    });
+  };
+
+  const applyFilters = () => {
+    setCurrentPage(1);
+    loadReviews();
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      domainId: null,
+      reviewDate: '',
+    });
+    setCurrentPage(1);
+    loadReviews();
+  };
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleCreateReview = async () => {
     if (newReview.domainId === 0 || !newReview.reviewDate) {
       alert('Veuillez sélectionner un domaine et définir une date de revue');
       return;
     }
-    axios.post('/api/revue', newReview)
-      .then(() => {
-        setShowCreateModal(false);
-        setNewReview({ domainId: 0, reviewDate: '' });
-        fetchReviews();
-      })
-      .catch(err => {
-        console.error('Create review error:', err);
-        if (err.response) {
-          alert(`Échec de la création de la revue : ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
-        } else if (err.request) {
-          alert('Échec de la création de la revue : aucune réponse du serveur');
-        } else {
-          alert(`Échec de la création de la revue : ${err.message}`);
-        }
-      });
+    
+    try {
+      await axios.post('/api/revue', newReview);
+      setShowCreateModal(false);
+      setNewReview({ domainId: 0, reviewDate: '' });
+      loadReviews();
+    } catch (err) {
+      console.error('Create review error:', err);
+      if (err.response) {
+        alert(`Échec de la création de la revue : ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
+      } else if (err.request) {
+        alert('Échec de la création de la revue : aucune réponse du serveur');
+      } else {
+        alert(`Échec de la création de la revue : ${err.message}`);
+      }
+    }
   };
 
-  const handleEditReview = () => {
-    if (!editReview || editReview.domainId === 0 || !editReview.reviewDate) {
-      alert('Veuillez sélectionner un domaine et définir une date de revue');
+  const handleEditReview = async () => {
+    if (!editReview || !editReview.reviewDate) {
+      alert('Veuillez définir une date de revue');
       return;
     }
-    axios.put(`/api/revue/${editReview.revueId}`, {
-      reviewDate: editReview.reviewDate,
-      status: editReview.status
-    })
-      .then(() => {
-        setShowEditModal(false);
-        setEditReview(null);
-        fetchReviews();
-      })
-      .catch(err => alert('Échec de la mise à jour de la revue'));
+    
+    try {
+      await axios.put(`/api/revue/${editReview.revueId}`, {
+        reviewDate: editReview.reviewDate,
+        status: editReview.status
+      });
+      setShowEditModal(false);
+      setEditReview(null);
+      loadReviews();
+    } catch (err) {
+      alert('Échec de la mise à jour de la revue');
+      console.error('Update review error:', err);
+    }
   };
 
-  const handleDeleteReview = (id: number) => {
+  const handleDeleteReview = async (id: number) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette revue ?')) return;
-    axios.delete(`/api/revue/${id}`)
-      .then(() => fetchReviews())
-      .catch(err => alert('Échec de la suppression de la revue'));
+    
+    try {
+      await axios.delete(`/api/revue/${id}`);
+      loadReviews();
+    } catch (err) {
+      alert('Échec de la suppression de la revue');
+      console.error('Delete review error:', err);
+    }
   };
 
   const canCreateDelete = () => {
@@ -130,173 +197,308 @@ const RevueDeDirectionPage: React.FC<RevueDeDirectionPageProps> = () => {
     return userRole === 'SubscriptionManager' || userRole === 'Auditor';
   };
 
-  return (
-    <div className="revue-page">
-      <h2 className="text-2xl font-bold mb-4">Revue de Direction</h2>
-      <div className="filters flex space-x-4 mb-4">
-        <select
-          value={filterDomainId || ''}
-          onChange={e => setFilterDomainId(e.target.value ? parseInt(e.target.value) : null)}
-          className="p-2 border rounded"
-        >
-          <option value="">Tous les domaines</option>
-          {domains.map(domain => (
-            <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={filterLastReviewDate}
-          onChange={e => setFilterLastReviewDate(e.target.value)}
-          className="p-2 border rounded"
-        />
-        <button onClick={fetchReviews} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-          Appliquer les filtres
-        </button>
-      </div>
-      
-      {loading ? (
-        <p>Chargement...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : (
-        <table className="revue-table w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="p-2">ID</th>
-              <th className="p-2">Domaine</th>
-              <th className="p-2">Date de revue</th>
-              <th className="p-2">Statut</th>
-              <th className="p-2">Créé le</th>
-              <th className="p-2">PDF</th>
-              <th className="p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reviews.map(review => (
-              <tr key={review.revueId} className="border-b">
-                <td className="p-2">{review.revueId}</td>
-                <td className="p-2">{review.domainName}</td>
-                <td className="p-2">{new Date(review.reviewDate).toLocaleDateString('fr-FR')}</td>
-                <td className="p-2">{review.status}</td>
-                <td className="p-2">{new Date(review.createdAt).toLocaleDateString('fr-FR')}</td>
-                <td className="p-2">
-                  {review.pdfFilePath ? (
-                    <a href={review.pdfFilePath} download className="text-blue-500">Télécharger</a>
-                  ) : 'N/A'}
-                </td>
-                <td className="p-2">
-                  <div className="action-buttons">
-                    <Link to={`${review.revueId}`} className="action-btn view">Voir</Link>
-                    {canEdit() && (userRole === 'SubscriptionManager') && (
-                      <button
-                        onClick={() => { setEditReview(review); setShowEditModal(true); }}
-                        className="action-btn edit"
-                      >
-                        Modifier
-                      </button>
-                    )}
-                    {canCreateDelete() && (
-                      <button
-                        onClick={() => handleDeleteReview(review.revueId)}
-                        className="action-btn delete"
-                      >
-                        Supprimer
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      
-      {canCreateDelete() && (
-        <button
-          className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          onClick={() => setShowCreateModal(true)}
-        >
-          + Créer une nouvelle revue
-        </button>
-      )}
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR');
+  };
 
-      {canCreateDelete() && (
-        <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Créer une nouvelle revue</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium">Domaine</label>
-                <select
-                  value={newReview.domainId}
-                  onChange={e => setNewReview({ ...newReview, domainId: parseInt(e.target.value) })}
-                  className="w-full p-2 border rounded"
+  return (
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <h1>Revue de Direction</h1>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="controls-section">
+        <div className="search-row">
+          <div className="search-box">
+            <Search className="search-icon" size={20} />
+            <input 
+              type="text" 
+              placeholder="Rechercher une revue..." 
+              value=""
+              onChange={() => {}}
+              disabled
+            />
+          </div>
+          <button 
+            className={`btn-filter ${showFilters ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={18} />
+            Filtres
+          </button>
+          <div className="header-actions">
+            {canCreateDelete() && (
+              <button 
+                className="btn-primary"
+                onClick={() => setShowCreateModal(true)}
+              >
+                <Plus size={18} />
+                Nouvelle revue
+              </button>
+            )}
+          </div>
+        </div>
+
+        {showFilters && (
+          <div className="filters-panel">
+            <div className="filters-header">
+              <h3>Filtres avancés</h3>
+              <button className="btn-reset" onClick={resetFilters}>
+                <RefreshCw size={16} />
+                Réinitialiser
+              </button>
+            </div>
+            
+            <div className="filters-grid">
+              <div className="form-group">
+                <label>Domaine</label>
+                <select 
+                  value={filters.domainId || ''}
+                  onChange={(e) => handleFilterChange('domainId', e.target.value ? Number(e.target.value) : null)}
                 >
-                  <option value={0}>Sélectionner un domaine</option>
-                  {domains.map(domain => (
+                  <option value="">Tous les domaines</option>
+                  {domains.map((domain) => (
                     <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Date de revue</label>
-                <input
-                  type="date"
-                  value={newReview.reviewDate}
-                  onChange={e => setNewReview({ ...newReview, reviewDate: e.target.value })}
-                  className="w-full p-2 border rounded"
+              
+              <div className="form-group">
+                <label>Date de revue</label>
+                <input 
+                  type="date" 
+                  value={filters.reviewDate} 
+                  onChange={(e) => handleFilterChange('reviewDate', e.target.value)}
                 />
               </div>
             </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Fermer</Button>
-            <Button variant="primary" onClick={handleCreateReview}>Créer</Button>
-          </Modal.Footer>
-        </Modal>
-      )}
+            
+            <div className="filters-actions">
+              <button className="btn-apply" onClick={applyFilters}>
+                Appliquer les filtres
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {canEdit() && (
-        <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Modifier la revue</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {editReview && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium">Domaine</label>
-                  <select
-                    value={editReview.domainId}
-                    onChange={e => setEditReview({ ...editReview, domainId: parseInt(e.target.value) })}
-                    className="w-full p-2 border rounded"
-                    disabled
-                  >
-                    {domains.map(domain => (
-                      <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium">Date de revue</label>
+      {/* Results */}
+      <div className="results-section">
+        <div className="results-info">
+          {totalCount > 0 ? `${totalCount} revue${totalCount > 1 ? 's' : ''} trouvée${totalCount > 1 ? 's' : ''}` : 'Aucun résultat'}
+        </div>
+        
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Chargement...</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <p>{error}</p>
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="empty-state">
+            <p>Aucune revue trouvée</p>
+          </div>
+        ) : (
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Domaine</th>
+                    <th>Date de revue</th>
+                    <th>Statut</th>
+                    <th>Créé le</th>
+                    <th>PDF</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reviews.map((review) => (
+                    <tr key={review.revueId}>
+                      <td>{review.revueId}</td>
+                      <td>{review.domainName}</td>
+                      <td>{formatDate(review.reviewDate)}</td>
+                      <td>
+                        <span className={`status-badge status-${review.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {review.status}
+                        </span>
+                      </td>
+                      <td>{formatDate(review.createdAt)}</td>
+                      <td>
+                        {review.pdfFilePath ? (
+                          <a 
+                            href={review.pdfFilePath} 
+                            download 
+                            className="pdf-link"
+                          >
+                            <FileText size={16} />
+                            Télécharger
+                          </a>
+                        ) : (
+                          <span className="no-pdf">N/A</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="actions-cell">
+                          <button 
+                            className="btn-action btn-view" 
+                            onClick={() => navigate(`${review.revueId}`)}
+                            title="Voir"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          {canEdit() && (userRole === 'SubscriptionManager') && (
+                            <button 
+                              className="btn-action btn-edit" 
+                              onClick={() => { setEditReview(review); setShowEditModal(true); }}
+                              title="Modifier"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          )}
+                          {canCreateDelete() && (
+                            <button 
+                              className="btn-action btn-delete" 
+                              onClick={() => handleDeleteReview(review.revueId)}
+                              title="Supprimer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft size={16} />
+                </button>
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(currentPage - 1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                <span className="page-info">
+                  Page {currentPage} sur {totalPages}
+                </span>
+                
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(currentPage + 1)} 
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(totalPages)} 
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight size={16} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Create Review Modal */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Créer une nouvelle revue</h2>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Domaine</label>
+                <select
+                  value={newReview.domainId}
+                  onChange={(e) => setNewReview({ ...newReview, domainId: parseInt(e.target.value) })}
+                >
+                  <option value={0}>Sélectionner un domaine</option>
+                  {domains.map((domain) => (
+                    <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Date de revue</label>
+                <div className="date-input-wrapper">
+                  <Calendar size={16} className="date-icon" />
                   <input
                     type="date"
-                    value={editReview.reviewDate.split('T')[0]}
-                    onChange={e => setEditReview({ ...editReview, reviewDate: e.target.value })}
-                    className="w-full p-2 border rounded"
+                    value={newReview.reviewDate}
+                    onChange={(e) => setNewReview({ ...newReview, reviewDate: e.target.value })}
                   />
                 </div>
               </div>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Fermer</Button>
-            <Button variant="primary" onClick={handleEditReview}>Enregistrer</Button>
-          </Modal.Footer>
-        </Modal>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowCreateModal(false)}>Annuler</button>
+              <button className="btn-primary" onClick={handleCreateReview}>Créer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Review Modal */}
+      {showEditModal && editReview && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Modifier la revue</h2>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Domaine</label>
+                <select
+                  value={editReview.domainId}
+                  disabled
+                >
+                  {domains.map((domain) => (
+                    <option key={domain.domainId} value={domain.domainId}>{domain.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Date de revue</label>
+                <div className="date-input-wrapper">
+                  <Calendar size={16} className="date-icon" />
+                  <input
+                    type="date"
+                    value={editReview.reviewDate.split('T')[0]}
+                    onChange={(e) => setEditReview({ ...editReview, reviewDate: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowEditModal(false)}>Annuler</button>
+              <button className="btn-primary" onClick={handleEditReview}>Enregistrer</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

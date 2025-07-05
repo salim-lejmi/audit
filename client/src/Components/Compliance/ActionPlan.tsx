@@ -1,27 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box, Container, Typography, Paper, Button, Grid, 
-  TextField, MenuItem, CircularProgress, 
-  IconButton, Chip, Tooltip, Dialog,
-  DialogTitle, DialogContent, DialogActions,
-  FormControl, InputLabel, Select, Slider,
-  Divider, LinearProgress, Alert
-} from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
 import { 
-  ArrowBack, Add, Delete, Edit, PictureAsPdf, 
-  FilterAlt, Search, Clear, ArrowForward, KeyboardReturn,
-  Close
-} from '@mui/icons-material';
+  ArrowLeft, ArrowRight, Filter, RefreshCw,
+  Search, X, Plus, Edit, Trash2, FileText, 
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
+  ArrowUp 
+} from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Action, Domain, Theme, SubTheme, User, ActionDialogState, TextRequirement
 } from '../shared/types';
 import dayjs from 'dayjs';
-import '../../styles/compliance.css';
-
-type StatusColor = 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+import '../../styles/compliance.css';  // Keep this for shared styles
+import '../../styles/actionplan.css'; // Add this new import for action-plan specific styles
 
 const ActionPlan: React.FC = () => {
   const navigate = useNavigate();
@@ -41,6 +32,7 @@ const ActionPlan: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [requirements, setRequirements] = useState<TextRequirement[]>([]);
   const [userRole, setUserRole] = useState<string>('');
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   
   const [filters, setFilters] = useState({
     domainId: '',
@@ -52,7 +44,6 @@ const ActionPlan: React.FC = () => {
     responsibleId: '',
     status: ''
   });
-  const [showFilters, setShowFilters] = useState<boolean>(false);
   
   const [actionDialog, setActionDialog] = useState<ActionDialogState>({
     open: false,
@@ -171,12 +162,7 @@ const ActionPlan: React.FC = () => {
     }
   };
   
-  const handleFilterChange = (
-    e: React.ChangeEvent<HTMLInputElement> | SelectChangeEvent<string>
-  ) => {
-    const name = e.target.name as string;
-    const value = e.target.value;
-    
+  const handleFilterChange = (name: string, value: string) => {
     setFilters(prev => ({ ...prev, [name]: value }));
     
     if (name === 'domainId') {
@@ -262,26 +248,7 @@ const ActionPlan: React.FC = () => {
     try {
       const { mode, actionId, textId, data } = actionDialog;
 
-      console.log('Soumission du dialogue d\'action:', {
-        mode,
-        actionId,
-        textId,
-        data,
-        isAuditor
-      });
-
       if (mode === 'create') {
-        console.log('Création d\'une action avec les données:', {
-          textId,
-          requirementId: data.requirementId,
-          description: data.description,
-          responsibleId: data.responsibleId,
-          deadline: data.deadline,
-          progress: data.progress,
-          effectiveness: data.effectiveness,
-          status: data.status
-        });
-
         await axios.post('/api/action-plan', {
           textId,
           requirementId: data.requirementId,
@@ -292,19 +259,8 @@ const ActionPlan: React.FC = () => {
           effectiveness: data.effectiveness,
           status: data.status
         });
-
       } else {
         if (isAuditor) {
-          console.log('Auditeur met à jour l\'action avec les données:', {
-            actionId,
-            description: data.description,
-            responsibleId: data.responsibleId,
-            deadline: data.deadline,
-            progress: data.progress,
-            effectiveness: data.effectiveness,
-            status: data.status
-          });
-
           await axios.put(`/api/action-plan/${actionId}`, {
             description: data.description,
             responsibleId: data.responsibleId,
@@ -313,18 +269,7 @@ const ActionPlan: React.FC = () => {
             effectiveness: data.effectiveness,
             status: data.status
           });
-
         } else {
-          console.log('Éditeur met à jour l\'action avec les données:', {
-            actionId,
-            description: data.description,
-            responsibleId: data.responsibleId,
-            deadline: data.deadline,
-            progress: data.progress,
-            effectiveness: data.effectiveness,
-            status: data.status
-          });
-
           await axios.put(`/api/action-plan/${actionId}`, {
             description: data.description,
             responsibleId: data.responsibleId,
@@ -340,15 +285,6 @@ const ActionPlan: React.FC = () => {
       fetchActions(currentPage);
     } catch (error: any) {
       console.error('Erreur lors de la sauvegarde de l\'action:', error);
-      if (error.response) {
-        console.error('Données de la réponse du serveur:', error.response.data);
-        console.error('Statut de la réponse du serveur:', error.response.status);
-        console.error('En-têtes de la réponse du serveur:', error.response.headers);
-      } else if (error.request) {
-        console.error('Aucune réponse reçue. La requête était:', error.request);
-      } else {
-        console.error('Erreur lors de la configuration de la requête:', error.message);
-      }
     }
   };
   
@@ -395,227 +331,193 @@ const ActionPlan: React.FC = () => {
     navigate('/company/statistics');
   };
 
-  const getStatusColor = (status: string): StatusColor => {
+  const getStatusClass = (status: string): string => {
     switch (status.toLowerCase()) {
-      case 'active': return 'primary';
-      case 'completed': return 'success';
-      case 'canceled': return 'error';
-      default: return 'default';
+      case 'active': return 'status-active';
+      case 'completed': return 'status-completed';
+      case 'canceled': return 'status-canceled';
+      default: return '';
     }
   };
   
   return (
-    <Container maxWidth="xl" className="compliance-container">
-      <Box sx={{ my: { xs: 2, md: 4 } }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          gutterBottom 
-          sx={{ fontSize: { xs: '1.5rem', md: '2rem' }, fontWeight: 600, mb: 3 }}
-        >
-          Plan d'Action
-        </Typography>
-        
-        <Paper elevation={0} sx={{ width: '100%', overflow: 'hidden', p: { xs: 2, md: 3 } }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            <Button startIcon={<ArrowBack />} onClick={handleNavigateToEvaluation}>
-              Évaluation de Conformité
-            </Button>
-            <Box>
-              <Button startIcon={<PictureAsPdf />} onClick={handleExportPdf} sx={{ mr: 1 }}>
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <h1>Plan d'Action</h1>
+      </div>
+
+      <div className="content-container">
+        <div className="main-panel">
+          {/* Top Actions */}
+          <div className="panel-header">
+         
+            <div className="header-actions">
+              <button className="btn-secondary" onClick={handleExportPdf}>
+                <FileText size={16} />
                 Exporter en PDF
-              </Button>
+              </button>
               {!isAuditor && (
-                <Button startIcon={<Add />} variant="contained" onClick={handleCreateAction}>
+                <button className="btn-primary" onClick={handleCreateAction}>
+                  <Plus size={16} />
                   Nouvelle Action
-                </Button>
+                </button>
               )}
-            </Box>
-          </Box>
+            </div>
+          </div>
           
-          <Box sx={{ mb: 3 }}>
-            <Button 
-              startIcon={showFilters ? <Clear /> : <FilterAlt />}
+          {/* Filters */}
+          <div className="filters-section">
+            <button 
+              className={`btn-filter ${showFilters ? 'active' : ''}`}
               onClick={() => setShowFilters(!showFilters)}
             >
+              {showFilters ? <X size={16} /> : <Filter size={16} />}
               {showFilters ? 'Masquer les Filtres' : 'Afficher les Filtres'}
-            </Button>
+            </button>
             
             {showFilters && (
-              <Grid container spacing={2} sx={{ mt: 2 }}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="domain-label">Domaine</InputLabel>
-                    <Select
-                      labelId="domain-label"
-                      id="domain-select"
-                      name="domainId"
-                      value={filters.domainId}
-                      label="Domaine"
-                      onChange={handleFilterChange}
-                    >
-                      <MenuItem value="">Tous</MenuItem>
-                      {Array.isArray(domains) ? domains.map(domain => (
-                        <MenuItem key={domain.domainId} value={domain.domainId}>
-                          {domain.name}
-                        </MenuItem>
-                      )) : null}
-                    </Select>
-                  </FormControl>
-                </Grid>
+              <div className="filters-panel">
+                <div className="filters-header">
+                  <h3>Filtres avancés</h3>
+                  <button className="btn-reset" onClick={handleClearFilters}>
+                    <RefreshCw size={16} />
+                    Réinitialiser
+                  </button>
+                </div>
                 
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="theme-label">Thème</InputLabel>
-                    <Select
-                      labelId="theme-label"
-                      id="theme-select"
-                      name="themeId"
+                <div className="filters-grid">
+                  <div className="form-group">
+                    <label>Domaine</label>
+                    <select 
+                      value={filters.domainId}
+                      onChange={(e) => handleFilterChange('domainId', e.target.value)}
+                    >
+                      <option value="">Tous</option>
+                      {domains.map(domain => (
+                        <option key={domain.domainId} value={domain.domainId.toString()}>
+                          {domain.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Thème</label>
+                    <select 
                       value={filters.themeId}
-                      label="Thème"
-                      onChange={handleFilterChange}
+                      onChange={(e) => handleFilterChange('themeId', e.target.value)}
                       disabled={!filters.domainId}
                     >
-                      <MenuItem value="">Tous</MenuItem>
+                      <option value="">Tous</option>
                       {themes.map(theme => (
-                        <MenuItem key={theme.themeId} value={theme.themeId}>
+                        <option key={theme.themeId} value={theme.themeId.toString()}>
                           {theme.name}
-                        </MenuItem>
+                        </option>
                       ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="subtheme-label">Sous-thème</InputLabel>
-                    <Select
-                      labelId="subtheme-label"
-                      id="subtheme-select"
-                      name="subThemeId"
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Sous-thème</label>
+                    <select 
                       value={filters.subThemeId}
-                      label="Sous-thème"
-                      onChange={handleFilterChange}
+                      onChange={(e) => handleFilterChange('subThemeId', e.target.value)}
                       disabled={!filters.themeId}
                     >
-                      <MenuItem value="">Tous</MenuItem>
+                      <option value="">Tous</option>
                       {subThemes.map(subTheme => (
-                        <MenuItem key={subTheme.subThemeId} value={subTheme.subThemeId}>
+                        <option key={subTheme.subThemeId} value={subTheme.subThemeId.toString()}>
                           {subTheme.name}
-                        </MenuItem>
+                        </option>
                       ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    id="nature"
-                    name="nature"
-                    label="Nature"
-                    value={filters.nature}
-                    onChange={handleFilterChange}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    id="publicationYear"
-                    name="publicationYear"
-                    label="Année de Publication"
-                    type="number"
-                    value={filters.publicationYear}
-                    onChange={handleFilterChange}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="responsible-label">Responsable</InputLabel>
-                    <Select
-                      labelId="responsible-label"
-                      id="responsible-select"
-                      name="responsibleId"
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Nature</label>
+                    <input 
+                      type="text"
+                      value={filters.nature}
+                      onChange={(e) => handleFilterChange('nature', e.target.value)}
+                      placeholder="Nature du texte"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Année de Publication</label>
+                    <input 
+                      type="number"
+                      value={filters.publicationYear}
+                      onChange={(e) => handleFilterChange('publicationYear', e.target.value)}
+                      placeholder="Année"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Responsable</label>
+                    <select 
                       value={filters.responsibleId}
-                      label="Responsable"
-                      onChange={handleFilterChange}
+                      onChange={(e) => handleFilterChange('responsibleId', e.target.value)}
                     >
-                      <MenuItem value="">Tous</MenuItem>
+                      <option value="">Tous</option>
                       {users.map(user => (
-                        <MenuItem key={user.userId} value={user.userId}>
+                        <option key={user.userId} value={user.userId.toString()}>
                           {user.name}
-                        </MenuItem>
+                        </option>
                       ))}
-                      <MenuItem value="null">Non Assigné</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel id="status-label">Statut</InputLabel>
-                    <Select
-                      labelId="status-label"
-                      id="status-select"
-                      name="status"
+                      <option value="null">Non Assigné</option>
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Statut</label>
+                    <select 
                       value={filters.status}
-                      label="Statut"
-                      onChange={handleFilterChange}
+                      onChange={(e) => handleFilterChange('status', e.target.value)}
                     >
-                      <MenuItem value="">Tous</MenuItem>
-                      <MenuItem value="active">Active</MenuItem>
-                      <MenuItem value="completed">Terminée</MenuItem>
-                      <MenuItem value="canceled">Annulée</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
+                      <option value="">Tous</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Terminée</option>
+                      <option value="canceled">Annulée</option>
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Mot-clé</label>
+                    <input 
+                      type="text"
+                      value={filters.keyword}
+                      onChange={(e) => handleFilterChange('keyword', e.target.value)}
+                      placeholder="Rechercher..."
+                    />
+                  </div>
+                </div>
                 
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    id="keyword"
-                    name="keyword"
-                    label="Mot-clé"
-                    value={filters.keyword}
-                    onChange={handleFilterChange}
-                  />
-                </Grid>
-                
-                <Grid item xs={12}>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                    <Button onClick={handleClearFilters}>Réinitialiser</Button>
-                    <Button 
-                      variant="contained" 
-                      startIcon={<Search />}
-                      onClick={handleApplyFilters}
-                    >
-                      Rechercher
-                    </Button>
-                  </Box>
-                </Grid>
-              </Grid>
+                <div className="filters-actions">
+                  <button className="btn-primary" onClick={handleApplyFilters}>
+                    <Search size={16} />
+                    Rechercher
+                  </button>
+                </div>
+              </div>
             )}
-          </Box>
+          </div>
           
-          <Divider sx={{ mb: 3 }} />
-          
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : actions.length === 0 ? (
-            <Typography variant="body1" sx={{ textAlign: 'center', my: 4 }}>
-              Aucune action trouvée. {!isAuditor && "Créez votre première action en cliquant sur \"Nouvelle Action\"."}
-            </Typography>
-          ) : (
-            <>
-              <Box sx={{ overflowX: 'auto' }}>
-                <table className="actions-table">
+          {/* Results */}
+          <div className="results-section">
+            {loading ? (
+              <div className="loading-state">
+                <div className="spinner"></div>
+                <p>Chargement des actions...</p>
+              </div>
+            ) : actions.length === 0 ? (
+              <div className="empty-state">
+                <p>Aucune action trouvée. {!isAuditor && "Créez votre première action en cliquant sur \"Nouvelle Action\"."}</p>
+              </div>
+            ) : (
+              <div className="table-container">
+                <table className="data-table">
                   <thead>
                     <tr>
                       <th>Référence</th>
@@ -636,353 +538,297 @@ const ActionPlan: React.FC = () => {
                         <td>{action.requirementTitle || '-'}</td>
                         <td>{action.description}</td>
                         <td>{action.responsibleName || 'Non Assigné'}</td>
-                        <td>
-                          <Tooltip title={`Créée le ${new Date(action.createdAt).toLocaleDateString('fr-FR')}`}>
-                            <span>{new Date(action.deadline).toLocaleDateString('fr-FR')}</span>
-                          </Tooltip>
+                        <td title={`Créée le ${new Date(action.createdAt).toLocaleDateString('fr-FR')}`}>
+                          {new Date(action.deadline).toLocaleDateString('fr-FR')}
                         </td>
                         <td>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={action.progress} 
-                              sx={{ flexGrow: 1, mr: 1 }}
-                            />
-                            <Typography variant="body2">{action.progress}%</Typography>
-                          </Box>
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill"
+                              style={{ width: `${action.progress}%` }}
+                            ></div>
+                            <span className="progress-text">{action.progress}%</span>
+                          </div>
                         </td>
                         <td>{action.effectiveness || '-'}</td>
                         <td>
-                          <Chip 
-                            label={action.status}
-                            size="small"
-                            color={getStatusColor(action.status)}
-                          />
+                          <span className={`status-badge ${getStatusClass(action.status)}`}>
+                            {action.status}
+                          </span>
                         </td>
                         <td>
-                          <IconButton 
-                            size="small" 
+                          <button 
+                            className="btn-action btn-view"
                             onClick={() => handleEditAction(action)}
-                            aria-label="Modifier"
+                            title="Modifier"
                           >
-                            <Edit fontSize="small" />
-                          </IconButton>
+                            <Edit size={16} />
+                          </button>
                           {!isAuditor && (
-                            <IconButton 
-                              size="small" 
+                            <button 
+                              className="btn-action btn-delete"
                               onClick={() => handleDeleteAction(action.actionId)}
-                              aria-label="Supprimer"
+                              title="Supprimer"
                             >
-                              <Delete fontSize="small" />
-                            </IconButton>
+                              <Trash2 size={16} />
+                            </button>
                           )}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </Box>
-              
-              {totalPages > 1 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button 
-                      disabled={currentPage === 1}
-                      onClick={() => handlePageChange(currentPage - 1)}
-                    >
-                      Précédent
-                    </Button>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      Page {currentPage} sur {totalPages}
-                    </Box>
-                    <Button 
-                      disabled={currentPage === totalPages}
-                      onClick={() => handlePageChange(currentPage + 1)}
-                    >
-                      Suivant
-                    </Button>
-                  </Box>
-                </Box>
-              )}
-            </>
-          )}
-        </Paper>
-        
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, mb: 5 }}>
-          <Button startIcon={<ArrowBack />} onClick={handleNavigateToEvaluation}>
-            Évaluation de Conformité
-          </Button>
-          <Button endIcon={<ArrowForward />} onClick={handleNavigateToStatistics}>
-            Statistiques
-          </Button>
-          <Button startIcon={<KeyboardReturn />} onClick={() => window.scrollTo(0, 0)}>
-            Haut de Page
-          </Button>
-        </Box>
-      </Box>
-      
-      {/* Modern Action Dialog */}
-      <Dialog 
-        open={actionDialog.open} 
-        onClose={() => setActionDialog(prev => ({ ...prev, open: false }))}
-        maxWidth="md"
-        fullWidth
-        className="modern-action-dialog"
-        PaperProps={{
-          sx: {
-            borderRadius: '16px',
-            boxShadow: '0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.20)'
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          pb: 1,
-          borderBottom: '1px solid #e0e0e0'
-        }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {actionDialog.mode === 'create' ? 'Créer une Nouvelle Action' : 
-             isAuditor ? 'Mettre à Jour le Statut de l\'Action' : 'Modifier une Action'}
-          </Typography>
-          <IconButton 
-            onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}
-            size="small"
-            sx={{ color: 'grey.500' }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pt: 3 }}>
-          {isAuditor && actionDialog.mode === 'edit' && (
-            <Alert severity="info" sx={{ mb: 3 }}>
-              En tant qu'auditeur, vous pouvez uniquement modifier la progression et le statut de cette action.
-            </Alert>
-          )}
+              </div>
+            )}
+            
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button 
+                  className="page-btn"
+                  onClick={() => handlePageChange(1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft size={16} />
+                </button>
+                <button 
+                  className="page-btn"
+                  onClick={() => handlePageChange(currentPage - 1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                <span className="page-info">
+                  Page {currentPage} sur {totalPages}
+                </span>
+                
+                <button 
+                  className="page-btn"
+                  onClick={() => handlePageChange(currentPage + 1)} 
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <button 
+                  className="page-btn"
+                  onClick={() => handlePageChange(totalPages)} 
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight size={16} />
+                </button>
+              </div>
+            )}
+          </div>
           
-          <Grid container spacing={3}>
-            {/* Requirement Selection - Only for creation and non-auditors */}
-            {actionDialog.mode === 'create' && actionDialog.textId && !isAuditor && (
-              <Grid item xs={12}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel id="requirement-label">Exigence</InputLabel>
-                  <Select
-                    labelId="requirement-label"
-                    id="requirement-select"
+          {/* Footer Actions */}
+          <div className="footer-actions">
+            <button className="btn-secondary" onClick={handleNavigateToEvaluation}>
+              <ArrowLeft size={16} />
+              Évaluation de Conformité
+            </button>
+            <button className="btn-secondary" onClick={handleNavigateToStatistics}>
+              Statistiques
+              <ArrowRight size={16} />
+            </button>
+          
+          </div>
+        </div>
+      </div>
+      
+      {/* Action Dialog */}
+      {actionDialog.open && (
+        <div className="modal-overlay" onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                {actionDialog.mode === 'create' ? 'Créer une Nouvelle Action' : 
+                isAuditor ? 'Mettre à Jour le Statut de l\'Action' : 'Modifier une Action'}
+              </h3>
+              <button 
+                className="btn-icon"
+                onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="modal-content">
+              {isAuditor && actionDialog.mode === 'edit' && (
+                <div className="info-alert">
+                  En tant qu'auditeur, vous pouvez uniquement modifier la progression et le statut de cette action.
+                </div>
+              )}
+              
+              {/* Requirement Selection - Only for creation and non-auditors */}
+              {actionDialog.mode === 'create' && actionDialog.textId && !isAuditor && (
+                <div className="form-group">
+                  <label>Exigence</label>
+                  <select
                     value={actionDialog.data.requirementId || ''}
-                    label="Exigence"
                     onChange={(e) => handleActionDialogChange('requirementId', e.target.value)}
                   >
-                    <MenuItem value="">Aucune</MenuItem>
+                    <option value="">Aucune</option>
                     {requirements.map(req => (
-                      <MenuItem key={req.requirementId} value={req.requirementId}>
+                      <option key={req.requirementId} value={req.requirementId}>
                         {req.number} - {req.title}
-                      </MenuItem>
+                      </option>
                     ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            )}
-            
-            {/* Read-only requirement for edit mode */}
-            {actionDialog.mode === 'edit' && actionDialog.data.requirementId && (
-              <Grid item xs={12}>
-                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Exigence
-                  </Typography>
-                  <Typography variant="body1">
+                  </select>
+                </div>
+              )}
+              
+              {/* Read-only requirement for edit mode */}
+              {actionDialog.mode === 'edit' && actionDialog.data.requirementId && (
+                <div className="readonly-field">
+                  <div className="field-label">Exigence</div>
+                  <div className="field-value">
                     {requirements.find(r => r.requirementId === actionDialog.data.requirementId)?.title || '-'}
-                  </Typography>
-                </Box>
-              </Grid>
-            )}
-            
-            {/* Description - Read-only for auditors in edit mode */}
-            <Grid item xs={12}>
-              {isAuditor && actionDialog.mode === 'edit' ? (
-                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Description de l'Action
-                  </Typography>
-                  <Typography variant="body1">{actionDialog.data.description}</Typography>
-                </Box>
-              ) : (
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  id="description"
-                  label="Description de l'Action"
-                  value={actionDialog.data.description}
-                  onChange={(e) => handleActionDialogChange('description', e.target.value)}
-                  required
-                  variant="outlined"
-                />
+                  </div>
+                </div>
               )}
-            </Grid>
-            
-            {/* Responsible and Deadline - Read-only for auditors */}
-            <Grid item xs={12} sm={6}>
+              
+              {/* Description - Read-only for auditors in edit mode */}
               {isAuditor && actionDialog.mode === 'edit' ? (
-                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Responsable
-                  </Typography>
-                  <Typography variant="body1">
-                    {users.find(u => u.userId === actionDialog.data.responsibleId)?.name || 'Non Assigné'}
-                  </Typography>
-                </Box>
+                <div className="readonly-field">
+                  <div className="field-label">Description de l'Action</div>
+                  <div className="field-value">{actionDialog.data.description}</div>
+                </div>
               ) : (
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel id="responsible-dialog-label">Responsable</InputLabel>
-                  <Select
-                    labelId="responsible-dialog-label"
-                    id="responsible-dialog-select"
-                    value={actionDialog.data.responsibleId || ''}
-                    label="Responsable"
-                    onChange={(e) => handleActionDialogChange('responsibleId', e.target.value === '' ? null : e.target.value)}
+                <div className="form-group">
+                  <label>Description de l'Action</label>
+                  <textarea
+                    rows={3}
+                    value={actionDialog.data.description}
+                    onChange={(e) => handleActionDialogChange('description', e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+              
+              {/* Responsible and Deadline - Read-only for auditors */}
+              <div className="form-row">
+                {isAuditor && actionDialog.mode === 'edit' ? (
+                  <div className="readonly-field">
+                    <div className="field-label">Responsable</div>
+                    <div className="field-value">
+                      {users.find(u => u.userId === actionDialog.data.responsibleId)?.name || 'Non Assigné'}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <label>Responsable</label>
+                    <select
+                      value={actionDialog.data.responsibleId || ''}
+                      onChange={(e) => handleActionDialogChange('responsibleId', e.target.value === '' ? null : parseInt(e.target.value))}
+                    >
+                      <option value="">Sélectionner un Responsable</option>
+                      {users.map(user => (
+                        <option key={user.userId} value={user.userId}>
+                          {user.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {isAuditor && actionDialog.mode === 'edit' ? (
+                  <div className="readonly-field">
+                    <div className="field-label">Date d'Échéance</div>
+                    <div className="field-value">
+                      {new Date(actionDialog.data.deadline).toLocaleDateString('fr-FR')}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <label>Date d'Échéance</label>
+                    <input
+                      type="date"
+                      value={actionDialog.data.deadline}
+                      onChange={(e) => handleActionDialogChange('deadline', e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Progress - Editable for everyone */}
+              <div className="form-group">
+                <label>Progression: {actionDialog.data.progress}%</label>
+                <div className="progress-slider">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={actionDialog.data.progress}
+                    onChange={(e) => handleActionDialogChange('progress', parseInt(e.target.value))}
+                    className="slider"
+                  />
+                  <div className="slider-marks">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="form-row">
+                {/* Effectiveness - Read-only for auditors */}
+                {isAuditor && actionDialog.mode === 'edit' ? (
+                  <div className="readonly-field">
+                    <div className="field-label">Efficacité</div>
+                    <div className="field-value">{actionDialog.data.effectiveness || '-'}</div>
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <label>Efficacité</label>
+                    <input
+                      type="text"
+                      value={actionDialog.data.effectiveness}
+                      onChange={(e) => handleActionDialogChange('effectiveness', e.target.value)}
+                      placeholder="Mesures d'impact, résultats de l'action"
+                    />
+                  </div>
+                )}
+                
+                {/* Status - Editable for everyone */}
+                <div className="form-group">
+                  <label>Statut</label>
+                  <select
+                    value={actionDialog.data.status}
+                    onChange={(e) => handleActionDialogChange('status', e.target.value)}
+                    required
                   >
-                    <MenuItem value="">Sélectionner un Responsable</MenuItem>
-                    {users.map(user => (
-                      <MenuItem key={user.userId} value={user.userId}>
-                        {user.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            </Grid>
+                    <option value="active">Active</option>
+                    <option value="completed">Terminée</option>
+                    <option value="canceled">Annulée</option>
+                  </select>
+                </div>
+              </div>
+            </div>
             
-            <Grid item xs={12} sm={6}>
-              {isAuditor && actionDialog.mode === 'edit' ? (
-                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Date d'Échéance
-                  </Typography>
-                  <Typography variant="body1">
-                    {new Date(actionDialog.data.deadline).toLocaleDateString('fr-FR')}
-                  </Typography>
-                </Box>
-              ) : (
-                <TextField
-                  fullWidth
-                  id="deadline"
-                  label="Date d'Échéance"
-                  type="date"
-                  value={actionDialog.data.deadline}
-                  onChange={(e) => handleActionDialogChange('deadline', e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                  variant="outlined"
-                />
-              )}
-            </Grid>
-            
-            {/* Progress - Editable for everyone */}
-            <Grid item xs={12}>
-              <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Progression: {actionDialog.data.progress}%
-                </Typography>
-                <Slider
-                  value={actionDialog.data.progress}
-                  onChange={(_, value) => handleActionDialogChange('progress', value)}
-                  aria-labelledby="progress-slider"
-                  valueLabelDisplay="auto"
-                  step={5}
-                  marks
-                  min={0}
-                  max={100}
-                  sx={{
-                    '& .MuiSlider-thumb': {
-                      height: 20,
-                      width: 20,
-                    },
-                    '& .MuiSlider-track': {
-                      height: 6,
-                    },
-                    '& .MuiSlider-rail': {
-                      height: 6,
-                    }
-                  }}
-                />
-              </Box>
-            </Grid>
-            
-            {/* Effectiveness - Read-only for auditors */}
-            <Grid item xs={12} sm={6}>
-              {isAuditor && actionDialog.mode === 'edit' ? (
-                <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Efficacité
-                  </Typography>
-                  <Typography variant="body1">{actionDialog.data.effectiveness || '-'}</Typography>
-                </Box>
-              ) : (
-                <TextField
-                  fullWidth
-                  id="effectiveness"
-                  label="Efficacité"
-                  value={actionDialog.data.effectiveness}
-                  onChange={(e) => handleActionDialogChange('effectiveness', e.target.value)}
-                  helperText="Mesures d'impact, résultats de l'action"
-                  variant="outlined"
-                />
-              )}
-            </Grid>
-            
-            {/* Status - Editable for everyone */}
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel id="status-dialog-label">Statut</InputLabel>
-                <Select
-                  labelId="status-dialog-label"
-                  id="status-dialog-select"
-                  value={actionDialog.data.status}
-                  label="Statut"
-                  onChange={(e) => handleActionDialogChange('status', e.target.value)}
-                  required
-                >
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="completed">Terminée</MenuItem>
-                  <MenuItem value="canceled">Annulée</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        
-        <DialogActions sx={{ p: 3, pt: 2 }}>
-          <Button 
-            onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}
-            variant="outlined"
-            sx={{ mr: 1 }}
-          >
-            Annuler
-          </Button>
-          <Button 
-            variant="contained" 
-            onClick={handleActionDialogSubmit}
-            disabled={
-              (actionDialog.mode === 'create' && (!actionDialog.data.description || !actionDialog.data.responsibleId || !actionDialog.data.deadline)) ||
-              !actionDialog.data.status
-            }
-            sx={{ 
-              minWidth: 120,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              '&:hover': {
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-              }
-            }}
-          >
-            {actionDialog.mode === 'create' ? 'Créer' : 'Enregistrer'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+            <div className="modal-footer">
+              <button 
+                className="btn-secondary"
+                onClick={() => setActionDialog(prev => ({ ...prev, open: false }))}
+              >
+                Annuler
+              </button>
+              <button 
+                className="btn-primary"
+                onClick={handleActionDialogSubmit}
+                disabled={
+                  (actionDialog.mode === 'create' && (!actionDialog.data.description || !actionDialog.data.responsibleId || !actionDialog.data.deadline)) ||
+                  !actionDialog.data.status
+                }
+              >
+                {actionDialog.mode === 'create' ? 'Créer' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

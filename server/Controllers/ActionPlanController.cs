@@ -638,6 +638,124 @@ public async Task<IActionResult> DeleteAction(int actionId)
 
             return Ok(exportData);
         }
+        [HttpGet("{actionId}/tips")]
+public async Task<IActionResult> GetActionTips(int actionId)
+{
+    try
+    {
+        // Check authentication
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var companyId = HttpContext.Session.GetInt32("CompanyId");
+        
+        if (!userId.HasValue || !companyId.HasValue)
+        {
+            return Unauthorized(new { message = "Not authenticated" });
+        }
+
+        // Get the action
+        var action = await _context.Actions
+            .Include(a => a.Text)
+            .ThenInclude(t => t.DomainObject)
+            .Include(a => a.Text)
+            .ThenInclude(t => t.ThemeObject)
+            .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
+
+        if (action == null)
+        {
+            return NotFound(new { message = "Action not found" });
+        }
+
+        // Get user
+        var user = await _context.Users.FindAsync(userId.Value);
+
+        // Check if user has access to this action
+        if (user.Role != "SubscriptionManager" && action.ResponsibleId != userId)
+        {
+            return StatusCode(403, new { message = "You don't have permission to view this action" });
+        }
+
+        // Call Flask NLP service
+        var tips = await CallNLPService(action);
+
+        return Ok(new { 
+            actionId = actionId,
+            tips = tips,
+            success = true
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = ex.Message });
+    }
+}
+
+private async Task<object> CallNLPService(Action action)
+{
+    try
+    {
+        using (var httpClient = new HttpClient())
+        {
+            var requestData = new
+            {
+                description = action.Description,
+                domain = action.Text?.DomainObject?.Name,
+                theme = action.Text?.ThemeObject?.Name
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(requestData);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await httpClient.PostAsync("http://localhost:5000/analyze-action", content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                return System.Text.Json.JsonSerializer.Deserialize<object>(responseContent);
+            }
+            else
+            {
+                // Return fallback tips if service is unavailable
+                return new
+                {
+                    success = false,
+                    analysis = new
+                    {
+                        priority_level = "Medium",
+                        risk_assessment = "Service temporarily unavailable",
+                        recommended_tips = new[]
+                        {
+                            "Review action requirements carefully",
+                            "Consult with relevant stakeholders",
+                            "Document progress regularly"
+                        },
+                        estimated_effort = "Medium",
+                        suggested_timeline = "2-4 weeks"
+                    }
+                };
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        // Return fallback tips on error
+        return new
+        {
+            success = false,
+            error = "NLP service unavailable",
+            analysis = new
+            {
+                priority_level = "Medium",
+                risk_assessment = "Unable to analyze at this time",
+                recommended_tips = new[]
+                {
+                    "Review action requirements",
+                    "Engage with team members",
+                    "Monitor progress closely"
+                }
+            }
+        };
+    }
+}
 
        public class CreateActionRequest
         {

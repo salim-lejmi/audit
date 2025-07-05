@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form } from 'react-bootstrap';
-import Modal from '../shared/modal';
 import axios from 'axios';
+import { 
+  Search, 
+  Filter, 
+  RefreshCw, 
+  Users, 
+  Edit2, 
+  Trash2, 
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronsLeft, 
+  ChevronsRight 
+} from 'lucide-react';
+import '../../styles/manageusers.css';
+import Modal from '../shared/modal';
 
 interface User {
   userId: number;
@@ -24,14 +36,18 @@ interface UpdateUserForm {
 const AdminManageUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [companyFilter, setCompanyFilter] = useState('Tous');
   const [roleFilter, setRoleFilter] = useState('Tous');
   const [companies, setCompanies] = useState<{companyId: number, companyName: string}[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [editForm, setEditForm] = useState<UpdateUserForm>({
     name: '',
@@ -45,16 +61,35 @@ const AdminManageUsers: React.FC = () => {
   useEffect(() => {
     fetchUsers();
     fetchCompanies();
-  }, []);
+  }, [currentPage]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/admin/users');
-      setUsers(response.data);
-      setLoading(false);
-    } catch  {
+      setError(null);
+      
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (companyFilter !== 'Tous') params.append('companyId', companyFilter);
+      if (roleFilter !== 'Tous') params.append('role', roleFilter);
+      params.append('page', currentPage.toString());
+      params.append('pageSize', pageSize.toString());
+      
+      const response = await axios.get(`/api/admin/users?${params.toString()}`);
+      setUsers(response.data.users || response.data);
+      
+      // Handle pagination data if available
+      if (response.data.totalCount !== undefined) {
+        setTotalCount(response.data.totalCount);
+        setTotalPages(response.data.totalPages || Math.ceil(response.data.totalCount / pageSize));
+      } else {
+        setTotalCount(response.data.length || 0);
+        setTotalPages(Math.ceil((response.data.length || 0) / pageSize));
+      }
+      
+    } catch (err) {
       setError('Échec du chargement des utilisateurs');
+    } finally {
       setLoading(false);
     }
   };
@@ -63,8 +98,8 @@ const AdminManageUsers: React.FC = () => {
     try {
       const response = await axios.get('/api/admin/companies');
       setCompanies(response.data);
-    } catch  {
-      console.error('Échec de la récupération des entreprises');
+    } catch (err) {
+      console.error('Échec de la récupération des entreprises', err);
     }
   };
 
@@ -76,7 +111,7 @@ const AdminManageUsers: React.FC = () => {
       await axios.put(`/api/admin/users/${selectedUser.userId}`, editForm);
       setShowEditModal(false);
       fetchUsers();
-    } catch  {
+    } catch (err) {
       setError('Échec de la mise à jour de l\'utilisateur');
     }
   };
@@ -88,7 +123,7 @@ const AdminManageUsers: React.FC = () => {
       await axios.delete(`/api/admin/users/${selectedUser.userId}`);
       setShowDeleteModal(false);
       fetchUsers();
-    } catch {
+    } catch (err) {
       setError('Échec de la suppression de l\'utilisateur');
     }
   };
@@ -109,215 +144,246 @@ const AdminManageUsers: React.FC = () => {
     setShowDeleteModal(true);
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCompany = companyFilter === 'Tous' || user.companyId.toString() === companyFilter;
-    const matchesRole = roleFilter === 'Tous' || user.role === roleFilter;
-    
-    return matchesSearch && matchesCompany && matchesRole;
-  });
+  const applyFilters = () => {
+    setCurrentPage(1);
+    fetchUsers();
+  };
 
-  if (loading) {
-    return <div className="loading-container">Chargement des utilisateurs...</div>;
-  }
+  const resetFilters = () => {
+    setSearchTerm('');
+    setCompanyFilter('Tous');
+    setRoleFilter('Tous');
+    setCurrentPage(1);
+    fetchUsers();
+  };
 
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
-  const editModalFooter = (
-    <>
-      <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-        Annuler
-      </Button>
-      <Button variant="primary" type="submit" form="editForm">
-        Mettre à jour l'utilisateur
-      </Button>
-    </>
-  );
-
-  const deleteModalFooter = (
-    <>
-      <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-        Annuler
-      </Button>
-      <Button variant="danger" onClick={handleDeleteConfirm}>
-        Supprimer
-      </Button>
-    </>
-  );
-
+  const filteredUsers = users;
   const uniqueRoles = ['Tous', ...new Set(users.map(user => user.role))];
 
   return (
-    <section className="manage-users-section">
-      <div className="container">
-        <div className="section-header">
-          <h2>Gérer tous les utilisateurs</h2>
-          <p className="text-muted">Voir et gérer les utilisateurs de toutes les entreprises</p>
-        </div>
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <h1>Gestion des utilisateurs</h1>
+      </div>
 
-        <div className="controls-row">
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Rechercher des utilisateurs..."
-              className="search-input"
+      {/* Search and Filters */}
+      <div className="controls-section">
+        <div className="search-row">
+          <div className="search-box">
+            <Search className="search-icon" size={20} />
+            <input 
+              type="text" 
+              placeholder="Rechercher par nom, email..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
             />
+            {searchTerm && (
+              <button 
+                className="search-clear" 
+                onClick={() => {
+                  setSearchTerm('');
+                  applyFilters();
+                }}
+              >
+                ×
+              </button>
+            )}
           </div>
-          
-          <div className="filter-group">
-            <select 
-              className="filter-select"
-              value={companyFilter}
-              onChange={(e) => setCompanyFilter(e.target.value)}
-            >
-              <option value="Tous">Toutes les entreprises</option>
-              {companies.map(company => (
-                <option key={company.companyId} value={company.companyId.toString()}>
-                  {company.companyName}
-                </option>
-              ))}
-            </select>
-            
-            <select 
-              className="filter-select"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              {uniqueRoles.map(role => (
-                <option key={role} value={role}>{role}</option>
-              ))}
-            </select>
-          </div>
+          <button 
+            className={`btn-filter ${showFilters ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={18} />
+            Filtres
+          </button>
         </div>
 
-        {users.length === 0 ? (
-          <div className="no-users-message">
-            <p>Aucun utilisateur trouvé.</p>
-          </div>
-        ) : (
-          <div className="users-table-container">
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Email</th>
-                  <th>Téléphone</th>
-                  <th>Entreprise</th>
-                  <th>Rôle</th>
-                  <th>Créé le</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map(user => (
-                  <tr key={user.userId}>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
-                    <td>{user.phoneNumber || '-'}</td>
-                    <td>{user.companyName}</td>
-                    <td>
-                      <span className={`role-badge ${user.role.toLowerCase()}`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td>{new Date(user.createdAt).toLocaleDateString('fr-FR')}</td>
-                    <td className="actions-cell">
-                      <button 
-                        className="action-btn delete"
-                        onClick={() => openDeleteModal(user)}
-                        title="Supprimer l'utilisateur"
-                        disabled={user.role === "Gestionnaire d'abonnement"}
-                      >
-                        <i className="fas fa-trash"></i>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {showFilters && (
+          <div className="filters-panel">
+            <div className="filters-header">
+              <h3>Filtres avancés</h3>
+              <button className="btn-reset" onClick={resetFilters}>
+                <RefreshCw size={16} />
+                Réinitialiser
+              </button>
+            </div>
+            
+            <div className="filters-grid">
+              <div className="form-group">
+                <label>Entreprise</label>
+                <select 
+                  value={companyFilter}
+                  onChange={(e) => setCompanyFilter(e.target.value)}
+                >
+                  <option value="Tous">Toutes les entreprises</option>
+                  {companies.map(company => (
+                    <option key={company.companyId} value={company.companyId.toString()}>
+                      {company.companyName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Rôle</label>
+                <select 
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                >
+                  {uniqueRoles.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="filters-actions">
+              <button className="btn-apply" onClick={applyFilters}>
+                Appliquer les filtres
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Edit User Modal */}
-      <Modal 
-        isOpen={showEditModal} 
-        onClose={() => setShowEditModal(false)} 
-        title="Modifier l'utilisateur"
-        footer={editModalFooter}
-      >
-        <Form id="editForm" onSubmit={handleEditSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label>Nom</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Nom complet"
-              value={editForm.name}
-              onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-              required
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Email</Form.Label>
-            <Form.Control
-              type="email"
-              placeholder="Adresse email"
-              value={editForm.email}
-              onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-              required
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Numéro de téléphone</Form.Label>
-            <Form.Control
-              type="tel"
-              placeholder="Numéro de téléphone"
-              value={editForm.phoneNumber}
-              onChange={(e) => setEditForm({...editForm, phoneNumber: e.target.value})}
-            />
-          </Form.Group>
-          {selectedUser && selectedUser.role !== "Gestionnaire d'abonnement" && (
-            <Form.Group className="mb-3">
-              <Form.Label>Rôle</Form.Label>
-              <Form.Select
-                value={editForm.role}
-                onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-                required
-              >
-                {availableRoles.filter(role => role !== "Gestionnaire d'abonnement").map(role => (
-                  <option key={role} value={role}>{role}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          )}
-          {selectedUser && selectedUser.role === "Gestionnaire d'abonnement" && (
-            <div className="alert alert-info">
-              Le rôle Gestionnaire d'abonnement ne peut pas être modifié
+      {/* Results */}
+      <div className="results-section">
+        <div className="results-info">
+          {totalCount > 0 ? `${totalCount} utilisateur${totalCount > 1 ? 's' : ''} trouvé${totalCount > 1 ? 's' : ''}` : 'Aucun résultat'}
+        </div>
+        
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Chargement...</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <p>{error}</p>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="empty-state">
+            <p>Aucun utilisateur trouvé</p>
+          </div>
+        ) : (
+          <>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Téléphone</th>
+                    <th>Entreprise</th>
+                    <th>Rôle</th>
+                    <th>Créé le</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map(user => (
+                    <tr key={user.userId}>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td>{user.phoneNumber || '-'}</td>
+                      <td>{user.companyName}</td>
+                      <td>
+                        <span className={`status-badge role-${user.role.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td>{new Date(user.createdAt).toLocaleDateString('fr-FR')}</td>
+                      <td>
+                  
+                        <button 
+                          className="btn-action btn-delete" 
+                          onClick={() => openDeleteModal(user)}
+                          title="Supprimer"
+                          disabled={user.role === "Gestionnaire d'abonnement"}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </Form>
-      </Modal>
+            
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft size={16} />
+                </button>
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(currentPage - 1)} 
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                <span className="page-info">
+                  Page {currentPage} sur {totalPages}
+                </span>
+                
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(currentPage + 1)} 
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <button 
+                  className="page-btn"
+                  onClick={() => goToPage(totalPages)} 
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight size={16} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      
+   
 
       {/* Delete User Modal */}
       <Modal 
         isOpen={showDeleteModal} 
         onClose={() => setShowDeleteModal(false)} 
         title="Supprimer l'utilisateur"
-        footer={deleteModalFooter}
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
+              Annuler
+            </button>
+            <button className="btn-danger" onClick={handleDeleteConfirm}>
+              Supprimer
+            </button>
+          </>
+        }
         size="sm"
       >
-        <p>Êtes-vous sûr de vouloir supprimer {selectedUser?.name} ?</p>
-        <p className="text-danger">Cette action est irréversible.</p>
+        <div className="delete-confirmation">
+          <p>Êtes-vous sûr de vouloir supprimer <strong>{selectedUser?.name}</strong> ?</p>
+          <p className="warning-text">Cette action est irréversible.</p>
+        </div>
       </Modal>
-    </section>
+    </div>
   );
 };
 

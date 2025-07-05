@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Paper, Tabs, Tab, useTheme, useMediaQuery } from '@mui/material';
+import { 
+  ChevronLeft
+} from 'lucide-react';
 import ComplianceTextList from './ComplianceTextList';
 import ComplianceRequirementEvaluation from './ComplianceRequirementEvaluation';
 import { TextListItem } from '../shared/types';
@@ -8,10 +10,8 @@ import '../../styles/compliance.css';
 const ComplianceEvaluation: React.FC = () => {
   const [tabValue, setTabValue] = useState<number>(0);
   const [selectedText, setSelectedText] = useState<TextListItem | null>(null);
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -21,60 +21,52 @@ const ComplianceEvaluation: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="xl" className="compliance-container">
-      <Box sx={{ my: { xs: 2, md: 4 } }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          gutterBottom 
-          sx={{ 
-            fontSize: { xs: '1.5rem', md: '2rem' },
-            fontWeight: 600,
-            mb: 3
-          }}
-        >
-          Évaluation de Conformité
-        </Typography>
-        
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            width: '100%',
-            overflow: 'hidden'
-          }}
-        >
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            indicatorColor="primary"
-            textColor="primary"
-            variant={isSmallScreen ? "fullWidth" : "standard"}
-          >
-            <Tab label="Liste des Textes" />
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <h1>Évaluation de Conformité</h1>
+      </div>
+
+      <div className="content-container">
+        <div className="tabs-container">
+          <div className="tabs-header">
+            <div 
+              className={`tab ${tabValue === 0 ? 'active' : ''}`} 
+              onClick={() => handleTabChange(0)}
+            >
+              Liste des Textes
+            </div>
             {selectedText && (
-              <Tab label={
-                isSmallScreen 
-                  ? `${selectedText.reference.substring(0, 15)}${selectedText.reference.length > 15 ? '...' : ''}`
-                  : `Exigences : ${selectedText.reference}`
-              } />
+              <div 
+                className={`tab ${tabValue === 1 ? 'active' : ''}`} 
+                onClick={() => handleTabChange(1)}
+              >
+                Exigences: {selectedText.reference}
+              </div>
             )}
-          </Tabs>
+          </div>
           
-          <Box sx={{ p: { xs: 2, md: 3 } }}>
+          <div className="tab-content">
             {tabValue === 0 && (
               <ComplianceTextList onSelectText={handleTextSelection} />
             )}
             
             {tabValue === 1 && selectedText && (
-              <ComplianceRequirementEvaluation 
-                textId={selectedText.textId} 
-                onBack={() => setTabValue(0)} 
-              />
+              <div className="requirement-container">
+                <div className="back-link" onClick={() => handleTabChange(0)}>
+                  <ChevronLeft size={18} />
+                  <span>Retour à la liste des textes</span>
+                </div>
+                <ComplianceRequirementEvaluation 
+                  textId={selectedText.textId} 
+                  onBack={() => handleTabChange(0)} 
+                />
+              </div>
             )}
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

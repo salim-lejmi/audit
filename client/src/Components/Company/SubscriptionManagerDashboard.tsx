@@ -127,36 +127,7 @@ const SubscriptionManagerDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Features Overview */}
-        <div className="overview-card">
-          <div className="card-header">
-            <h5>Fonctionnalités Disponibles</h5>
-          </div>
-          <div className="card-body">
-            <div className="features-grid">
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <i className="fas fa-check-square"></i>
-                </div>
-                <div className="feature-content">
-                  <h6>Évaluation de la Conformité</h6>
-                  <p>Évaluez la conformité des textes et exigences, ajoutez des observations et joignez des documents.</p>
-                  <Link to="/company/compliance" className="feature-link">Aller à l'Évaluation de la Conformité</Link>
-                </div>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <i className="fas fa-file-alt"></i>
-                </div>
-                <div className="feature-content">
-                  <h6>Gestion des Textes</h6>
-                  <p>Gérez les textes réglementaires, organisez par domaine, thème et sous-thème.</p>
-                  <Link to="/company/texts" className="feature-link">Gérer les Textes</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+   
       </div>
     </section>
   );

@@ -111,32 +111,7 @@ const SuperAdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Menu */}
-        <div className="menu-container">
-          <div className="menu-card">
-            <div className="menu-header">
-              <h5>Gestion du système</h5>
-            </div>
-            <div className="menu-body">
-              <Link to="/admin/users" className="menu-item">
-                <i className="fas fa-users"></i>
-                <span>Gestion des utilisateurs</span>
-              </Link>
-              <Link to="/admin/companies" className="menu-item">
-                <i className="fas fa-building"></i>
-                <span>Gestion des entreprises</span>
-              </Link>
-              <Link to="/admin/roles" className="menu-item">
-                <i className="fas fa-user-shield"></i>
-                <span>Rôles et permissions</span>
-              </Link>
-              <Link to="/admin/audit-logs" className="menu-item">
-                <i className="fas fa-clipboard-list"></i>
-                <span>Journaux d'audit</span>
-              </Link>
-            </div>
-          </div>
-        </div>
+   
       </div>
     </section>
   );

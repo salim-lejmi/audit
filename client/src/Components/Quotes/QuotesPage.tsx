@@ -25,6 +25,13 @@ interface NewSubscriptionPlan {
   isActive: boolean;
 }
 
+interface PlanTemplate {
+  id: string;
+  name: string;
+  description: string;
+  planData: NewSubscriptionPlan;
+}
+
 const QuotesPage: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +39,8 @@ const QuotesPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showTemplateDrawer, setShowTemplateDrawer] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   
   const [newPlan, setNewPlan] = useState<NewSubscriptionPlan>({
     name: '',
@@ -52,6 +61,70 @@ const QuotesPage: React.FC = () => {
     'Statistiques et analyses',
   ];
 
+  const planTemplates: PlanTemplate[] = [
+    {
+      id: 'basic',
+      name: 'Plan de Base',
+      description: 'Idéal pour les petites équipes qui débutent',
+      planData: {
+        name: 'Plan de Base',
+        description: 'Plan d\'entrée de gamme avec les fonctionnalités essentielles pour démarrer votre gestion de conformité.',
+        basePrice: 29.99,
+        userLimit: 15,
+        discount: 0,
+        taxRate: 20,
+        features: [
+          'Gestion de la conformité',
+          'Gestion de texte',
+          'Plans d\'action',
+          'Management Review (Revue)'
+        ],
+        isActive: true
+      }
+    },
+    {
+      id: 'professional',
+      name: 'Plan Professionnel',
+      description: 'Pour les équipes en croissance',
+      planData: {
+        name: 'Plan Professionnel',
+        description: 'Solution complète pour les équipes professionnelles avec plus d\'utilisateurs et fonctionnalités avancées.',
+        basePrice: 79.99,
+        userLimit: 75,
+        discount: 10,
+        taxRate: 20,
+        features: [
+          'Gestion de la conformité',
+          'Gestion de texte',
+          'Plans d\'action',
+          'Management Review (Revue)'
+        ],
+        isActive: true
+      }
+    },
+    {
+      id: 'premium',
+      name: 'Plan Premium',
+      description: 'Solution complète pour les grandes entreprises',
+      planData: {
+        name: 'Plan Premium',
+        description: 'Solution enterprise avec toutes les fonctionnalités, statistiques avancées et support prioritaire.',
+        basePrice: 149.99,
+        userLimit: 250,
+        discount: 15,
+        taxRate: 20,
+        features: [
+          'Gestion de la conformité',
+          'Gestion de texte',
+          'Plans d\'action',
+          'Management Review (Revue)',
+          'Statistiques et analyses'
+        ],
+        isActive: true
+      }
+    }
+  ];
+
   useEffect(() => {
     fetchPlans();
   }, []);
@@ -70,6 +143,26 @@ const QuotesPage: React.FC = () => {
     }
   };
 
+  const handleTemplateSelect = (template: PlanTemplate) => {
+    setSelectedTemplate(template.id);
+    setNewPlan(template.planData);
+    setShowTemplateDrawer(false);
+  };
+
+  const resetForm = () => {
+    setNewPlan({
+      name: '',
+      description: '',
+      basePrice: 0,
+      userLimit: 10,
+      discount: 0,
+      taxRate: 20,
+      features: [],
+      isActive: true
+    });
+    setSelectedTemplate(null);
+  };
+
   const handleCreatePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -77,16 +170,7 @@ const QuotesPage: React.FC = () => {
       setPlans([...plans, response.data]);
       setSuccessMessage('Plan d\'abonnement créé avec succès');
       setShowCreateForm(false);
-      setNewPlan({
-        name: '',
-        description: '',
-        basePrice: 0,
-        userLimit: 10,
-        discount: 0,
-        taxRate: 20,
-        features: [],
-        isActive: true
-      });
+      resetForm();
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Échec de la création du plan d\'abonnement');
@@ -205,11 +289,62 @@ const QuotesPage: React.FC = () => {
             <h3>Créer un nouveau plan d'abonnement</h3>
             <button 
               className="close-btn"
-              onClick={() => setShowCreateForm(false)}
+              onClick={() => {
+                setShowCreateForm(false);
+                resetForm();
+              }}
             >
               ×
             </button>
           </div>
+
+          {/* Template Drawer */}
+          <div className="template-section">
+            <div className="template-header">
+              <button 
+                className="template-toggle-btn"
+                onClick={() => setShowTemplateDrawer(!showTemplateDrawer)}
+              >
+                <i className={`fas fa-chevron-${showTemplateDrawer ? 'up' : 'down'}`}></i>
+                <span>Utiliser un modèle prédéfini</span>
+                <span className="template-badge">Optionnel</span>
+              </button>
+            </div>
+
+            {showTemplateDrawer && (
+              <div className="template-drawer">
+                <div className="template-grid">
+                  {planTemplates.map((template) => (
+                    <div 
+                      key={template.id}
+                      className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
+                      onClick={() => handleTemplateSelect(template)}
+                    >
+                      <div className="template-header-info">
+                        <h4>{template.name}</h4>
+                      </div>
+                      <p className="template-description">{template.description}</p>
+                      <div className="template-highlights">
+                        <div className="highlight-item">
+                          <i className="fas fa-users"></i>
+                          <span>{template.planData.userLimit} utilisateurs</span>
+                        </div>
+                        <div className="highlight-item">
+                          <i className="fas fa-dollar-sign"></i>
+                          <span>{formatCurrency(template.planData.basePrice)}/mois</span>
+                        </div>
+                        <div className="highlight-item">
+                          <i className="fas fa-check"></i>
+                          <span>{template.planData.features.length} fonctionnalités</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <form onSubmit={handleCreatePlan} className="plan-form">
             <div className="form-row">
               <div className="form-group">
@@ -322,7 +457,10 @@ const QuotesPage: React.FC = () => {
             )}
 
             <div className="form-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setShowCreateForm(false)}>
+              <button type="button" className="btn btn-secondary" onClick={() => {
+                setShowCreateForm(false);
+                resetForm();
+              }}>
                 Annuler
               </button>
               <button type="submit" className="btn btn-primary">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import '../../styles/auth.css'; // Adjust the path as necessary
+import '../../styles/auth.css';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import CountryPhoneInput from '../shared/CountryPhoneInput';
 
 const Auth: React.FC = () => {
   const [isLoginView, setIsLoginView] = useState(true);
@@ -86,6 +87,13 @@ const Auth: React.FC = () => {
     });
   };
 
+  const handlePhoneChange = (phoneValue: string) => {
+    setSignupFormData({
+      ...signupFormData,
+      phone: phoneValue
+    });
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signupFormData.password !== signupFormData.confirmPassword) {
@@ -119,8 +127,8 @@ const Auth: React.FC = () => {
         confirmPassword: ''
       });
       setTimeout(() => {
-        setIsLoginView(true); // Switch to login view after successful signup
-        setSignupSuccess(''); // Clear success message
+        setIsLoginView(true);
+        setSignupSuccess('');
       }, 3000);
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response) {
@@ -133,7 +141,6 @@ const Auth: React.FC = () => {
     }
   };
   
-  // Preload image
   useEffect(() => {
     const img = new Image();
     img.src = "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/img3.webp";
@@ -144,21 +151,14 @@ const Auth: React.FC = () => {
       <div className="auth-container">
         <div className="auth-image-side">
           <img
-            src="auth.jpg" // Adjust the path as necessary
+            src="auth.jpg"
             alt="Visuel d'authentification"
             className="auth-image"
           />
         </div>
         <div className="auth-form-side">
           <div className="auth-form-container">
-            {/* Dark mode toggle - basic structure */}
-            {/* <div className="theme-toggle">
-              <button aria-label="Toggle dark mode">
-                <i className="fas fa-moon"></i> {/* Placeholder for moon icon }
-              </button>
-            </div> */}
-            
-            <h1 className="auth-title">Prevention Plus</h1> {/* Placeholder Title */}
+            <h1 className="auth-title">Prevention Plus</h1>
 
             <div className="auth-toggle-buttons">
               <button
@@ -181,7 +181,6 @@ const Auth: React.FC = () => {
                 <div className="form-group">
                   <label htmlFor="login-email">Nom d'utilisateur, email ou téléphone...</label>
                   <div className="input-wrapper">
-                    {/* <i className="fas fa-user input-icon"></i> Placeholder icon */}
                     <input
                       type="email"
                       id="login-email"
@@ -196,7 +195,6 @@ const Auth: React.FC = () => {
                 <div className="form-group">
                   <label htmlFor="login-password">Entrez votre mot de passe...</label>
                   <div className="input-wrapper">
-                    {/* <i className="fas fa-lock input-icon"></i> Placeholder icon */}
                     <input
                       type="password"
                       id="login-password"
@@ -206,7 +204,6 @@ const Auth: React.FC = () => {
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
                     />
-                    {/* <i className="fas fa-eye input-icon-right"></i> Placeholder icon */}
                   </div>
                 </div>
                 <button
@@ -263,13 +260,11 @@ const Auth: React.FC = () => {
                 </div>
                 <div className="form-group">
                   <label htmlFor="phone">Numéro de téléphone (facultatif)</label>
-                  <input
-                    type="tel"
+                  <CountryPhoneInput
                     id="phone"
-                    className="form-input"
-                    placeholder="Entrez votre numéro de téléphone"
                     value={signupFormData.phone}
-                    onChange={handleSignupChange}
+                    onChange={handlePhoneChange}
+                    placeholder="Entrez votre numéro"
                   />
                 </div>
                 <div className="form-group">
@@ -322,23 +317,11 @@ const Auth: React.FC = () => {
                 </button>
               </form>
             )}
-            {/* 
-            <div className="social-signin">
-              <p>Se connecter avec</p>
-              <div className="social-icons">
-                <button aria-label="Se connecter avec Apple"><i className="fab fa-apple"></i></button>
-                <button aria-label="Se connecter avec Facebook"><i className="fab fa-facebook-f"></i></button>
-                <button aria-label="Se connecter avec Google"><i className="fab fa-google"></i></button>
-                <button aria-label="Se connecter avec Twitter"><i className="fab fa-twitter"></i></button>
-              </div>
-            </div>
-            */}
-                      </div>
-
           </div>
         </div>
-      </section>
-    );
+      </div>
+    </section>
+  );
 };
 
 export default Auth;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/profile.css';
+import CountryPhoneInput from '../shared/CountryPhoneInput';
 
 const ProfilePage: React.FC = () => {
   const [userData, setUserData] = useState({
@@ -70,6 +71,13 @@ const ProfilePage: React.FC = () => {
         [id]: value
       });
     }
+  };
+
+  const handlePhoneChange = (phoneValue: string) => {
+    setUserData({
+      ...userData,
+      phoneNumber: phoneValue
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,12 +199,11 @@ const ProfilePage: React.FC = () => {
               
               <div className="form-group">
                 <label htmlFor="phoneNumber">Numéro de téléphone</label>
-                <input
-                  type="tel"
+                <CountryPhoneInput
                   id="phoneNumber"
-                  className="form-input"
                   value={userData.phoneNumber}
-                  onChange={handleInputChange}
+                  onChange={handlePhoneChange}
+                  placeholder="Entrez votre numéro"
                 />
               </div>
             </>
@@ -230,12 +237,11 @@ const ProfilePage: React.FC = () => {
               
               <div className="form-group">
                 <label htmlFor="phoneNumber">Numéro de téléphone</label>
-                <input
-                  type="tel"
+                <CountryPhoneInput
                   id="phoneNumber"
-                  className="form-input"
                   value={userData.phoneNumber}
-                  onChange={handleInputChange}
+                  onChange={handlePhoneChange}
+                  placeholder="Entrez votre numéro"
                 />
               </div>
             </>
@@ -257,12 +263,11 @@ const ProfilePage: React.FC = () => {
               
               <div className="form-group">
                 <label htmlFor="phoneNumber">Numéro de téléphone</label>
-                <input
-                  type="tel"
+                <CountryPhoneInput
                   id="phoneNumber"
-                  className="form-input"
                   value={userData.phoneNumber}
-                  onChange={handleInputChange}
+                  onChange={handlePhoneChange}
+                  placeholder="Entrez votre numéro"
                 />
               </div>
             </>

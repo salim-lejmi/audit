@@ -267,31 +267,73 @@ namespace server.Controllers
         [HttpDelete("users/{userId}")]
         public async Task<IActionResult> DeleteUser(int userId)
         {
-            // Check if user is a SuperAdmin
-            var userRole = HttpContext.Session.GetString("UserRole");
-            if (userRole != "SuperAdmin")
+            try
             {
-                return Forbid();
-            }
+                // Check if user is a SuperAdmin
+                var userRole = HttpContext.Session.GetString("UserRole");
+                if (userRole != "SuperAdmin")
+                {
+                    return Forbid();
+                }
 
-            // Find user
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
+                // Find user
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                // Prevent deleting a SubscriptionManager
+                if (user.Role == "SubscriptionManager")
+                {
+                    return BadRequest(new { message = "Cannot delete a Subscription Manager" });
+                }
+
+                // --- UPDATED DELETION LOGIC (matching CompanyController) ---
+
+                // First, delete notifications for this user (notifications sent TO the user)
+                var userNotifications = await _context.Notifications
+                                                    .Where(n => n.UserId == userId)
+                                                    .ToListAsync();
+                _context.Notifications.RemoveRange(userNotifications);
+
+                // Find all actions where this user is responsible or created by this user
+                var responsibleActions = await _context.Actions
+                                                        .Where(a => a.ResponsibleId == userId)
+                                                        .ToListAsync();
+
+                var createdByActions = await _context.Actions
+                                                    .Where(a => a.CreatedById == userId)
+                                                    .ToListAsync();
+
+                // Combine both lists and get unique actions
+                var allUserActions = responsibleActions.Union(createdByActions).Distinct().ToList();
+
+                // Delete notifications that reference these actions
+                if (allUserActions.Any())
+                {
+                    var actionIds = allUserActions.Select(a => a.ActionId).ToList();
+                    var actionNotifications = await _context.Notifications
+                                                           .Where(n => n.RelatedActionId.HasValue && actionIds.Contains(n.RelatedActionId.Value))
+                                                           .ToListAsync();
+                    _context.Notifications.RemoveRange(actionNotifications);
+                }
+
+                // Now delete the actions
+                _context.Actions.RemoveRange(allUserActions);
+
+                // Finally, delete the user
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "User deleted successfully" });
+            }
+            catch (Exception ex)
             {
-                return NotFound(new { message = "User not found" });
+                // Log the exception
+                Console.WriteLine($"Error deleting user: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred while deleting the user", details = ex.Message });
             }
-
-            // Prevent deleting a SubscriptionManager
-            if (user.Role == "SubscriptionManager")
-            {
-                return BadRequest(new { message = "Cannot delete a Subscription Manager" });
-            }
-
-            // Delete user
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "User deleted successfully" });
         }
 [HttpGet("companies/detailed")]
 public async Task<IActionResult> GetAllCompaniesDetailed()
