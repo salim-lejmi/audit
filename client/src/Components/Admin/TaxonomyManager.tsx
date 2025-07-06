@@ -20,6 +20,11 @@ interface SubTheme {
   themeId: number;
 }
 
+// Interface for API error response
+interface ApiErrorResponse {
+  message: string;
+}
+
 const TaxonomyManager: React.FC = () => {
   // State for domains, themes, subthemes
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -35,9 +40,34 @@ const TaxonomyManager: React.FC = () => {
   const [newThemeName, setNewThemeName] = useState('');
   const [newSubThemeName, setNewSubThemeName] = useState('');
   
+  // State for editing
+  const [editingDomain, setEditingDomain] = useState<Domain | null>(null);
+  const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
+  const [editingSubTheme, setEditingSubTheme] = useState<SubTheme | null>(null);
+  const [editDomainName, setEditDomainName] = useState('');
+  const [editThemeName, setEditThemeName] = useState('');
+  const [editSubThemeName, setEditSubThemeName] = useState('');
+  
   // State for loading and errors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper function to extract error message from API response
+  const getErrorMessage = (err: unknown): string => {
+    if (axios.isAxiosError(err)) {
+      const axiosError = err as AxiosError<ApiErrorResponse>;
+      if (axiosError.response?.data?.message) {
+        return axiosError.response.data.message;
+      }
+      if (axiosError.response?.status === 403) {
+        return "Vous n'avez pas les permissions nécessaires pour effectuer cette action.";
+      }
+      if (axiosError.response?.status === 401) {
+        return "Vous devez être connecté pour effectuer cette action.";
+      }
+    }
+    return "Une erreur inattendue s'est produite. Veuillez réessayer.";
+  };
 
   // Load domains when component mounts
   useEffect(() => {
@@ -73,7 +103,7 @@ const TaxonomyManager: React.FC = () => {
       setDomains(response.data);
     } catch (err) {
       console.error('Error loading domains:', err);
-      setError('Échec du chargement des domaines. Veuillez réessayer.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -89,7 +119,7 @@ const TaxonomyManager: React.FC = () => {
       setThemes(response.data);
     } catch (err) {
       console.error('Error loading themes:', err);
-      setError('Échec du chargement des thèmes. Veuillez réessayer.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -105,7 +135,7 @@ const TaxonomyManager: React.FC = () => {
       setSubThemes(response.data);
     } catch (err) {
       console.error('Error loading subthemes:', err);
-      setError('Échec du chargement des sous-thèmes. Veuillez réessayer.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -127,7 +157,7 @@ const TaxonomyManager: React.FC = () => {
       loadDomains();
     } catch (err) {
       console.error('Error creating domain:', err);
-      setError('Échec de la création du domaine. Veuillez réessayer.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -157,7 +187,7 @@ const TaxonomyManager: React.FC = () => {
       loadThemes(selectedDomain.domainId);
     } catch (err) {
       console.error('Error creating theme:', err);
-      setError('Échec de la création du thème. Veuillez réessayer.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -187,7 +217,109 @@ const TaxonomyManager: React.FC = () => {
       loadSubThemes(selectedTheme.themeId);
     } catch (err) {
       console.error('Error creating subtheme:', err);
-      setError('Échec de la création du sous-thème. Veuillez réessayer.');
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Edit handlers
+  const startEditDomain = (domain: Domain): void => {
+    setEditingDomain(domain);
+    setEditDomainName(domain.name);
+  };
+
+  const startEditTheme = (theme: Theme): void => {
+    setEditingTheme(theme);
+    setEditThemeName(theme.name);
+  };
+
+  const startEditSubTheme = (subTheme: SubTheme): void => {
+    setEditingSubTheme(subTheme);
+    setEditSubThemeName(subTheme.name);
+  };
+
+  const cancelEdit = (): void => {
+    setEditingDomain(null);
+    setEditingTheme(null);
+    setEditingSubTheme(null);
+    setEditDomainName('');
+    setEditThemeName('');
+    setEditSubThemeName('');
+  };
+
+  // Update handlers
+  const updateDomain = async (): Promise<void> => {
+    if (!editingDomain || !editDomainName.trim()) {
+      setError('Le nom du domaine ne peut pas être vide');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await axios.put(`/api/taxonomy/domains/${editingDomain.domainId}`, { 
+        name: editDomainName 
+      });
+      setEditingDomain(null);
+      setEditDomainName('');
+      loadDomains();
+    } catch (err) {
+      console.error('Error updating domain:', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateTheme = async (): Promise<void> => {
+    if (!editingTheme || !editThemeName.trim()) {
+      setError('Le nom du thème ne peut pas être vide');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await axios.put(`/api/taxonomy/themes/${editingTheme.themeId}`, { 
+        name: editThemeName 
+      });
+      setEditingTheme(null);
+      setEditThemeName('');
+      if (selectedDomain) {
+        loadThemes(selectedDomain.domainId);
+      }
+    } catch (err) {
+      console.error('Error updating theme:', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateSubTheme = async (): Promise<void> => {
+    if (!editingSubTheme || !editSubThemeName.trim()) {
+      setError('Le nom du sous-thème ne peut pas être vide');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await axios.put(`/api/taxonomy/subthemes/${editingSubTheme.subThemeId}`, { 
+        name: editSubThemeName 
+      });
+      setEditingSubTheme(null);
+      setEditSubThemeName('');
+      if (selectedTheme) {
+        loadSubThemes(selectedTheme.themeId);
+      }
+    } catch (err) {
+      console.error('Error updating subtheme:', err);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -195,7 +327,15 @@ const TaxonomyManager: React.FC = () => {
 
   // Delete handlers for each taxonomy level
   const deleteDomain = async (domainId: number): Promise<void> => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce domaine ?')) {
+    const domain = domains.find(d => d.domainId === domainId);
+    const themesCount = themes.filter(t => t.domainId === domainId).length;
+    
+    let confirmMessage = `Êtes-vous sûr de vouloir supprimer le domaine "${domain?.name}" ?`;
+    if (themesCount > 0) {
+      confirmMessage += `\n\nATTENTION: Cela supprimera également tous les thèmes et sous-thèmes associés (${themesCount} thème(s)).`;
+    }
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
@@ -205,15 +345,11 @@ const TaxonomyManager: React.FC = () => {
     try {
       await axios.delete(`/api/taxonomy/domains/${domainId}`);
       setSelectedDomain(null);
+      setSelectedTheme(null);
       loadDomains();
     } catch (err) {
       console.error('Error deleting domain:', err);
-      const axiosError = err as AxiosError;
-      if (axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data) {
-        setError(axiosError.response.data.message as string);
-      } else {
-        setError('Échec de la suppression du domaine. Veuillez réessayer.');
-      }
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -221,7 +357,15 @@ const TaxonomyManager: React.FC = () => {
 
   // Delete theme handler
   const deleteTheme = async (themeId: number): Promise<void> => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce thème ?')) {
+    const theme = themes.find(t => t.themeId === themeId);
+    const subThemesCount = subThemes.filter(s => s.themeId === themeId).length;
+    
+    let confirmMessage = `Êtes-vous sûr de vouloir supprimer le thème "${theme?.name}" ?`;
+    if (subThemesCount > 0) {
+      confirmMessage += `\n\nATTENTION: Cela supprimera également tous les sous-thèmes associés (${subThemesCount} sous-thème(s)).`;
+    }
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
@@ -236,12 +380,7 @@ const TaxonomyManager: React.FC = () => {
       }
     } catch (err) {
       console.error('Error deleting theme:', err);
-      const axiosError = err as AxiosError;
-      if (axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data) {
-        setError(axiosError.response.data.message as string);
-      } else {
-        setError('Échec de la suppression du thème. Veuillez réessayer.');
-      }
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -249,7 +388,9 @@ const TaxonomyManager: React.FC = () => {
 
   // Delete subtheme handler
   const deleteSubTheme = async (subThemeId: number): Promise<void> => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce sous-thème ?')) {
+    const subTheme = subThemes.find(s => s.subThemeId === subThemeId);
+    
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le sous-thème "${subTheme?.name}" ?`)) {
       return;
     }
 
@@ -263,12 +404,7 @@ const TaxonomyManager: React.FC = () => {
       }
     } catch (err) {
       console.error('Error deleting sub-theme:', err);
-      const axiosError = err as AxiosError;
-      if (axiosError.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data) {
-        setError(axiosError.response.data.message as string);
-      } else {
-        setError('Échec de la suppression du sous-thème. Veuillez réessayer.');
-      }
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -309,17 +445,63 @@ const TaxonomyManager: React.FC = () => {
                 className={`taxonomy-item ${selectedDomain && selectedDomain.domainId === domain.domainId ? 'selected' : ''}`}
                 onClick={() => setSelectedDomain(domain)}
               >
-                <span>{domain.name}</span>
-                <button 
-                  className="delete-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteDomain(domain.domainId);
-                  }}
-                  disabled={loading}
-                >
-                  Supprimer
-                </button>
+                {editingDomain && editingDomain.domainId === domain.domainId ? (
+                  <div className="edit-form">
+                    <input 
+                      type="text"
+                      value={editDomainName}
+                      onChange={(e) => setEditDomainName(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={loading}
+                    />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateDomain();
+                      }}
+                      disabled={loading}
+                      className="save-button"
+                    >
+                      Sauvegarder
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cancelEdit();
+                      }}
+                      disabled={loading}
+                      className="cancel-button"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span>{domain.name}</span>
+                    <div className="button-group">
+                      <button 
+                        className="edit-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditDomain(domain);
+                        }}
+                        disabled={loading}
+                      >
+                        Modifier
+                      </button>
+                      <button 
+                        className="delete-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteDomain(domain.domainId);
+                        }}
+                        disabled={loading}
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
             
@@ -360,17 +542,63 @@ const TaxonomyManager: React.FC = () => {
                 className={`taxonomy-item ${selectedTheme && selectedTheme.themeId === theme.themeId ? 'selected' : ''}`}
                 onClick={() => setSelectedTheme(theme)}
               >
-                <span>{theme.name}</span>
-                <button 
-                  className="delete-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteTheme(theme.themeId);
-                  }}
-                  disabled={loading}
-                >
-                  Supprimer
-                </button>
+                {editingTheme && editingTheme.themeId === theme.themeId ? (
+                  <div className="edit-form">
+                    <input 
+                      type="text"
+                      value={editThemeName}
+                      onChange={(e) => setEditThemeName(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={loading}
+                    />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateTheme();
+                      }}
+                      disabled={loading}
+                      className="save-button"
+                    >
+                      Sauvegarder
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cancelEdit();
+                      }}
+                      disabled={loading}
+                      className="cancel-button"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span>{theme.name}</span>
+                    <div className="button-group">
+                      <button 
+                        className="edit-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditTheme(theme);
+                        }}
+                        disabled={loading}
+                      >
+                        Modifier
+                      </button>
+                      <button 
+                        className="delete-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteTheme(theme.themeId);
+                        }}
+                        disabled={loading}
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
             
@@ -414,17 +642,63 @@ const TaxonomyManager: React.FC = () => {
                 key={subTheme.subThemeId} 
                 className="taxonomy-item"
               >
-                <span>{subTheme.name}</span>
-                <button 
-                  className="delete-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteSubTheme(subTheme.subThemeId);
-                  }}
-                  disabled={loading}
-                >
-                  Supprimer
-                </button>
+                {editingSubTheme && editingSubTheme.subThemeId === subTheme.subThemeId ? (
+                  <div className="edit-form">
+                    <input 
+                      type="text"
+                      value={editSubThemeName}
+                      onChange={(e) => setEditSubThemeName(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={loading}
+                    />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateSubTheme();
+                      }}
+                      disabled={loading}
+                      className="save-button"
+                    >
+                      Sauvegarder
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cancelEdit();
+                      }}
+                      disabled={loading}
+                      className="cancel-button"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span>{subTheme.name}</span>
+                    <div className="button-group">
+                      <button 
+                        className="edit-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditSubTheme(subTheme);
+                        }}
+                        disabled={loading}
+                      >
+                        Modifier
+                      </button>
+                      <button 
+                        className="delete-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSubTheme(subTheme.subThemeId);
+                        }}
+                        disabled={loading}
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
             

@@ -13,6 +13,12 @@ namespace server.Models
         public string Status { get; set; } // "Pending", "In Progress", "Completed"
         public string Observation { get; set; }
         public string FollowUp { get; set; }
+        public int CreatedById { get; set; }
+public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+[ForeignKey("CreatedById")]
+public virtual User CreatedBy { get; set; }
+
 
         [ForeignKey("RevueId")]
         public virtual RevueDeDirection Revue { get; set; }

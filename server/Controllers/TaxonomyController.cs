@@ -53,6 +53,14 @@ namespace server.Controllers
                 return BadRequest(new { message = "Domain name is required" });
             }
 
+            // Check for duplicate domain name
+            var duplicateExists = await _context.Domains
+                .AnyAsync(d => d.Name.ToLower() == request.Name.ToLower());
+            if (duplicateExists)
+            {
+                return BadRequest(new { message = "Un domaine avec ce nom existe déjà" });
+            }
+
             var domain = new Domain
             {
                 Name = request.Name,
@@ -85,6 +93,14 @@ namespace server.Controllers
 
             if (!string.IsNullOrEmpty(request.Name))
             {
+                // Check for duplicate domain name (excluding current domain)
+                var duplicateExists = await _context.Domains
+                    .AnyAsync(d => d.Name.ToLower() == request.Name.ToLower() && d.DomainId != id);
+                if (duplicateExists)
+                {
+                    return BadRequest(new { message = "Un domaine avec ce nom existe déjà" });
+                }
+
                 domain.Name = request.Name;
             }
 
@@ -109,16 +125,58 @@ namespace server.Controllers
                 return NotFound(new { message = "Domain not found" });
             }
 
-            // Check if domain is in use
-            var inUse = await _context.Texts.AnyAsync(t => t.DomainId == id);
-            if (inUse)
+            // Check if domain is in use by texts
+            var inUseByTexts = await _context.Texts.AnyAsync(t => t.DomainId == id);
+            if (inUseByTexts)
             {
-                return BadRequest(new { message = "Cannot delete domain as it is in use by existing texts" });
+                return BadRequest(new { message = "Impossible de supprimer ce domaine car il est utilisé par des textes existants." });
             }
 
-            _context.Domains.Remove(domain);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Domain deleted successfully" });
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Get all themes in this domain
+                var themes = await _context.Themes.Where(t => t.DomainId == id).ToListAsync();
+                
+                // For each theme, delete all its subthemes
+                foreach (var theme in themes)
+                {
+                    // Check if any subtheme is in use by texts
+                    var subthemesInUse = await _context.Texts.AnyAsync(t => t.ThemeId == theme.ThemeId);
+                    if (subthemesInUse)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest(new { message = $"Impossible de supprimer ce domaine car le thème '{theme.Name}' est utilisé par des textes existants." });
+                    }
+
+                    var subthemesInUseBySubThemeId = await _context.Texts.AnyAsync(t => t.SubThemeId.HasValue && _context.SubThemes.Any(s => s.SubThemeId == t.SubThemeId.Value && s.ThemeId == theme.ThemeId));
+                    if (subthemesInUseBySubThemeId)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest(new { message = $"Impossible de supprimer ce domaine car des sous-thèmes du thème '{theme.Name}' sont utilisés par des textes existants." });
+                    }
+
+                    // Delete all subthemes of this theme
+                    var subThemes = await _context.SubThemes.Where(s => s.ThemeId == theme.ThemeId).ToListAsync();
+                    _context.SubThemes.RemoveRange(subThemes);
+                }
+
+                // Delete all themes in this domain
+                _context.Themes.RemoveRange(themes);
+
+                // Delete the domain
+                _context.Domains.Remove(domain);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Domain and all associated themes and subthemes deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "An error occurred while deleting the domain: " + ex.Message });
+            }
         }
 
         // THEMES
@@ -168,6 +226,14 @@ namespace server.Controllers
                 return BadRequest(new { message = "Selected domain does not exist" });
             }
 
+            // Check for duplicate theme name within the same domain
+            var duplicateExists = await _context.Themes
+                .AnyAsync(t => t.Name.ToLower() == request.Name.ToLower() && t.DomainId == request.DomainId);
+            if (duplicateExists)
+            {
+                return BadRequest(new { message = "Un thème avec ce nom existe déjà dans ce domaine" });
+            }
+
             var theme = new Theme
             {
                 Name = request.Name,
@@ -201,6 +267,17 @@ namespace server.Controllers
 
             if (!string.IsNullOrEmpty(request.Name))
             {
+                // Check for duplicate theme name within the same domain (excluding current theme)
+                var domainIdToCheck = request.DomainId > 0 ? request.DomainId : theme.DomainId;
+                var duplicateExists = await _context.Themes
+                    .AnyAsync(t => t.Name.ToLower() == request.Name.ToLower() && 
+                                  t.DomainId == domainIdToCheck && 
+                                  t.ThemeId != id);
+                if (duplicateExists)
+                {
+                    return BadRequest(new { message = "Un thème avec ce nom existe déjà dans ce domaine" });
+                }
+
                 theme.Name = request.Name;
             }
 
@@ -211,6 +288,18 @@ namespace server.Controllers
                 if (!domainExists)
                 {
                     return BadRequest(new { message = "Selected domain does not exist" });
+                }
+
+                // If domain is changing, check for duplicates in the new domain
+                if (request.DomainId != theme.DomainId)
+                {
+                    var duplicateExists = await _context.Themes
+                        .AnyAsync(t => t.Name.ToLower() == theme.Name.ToLower() && 
+                                      t.DomainId == request.DomainId);
+                    if (duplicateExists)
+                    {
+                        return BadRequest(new { message = "Un thème avec ce nom existe déjà dans le domaine de destination" });
+                    }
                 }
 
                 theme.DomainId = request.DomainId;
@@ -237,16 +326,41 @@ namespace server.Controllers
                 return NotFound(new { message = "Theme not found" });
             }
 
-            // Check if theme is in use
-            var inUse = await _context.Texts.AnyAsync(t => t.ThemeId == id);
-            if (inUse)
+            // Check if theme is in use by texts
+            var inUseByTheme = await _context.Texts.AnyAsync(t => t.ThemeId == id);
+            if (inUseByTheme)
             {
-                return BadRequest(new { message = "Cannot delete theme as it is in use by existing texts" });
+                return BadRequest(new { message = "Impossible de supprimer ce thème car il est utilisé par des textes existants." });
             }
 
-            _context.Themes.Remove(theme);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Theme deleted successfully" });
+            // Check if any subtheme is in use by texts
+            var subthemesInUse = await _context.Texts.AnyAsync(t => t.SubThemeId.HasValue && 
+                _context.SubThemes.Any(s => s.SubThemeId == t.SubThemeId.Value && s.ThemeId == id));
+            if (subthemesInUse)
+            {
+                return BadRequest(new { message = "Impossible de supprimer ce thème car ses sous-thèmes sont utilisés par des textes existants." });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Delete all subthemes of this theme
+                var subThemes = await _context.SubThemes.Where(s => s.ThemeId == id).ToListAsync();
+                _context.SubThemes.RemoveRange(subThemes);
+
+                // Delete the theme
+                _context.Themes.Remove(theme);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Theme and all associated subthemes deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "An error occurred while deleting the theme: " + ex.Message });
+            }
         }
 
         // SUBTHEMES
@@ -296,6 +410,14 @@ namespace server.Controllers
                 return BadRequest(new { message = "Selected theme does not exist" });
             }
 
+            // Check for duplicate subtheme name within the same theme
+            var duplicateExists = await _context.SubThemes
+                .AnyAsync(s => s.Name.ToLower() == request.Name.ToLower() && s.ThemeId == request.ThemeId);
+            if (duplicateExists)
+            {
+                return BadRequest(new { message = "Un sous-thème avec ce nom existe déjà dans ce thème" });
+            }
+
             var subTheme = new SubTheme
             {
                 Name = request.Name,
@@ -329,6 +451,17 @@ namespace server.Controllers
 
             if (!string.IsNullOrEmpty(request.Name))
             {
+                // Check for duplicate subtheme name within the same theme (excluding current subtheme)
+                var themeIdToCheck = request.ThemeId > 0 ? request.ThemeId : subTheme.ThemeId;
+                var duplicateExists = await _context.SubThemes
+                    .AnyAsync(s => s.Name.ToLower() == request.Name.ToLower() && 
+                                  s.ThemeId == themeIdToCheck && 
+                                  s.SubThemeId != id);
+                if (duplicateExists)
+                {
+                    return BadRequest(new { message = "Un sous-thème avec ce nom existe déjà dans ce thème" });
+                }
+
                 subTheme.Name = request.Name;
             }
 
@@ -339,6 +472,18 @@ namespace server.Controllers
                 if (!themeExists)
                 {
                     return BadRequest(new { message = "Selected theme does not exist" });
+                }
+
+                // If theme is changing, check for duplicates in the new theme
+                if (request.ThemeId != subTheme.ThemeId)
+                {
+                    var duplicateExists = await _context.SubThemes
+                        .AnyAsync(s => s.Name.ToLower() == subTheme.Name.ToLower() && 
+                                      s.ThemeId == request.ThemeId);
+                    if (duplicateExists)
+                    {
+                        return BadRequest(new { message = "Un sous-thème avec ce nom existe déjà dans le thème de destination" });
+                    }
                 }
 
                 subTheme.ThemeId = request.ThemeId;
@@ -365,11 +510,11 @@ namespace server.Controllers
                 return NotFound(new { message = "SubTheme not found" });
             }
 
-            // Check if subtheme is in use
+            // Check if subtheme is in use by texts
             var inUse = await _context.Texts.AnyAsync(t => t.SubThemeId == id);
             if (inUse)
             {
-                return BadRequest(new { message = "Cannot delete subtheme as it is in use by existing texts" });
+                return BadRequest(new { message = "Impossible de supprimer ce sous-thème car il est utilisé par des textes existants." });
             }
 
             _context.SubThemes.Remove(subTheme);

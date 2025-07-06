@@ -130,7 +130,29 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         .WithMany(r => r.Requirements)
         .HasForeignKey(rr => rr.RevueId)
         .OnDelete(DeleteBehavior.Cascade);
+modelBuilder.Entity<RevueAction>()
+        .HasOne(ra => ra.CreatedBy)
+        .WithMany()
+        .HasForeignKey(ra => ra.CreatedById)
+        .OnDelete(DeleteBehavior.NoAction);
 
+    modelBuilder.Entity<RevueStakeholder>()
+        .HasOne(rs => rs.CreatedBy)
+        .WithMany()
+        .HasForeignKey(rs => rs.CreatedById)
+        .OnDelete(DeleteBehavior.NoAction);
+
+    modelBuilder.Entity<RevueRequirement>()
+        .HasOne(rr => rr.CreatedBy)
+        .WithMany()
+        .HasForeignKey(rr => rr.CreatedById)
+        .OnDelete(DeleteBehavior.NoAction);
+
+    modelBuilder.Entity<RevueLegalText>()
+        .HasOne(rlt => rlt.CreatedBy)
+        .WithMany()
+        .HasForeignKey(rlt => rlt.CreatedById)
+        .OnDelete(DeleteBehavior.NoAction);
     modelBuilder.Entity<RevueAction>()
         .HasOne(ra => ra.Revue)
         .WithMany(r => r.Actions)

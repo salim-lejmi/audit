@@ -55,7 +55,7 @@
   color: white;
 }
 
-/* Action Buttons */
+/* Action Buttons Row */
 .action-buttons-row {
   display: flex;
   gap: 16px;
@@ -88,6 +88,17 @@
   box-shadow: 0 8px 25px 0 rgba(16, 185, 129, 0.4);
 }
 
+.btn-complete {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+}
+
+.btn-complete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px 0 rgba(59, 130, 246, 0.4);
+}
+
 .btn-cancel {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
@@ -110,6 +121,7 @@
   box-shadow: 0 8px 25px 0 rgba(139, 92, 246, 0.4);
 }
 
+/* Section Styling */
 .section {
   background: white;
   border-radius: 16px;
@@ -176,6 +188,7 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 16px;
 }
 
 .data-table thead {
@@ -213,31 +226,88 @@
   border-bottom: none;
 }
 
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 48px 24px;
-  color: #6b7280;
+/* Action Buttons in Table */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-.empty-state-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.empty-state-text {
-  font-size: 18px;
+.btn-edit {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
   font-weight: 500;
-  margin-bottom: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
-.empty-state-subtext {
-  font-size: 14px;
-  opacity: 0.7;
+.btn-edit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
-/* Modal Enhancements - FIXED VERSION */
+.btn-delete {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.btn-delete:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-draft {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-inprogress {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-canceled {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Modal Styling */
 .modal {
   position: fixed !important;
   top: 0 !important;
@@ -245,10 +315,10 @@
   width: 100% !important;
   height: 100% !important;
   z-index: 1050 !important;
-  display: block !important; /* Changed from flex to block */
+  display: block !important;
   background-color: rgba(0, 0, 0, 0.5) !important;
-  overflow-y: auto !important; /* Enable vertical scrolling */
-  padding: 20px 0 !important; /* Add padding top and bottom */
+  overflow-y: auto !important;
+  padding: 20px 0 !important;
 }
 
 .modal-dialog {
@@ -257,7 +327,7 @@
   width: 90% !important;
   position: relative !important;
   transform: none !important;
-  min-height: auto !important; /* Allow natural height */
+  min-height: auto !important;
 }
 
 .modal-content {
@@ -266,7 +336,7 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
   overflow: hidden !important;
   backdrop-filter: blur(10px) !important;
-  margin: 20px 0 !important; /* Add top and bottom margin for spacing */
+  margin: 20px 0 !important;
 }
 
 .modal-header {
@@ -274,18 +344,19 @@
   color: white !important;
   border-bottom: none !important;
   padding: 24px 28px !important;
-  position: relative !important; /* Ensure close button is positioned correctly */
+  position: relative !important;
 }
 
 .modal-title {
   font-weight: 700 !important;
   font-size: 1.375rem !important;
   margin: 0 !important;
-  padding-right: 50px !important; /* Give space for close button */
+  padding-right: 50px !important;
 }
 
-/* Fixed close button styling */
-.modal-header .btn-close {
+.modal-header .btn-close,
+.modal-header .close,
+.modal-header button[aria-label="Close"] {
   background: rgba(255, 255, 255, 0.2) !important;
   border: none !important;
   color: white !important;
@@ -301,38 +372,12 @@
   top: 50% !important;
   right: 24px !important;
   transform: translateY(-50%) !important;
-  z-index: 10 !important; /* Ensure it's above other content */
-  cursor: pointer !important;
-}
-
-.modal-header .btn-close:hover {
-  opacity: 1 !important;
-  background: rgba(255, 255, 255, 0.3) !important;
-}
-
-/* Alternative close button if using × character */
-.modal-header .close,
-.modal-header button[aria-label="Close"] {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border: none !important;
-  color: white !important;
-  opacity: 0.8 !important;
-  font-size: 1.5rem !important;
-  border-radius: 50% !important;
-  width: 32px !important;
-  height: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  position: absolute !important;
-  top: 50% !important;
-  right: 24px !important;
-  transform: translateY(-50%) !important;
   z-index: 10 !important;
   cursor: pointer !important;
   line-height: 1 !important;
 }
 
+.modal-header .btn-close:hover,
 .modal-header .close:hover,
 .modal-header button[aria-label="Close"]:hover {
   opacity: 1 !important;
@@ -342,8 +387,8 @@
 .modal-body {
   padding: 28px !important;
   background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%) !important;
-  max-height: 60vh !important; /* Limit body height to 60% of viewport */
-  overflow-y: auto !important; /* Enable scrolling within modal body */
+  max-height: 60vh !important;
+  overflow-y: auto !important;
 }
 
 .modal-body .space-y-4 > div {
@@ -386,7 +431,7 @@
   display: flex !important;
   gap: 12px !important;
   justify-content: flex-end !important;
-  position: sticky !important; /* Make footer stick to bottom */
+  position: sticky !important;
   bottom: 0 !important;
 }
 
@@ -455,34 +500,77 @@
   font-weight: 500;
 }
 
-/* Status Badges */
-.status-badge {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #6b7280;
 }
 
-.status-draft {
-  background-color: #fef3c7;
-  color: #92400e;
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
 }
 
-.status-progress {
-  background-color: #dbeafe;
-  color: #1e40af;
+.empty-state-text {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 8px;
 }
 
-.status-completed {
-  background-color: #d1fae5;
-  color: #065f46;
+.empty-state-subtext {
+  font-size: 14px;
+  opacity: 0.7;
 }
 
-.status-canceled {
-  background-color: #fee2e2;
-  color: #991b1b;
+/* Utility Classes */
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.block {
+  display: block;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+.border {
+  border: 1px solid #d1d5db;
+}
+
+.rounded {
+  border-radius: 0.375rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
 }
 
 /* Responsive Design */
@@ -513,6 +601,18 @@
     flex-direction: column;
   }
 
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
   .section {
     padding: 20px;
   }
@@ -533,7 +633,7 @@
   }
 
   .modal {
-    padding: 10px 0 !important; /* Reduce padding on mobile */
+    padding: 10px 0 !important;
   }
 
   .modal-dialog {
@@ -543,7 +643,7 @@
 
   .modal-body {
     padding: 20px !important;
-    max-height: 50vh !important; /* Reduce max height on mobile */
+    max-height: 50vh !important;
   }
 
   .modal-footer {
@@ -568,6 +668,6 @@
   }
 
   .modal-body {
-    max-height: 40vh !important; /* Further reduce on very small screens */
+    max-height: 40vh !important;
   }
 }
