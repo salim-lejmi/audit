@@ -108,14 +108,14 @@ namespace server.Controllers
 
     public class UpdateProfileRequest
     {
-        public string Name { get; set; }
-        public string PhoneNumber { get; set; }
+        public string? Name { get; set; }
+        public string? PhoneNumber { get; set; }
         
         // Password change fields
-        public string? OldPassword { get; set; } = null;
-        public string? NewPassword { get; set; } = null;
+        public string? OldPassword { get; set; }
+        public string? NewPassword { get; set; }
         
-        // Company name only for SubscriptionManager
-        public string CompanyName { get; set; }
+        // Company name only for SubscriptionManager - make it nullable
+        public string? CompanyName { get; set; }
     }
 }

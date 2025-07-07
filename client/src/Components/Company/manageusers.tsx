@@ -119,23 +119,50 @@ const ManageUsers: React.FC = () => {
     });
   };
 
-  const handleCreateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await axios.post('/api/company/users', createForm);
-      setShowCreateModal(false);
-      setCreateForm({
-        name: '',
-        email: '',
-        phoneNumber: '',
-        password: '',
-        role: 'User'
-      });
-      fetchUsers();
-    } catch (err) {
+ const handleCreateSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  // Debug: Log the form data being sent
+  console.log('Creating user with data:', createForm);
+  
+  try {
+    const response = await axios.post('/api/company/users', createForm);
+    
+    // Debug: Log successful response
+    console.log('User created successfully:', response.data);
+    
+    setShowCreateModal(false);
+    setCreateForm({
+      name: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+      role: 'User'
+    });
+    fetchUsers();
+  } catch (err) {
+    // Debug: Log detailed error information
+    console.error('Error creating user:', err);
+    
+    if (axios.isAxiosError(err)) {
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
+      console.error('Error headers:', err.response?.headers);
+      
+      // Set more specific error message based on response
+      if (err.response?.data?.message) {
+        setError(`Échec de la création de l'utilisateur: ${err.response.data.message}`);
+      } else if (err.response?.status === 400) {
+        setError('Échec de la création de l\'utilisateur: Données invalides');
+      } else {
+        setError('Échec de la création de l\'utilisateur');
+      }
+    } else {
+      console.error('Non-Axios error:', err);
       setError('Échec de la création de l\'utilisateur');
     }
-  };
+  }
+};
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

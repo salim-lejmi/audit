@@ -103,41 +103,48 @@ const AdminManageUsers: React.FC = () => {
     }
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedUser) return;
-    
-    try {
-      await axios.put(`/api/admin/users/${selectedUser.userId}`, editForm);
-      setShowEditModal(false);
-      fetchUsers();
-    } catch (err) {
-      setError('Échec de la mise à jour de l\'utilisateur');
-    }
-  };
+ 
 
-  const handleDeleteConfirm = async () => {
-    if (!selectedUser) return;
+const handleDeleteConfirm = async () => {
+  if (!selectedUser) return;
+  
+  // Debug: Log the user being deleted
+  console.log('Deleting user:', selectedUser);
+  console.log('Delete URL:', `/api/admin/users/${selectedUser.userId}`);
+  
+  try {
+    const response = await axios.delete(`/api/admin/users/${selectedUser.userId}`);
     
-    try {
-      await axios.delete(`/api/admin/users/${selectedUser.userId}`);
-      setShowDeleteModal(false);
-      fetchUsers();
-    } catch (err) {
+    // Debug: Log successful response
+    console.log('User deleted successfully:', response.data);
+    
+    setShowDeleteModal(false);
+    fetchUsers();
+  } catch (err) {
+    // Debug: Log detailed error information
+    console.error('Error deleting user:', err);
+    
+    if (axios.isAxiosError(err)) {
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
+      console.error('Error headers:', err.response?.headers);
+      
+      // Set more specific error message based on response
+      if (err.response?.data?.message) {
+        setError(`Échec de la suppression de l'utilisateur: ${err.response.data.message}`);
+      } else if (err.response?.status === 403) {
+        setError('Échec de la suppression de l\'utilisateur: Permissions insuffisantes');
+      } else if (err.response?.status === 404) {
+        setError('Échec de la suppression de l\'utilisateur: Utilisateur introuvable');
+      } else {
+        setError('Échec de la suppression de l\'utilisateur');
+      }
+    } else {
+      console.error('Non-Axios error:', err);
       setError('Échec de la suppression de l\'utilisateur');
     }
-  };
-
-  const openEditModal = (user: User) => {
-    setSelectedUser(user);
-    setEditForm({
-      name: user.name,
-      email: user.email,
-      phoneNumber: user.phoneNumber || '',
-      role: user.role
-    });
-    setShowEditModal(true);
-  };
+  }
+};  
 
   const openDeleteModal = (user: User) => {
     setSelectedUser(user);

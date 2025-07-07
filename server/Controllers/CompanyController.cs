@@ -310,84 +310,105 @@ private string GenerateEmailVerificationToken()
             });
         }
 
-        [HttpDelete("users/{userId}")]
-        public async Task<IActionResult> DeleteUser(int userId)
+   [HttpDelete("users/{userId}")]
+public async Task<IActionResult> DeleteUser(int userId)
+{
+    try
+    {
+        // Check if user is a SubscriptionManager
+        var userRole = HttpContext.Session.GetString("UserRole");
+        if (userRole != "SubscriptionManager")
         {
-            try
-            {
-                // Check if user is a SubscriptionManager
-                var userRole = HttpContext.Session.GetString("UserRole");
-                if (userRole != "SubscriptionManager")
-                {
-                    return Forbid();
-                }
-
-                // Get companyId from session
-                var companyId = HttpContext.Session.GetInt32("CompanyId");
-                if (!companyId.HasValue)
-                {
-                    return BadRequest(new { message = "Invalid company ID" });
-                }
-
-                // Find user
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.CompanyId == companyId);
-                if (user == null)
-                {
-                    return NotFound(new { message = "User not found" });
-                }
-
-                // Prevent deleting the SubscriptionManager
-                if (user.Role == "SubscriptionManager")
-                {
-                    return BadRequest(new { message = "Cannot delete the Subscription Manager" });
-                }
-
-                // --- UPDATED DELETION LOGIC ---
-
-                // First, delete notifications for this user (notifications sent TO the user)
-                var userNotifications = await _context.Notifications
-                                                    .Where(n => n.UserId == userId)
-                                                    .ToListAsync();
-                _context.Notifications.RemoveRange(userNotifications);
-
-                // Find all actions where this user is responsible or created by this user
-                var responsibleActions = await _context.Actions
-                                                        .Where(a => a.ResponsibleId == userId)
-                                                        .ToListAsync();
-
-                var createdByActions = await _context.Actions
-                                                    .Where(a => a.CreatedById == userId)
-                                                    .ToListAsync();
-
-                // Combine both lists and get unique actions
-                var allUserActions = responsibleActions.Union(createdByActions).Distinct().ToList();
-
-                // Delete notifications that reference these actions
-                if (allUserActions.Any())
-                {
-                    var actionIds = allUserActions.Select(a => a.ActionId).ToList();
-                    var actionNotifications = await _context.Notifications
-                                                           .Where(n => n.RelatedActionId.HasValue && actionIds.Contains(n.RelatedActionId.Value))
-                                                           .ToListAsync();
-                    _context.Notifications.RemoveRange(actionNotifications);
-                }
-
-                // Now delete the actions
-                _context.Actions.RemoveRange(allUserActions);
-
-                // Finally, delete the user
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { message = "User deleted successfully" });
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                Console.WriteLine($"Error deleting user: {ex.Message}");
-                return StatusCode(500, new { message = "An error occurred while deleting the user", details = ex.Message });
-            }
+            return Forbid();
         }
+
+        // Get companyId from session
+        var companyId = HttpContext.Session.GetInt32("CompanyId");
+        if (!companyId.HasValue)
+        {
+            return BadRequest(new { message = "Invalid company ID" });
+        }
+
+        // Find user
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.CompanyId == companyId);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        // Prevent deleting the SubscriptionManager
+        if (user.Role == "SubscriptionManager")
+        {
+            return BadRequest(new { message = "Cannot delete the Subscription Manager" });
+        }
+
+        // --- UPDATED DELETION LOGIC ---
+
+        // 1. Delete notifications for this user (notifications sent TO the user)
+        var userNotifications = await _context.Notifications
+                                            .Where(n => n.UserId == userId)
+                                            .ToListAsync();
+        _context.Notifications.RemoveRange(userNotifications);
+
+        // 2. Find all actions where this user is responsible or created by this user
+        var responsibleActions = await _context.Actions
+                                                .Where(a => a.ResponsibleId == userId)
+                                                .ToListAsync();
+
+        var createdByActions = await _context.Actions
+                                            .Where(a => a.CreatedById == userId)
+                                            .ToListAsync();
+
+        // Combine both lists and get unique actions
+        var allUserActions = responsibleActions.Union(createdByActions).Distinct().ToList();
+
+        // Delete notifications that reference these actions
+        if (allUserActions.Any())
+        {
+            var actionIds = allUserActions.Select(a => a.ActionId).ToList();
+            var actionNotifications = await _context.Notifications
+                                                   .Where(n => n.RelatedActionId.HasValue && actionIds.Contains(n.RelatedActionId.Value))
+                                                   .ToListAsync();
+            _context.Notifications.RemoveRange(actionNotifications);
+        }
+
+        // Delete the actions
+        _context.Actions.RemoveRange(allUserActions);
+
+        // 3. Delete all Revue entities created by this user
+        var revueRequirements = await _context.RevueRequirements
+                                              .Where(rr => rr.CreatedById == userId)
+                                              .ToListAsync();
+        _context.RevueRequirements.RemoveRange(revueRequirements);
+
+        var revueLegalTexts = await _context.RevueLegalTexts
+                                           .Where(rlt => rlt.CreatedById == userId)
+                                           .ToListAsync();
+        _context.RevueLegalTexts.RemoveRange(revueLegalTexts);
+
+        var revueActions = await _context.RevueActions
+                                        .Where(ra => ra.CreatedById == userId)
+                                        .ToListAsync();
+        _context.RevueActions.RemoveRange(revueActions);
+
+        var revueStakeholders = await _context.RevueStakeholders
+                                             .Where(rs => rs.CreatedById == userId)
+                                             .ToListAsync();
+        _context.RevueStakeholders.RemoveRange(revueStakeholders);
+
+        // 4. Finally, delete the user
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "User deleted successfully" });
+    }
+    catch (Exception ex)
+    {
+        // Log the exception
+        Console.WriteLine($"Error deleting user: {ex.Message}");
+        return StatusCode(500, new { message = "An error occurred while deleting the user", details = ex.Message });
+    }
+}
         [HttpPut("users/{userId}/role")]
         public async Task<IActionResult> UpdateUserRole(int userId, [FromBody] UpdateRoleRequest request)
         {
