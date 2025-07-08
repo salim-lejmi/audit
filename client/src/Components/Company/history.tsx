@@ -208,7 +208,7 @@ const HistoryPage: React.FC = () => {
       <div className="container">
         {/* Header */}
         <div className="page-header">
-          <h1>📋 Historique des Documents</h1>
+          <h1>Historique des Documents</h1>
         </div>
 
         {/* Filters Section */}
@@ -276,7 +276,7 @@ const HistoryPage: React.FC = () => {
 
             <div className="filter-actions">
               <button onClick={clearFilters} className="clear-filters-btn">
-                🗑️ Effacer
+              Effacer
               </button>
             </div>
           </div>
@@ -306,11 +306,11 @@ const HistoryPage: React.FC = () => {
                 <thead>
                   <tr>
                     <th>N°</th>
-                    <th>👤 Utilisateur</th>
-                    <th>📄 Document</th>
-                    <th>📂 Source</th>
-                    <th>📅 Date de création</th>
-                    <th>📝 Date de modification</th>
+                    <th>Utilisateur</th>
+                    <th>Document</th>
+                    <th>Source</th>
+                    <th>Date de création</th>
+                    <th>Date de modification</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Modal, Button } from 'react-bootstrap';
+import { Edit, Trash2 } from 'lucide-react';
 import '../../styles/revueDetail.css';
 
 interface ReviewDetail {
@@ -564,21 +565,22 @@ const RevueDetailPage: React.FC = () => {
                       <td>
                         <div className="action-buttons">
                           {canModifyItem(lt.createdById) && (
-                            <button 
-                              onClick={() => handleEditLegalText(lt)}
-                              className="btn-edit"
-                            >
-                              Modifier
-                            </button>
+                          <button 
+      onClick={() => handleEditLegalText(lt)}
+      className="btn-action btn-edit"
+      title="Modifier"
+    >
+      <Edit size={16} />
+    </button>
                           )}
                           {canDeleteItem(lt.createdById) && (
-                            <button 
-                              onClick={() => handleDeleteLegalText(lt.legalTextId)}
-                              className="btn-delete"
-                            >
-                              Supprimer
-                            </button>
-                          )}
+<button 
+      onClick={() => handleDeleteLegalText(lt.legalTextId)}
+      className="btn-action btn-delete"
+      title="Supprimer"
+    >
+      <Trash2 size={16} />
+    </button>                          )}
                         </div>
                       </td>
                     )}
@@ -623,21 +625,22 @@ const RevueDetailPage: React.FC = () => {
                       <td>
                         <div className="action-buttons">
                           {canModifyItem(req.createdById) && (
-                            <button 
-                              onClick={() => handleEditRequirement(req)}
-                              className="btn-edit"
-                            >
-                              Modifier
-                            </button>
-                          )}
-                          {canDeleteItem(req.createdById) && (
-                            <button 
-                              onClick={() => handleDeleteRequirement(req.requirementId)}
-                              className="btn-delete"
-                            >
-                              Supprimer
-                            </button>
-                          )}
+<button 
+      onClick={() => handleEditRequirement(req)}
+      className="btn-action btn-edit"
+      title="Modifier"
+    >
+      <Edit size={16} />
+    </button>
+  )}
+  {canDeleteItem(req.createdById) && (
+    <button 
+      onClick={() => handleDeleteRequirement(req.requirementId)}
+      className="btn-action btn-delete"
+      title="Supprimer"
+    >
+      <Trash2 size={16} />
+    </button>                          )}
                         </div>
                       </td>
                     )}
@@ -682,21 +685,22 @@ const RevueDetailPage: React.FC = () => {
                       <td>
                         <div className="action-buttons">
                           {canModifyItem(act.createdById) && (
-                            <button 
-                              onClick={() => handleEditAction(act)}
-                              className="btn-edit"
-                            >
-                              Modifier
-                            </button>
-                          )}
-                          {canDeleteItem(act.createdById) && (
-                            <button 
-                              onClick={() => handleDeleteAction(act.actionId)}
-                              className="btn-delete"
-                            >
-                              Supprimer
-                            </button>
-                          )}
+<button 
+      onClick={() => handleEditAction(act)}
+      className="btn-action btn-edit"
+      title="Modifier"
+    >
+      <Edit size={16} />
+    </button>
+  )}
+  {canDeleteItem(act.createdById) && (
+    <button 
+      onClick={() => handleDeleteAction(act.actionId)}
+      className="btn-action btn-delete"
+      title="Supprimer"
+    >
+      <Trash2 size={16} />
+    </button>                          )}
                         </div>
                       </td>
                     )}
@@ -741,21 +745,22 @@ const RevueDetailPage: React.FC = () => {
                       <td>
                         <div className="action-buttons">
                           {canModifyItem(stake.createdById) && (
-                            <button 
-                              onClick={() => handleEditStakeholder(stake)}
-                              className="btn-edit"
-                            >
-                              Modifier
-                            </button>
-                          )}
-                          {canDeleteItem(stake.createdById) && (
-                            <button 
-                              onClick={() => handleDeleteStakeholder(stake.stakeholderId)}
-                              className="btn-delete"
-                            >
-                              Supprimer
-                            </button>
-                          )}
+<button 
+      onClick={() => handleEditStakeholder(stake)}
+      className="btn-action btn-edit"
+      title="Modifier"
+    >
+      <Edit size={16} />
+    </button>
+  )}
+  {canDeleteItem(stake.createdById) && (
+    <button 
+      onClick={() => handleDeleteStakeholder(stake.stakeholderId)}
+      className="btn-action btn-delete"
+      title="Supprimer"
+    >
+      <Trash2 size={16} />
+    </button>                          )}
                         </div>
                       </td>
                     )}

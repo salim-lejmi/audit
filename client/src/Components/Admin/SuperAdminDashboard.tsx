@@ -95,10 +95,7 @@ const SuperAdminDashboard: React.FC = () => {
                 <i className="fas fa-check-circle"></i>
                 <span>Approuver/Rejeter des entreprises</span>
               </Link>
-              <Link to="/admin/users/create" className="action-button success">
-                <i className="fas fa-user-plus"></i>
-                <span>Créer un utilisateur</span>
-              </Link>
+             
               <Link to="/admin/users" className="action-button info">
                 <i className="fas fa-users-cog"></i>
                 <span>Gérer les utilisateurs</span>
