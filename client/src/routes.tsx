@@ -24,6 +24,7 @@ import QuotesPage from './Components/Quotes/QuotesPage';
 import PaymentPage from './Components/Payments/PaymentPage';
 import CompanySettings from './Components/Company/CompanySettings';
 import AdminCompanyManagement from './Components/Admin/admincompanymanagement';
+import Dashboard from "./Components/Admin/Dashboard";
 
 const AppRoutes = () => {
   return (
@@ -45,6 +46,8 @@ const AppRoutes = () => {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="quotes" element={<QuotesPage />} />
           <Route path="history" element={<HistoryPage />} />
+                    <Route path="dashboardd" element={<Dashboard />} /> {/* Updated to use new Dashboard */}
+
         </Route>
 
         {/* Subscription Manager Routes */}

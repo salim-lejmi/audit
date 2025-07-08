@@ -45,6 +45,155 @@ namespace server.Controllers
             });
         }
 
+        [HttpGet("dashboard-detailed")]
+        public async Task<IActionResult> GetDashboardDetailed()
+        {
+            try
+            {
+                // Check if user is a SuperAdmin
+                var userRole = HttpContext.Session.GetString("UserRole");
+                if (userRole != "SuperAdmin")
+                {
+                    return Forbid();
+                }
+
+                // Basic stats
+                var totalCompanies = await _context.Companies.CountAsync(c => c.Status == "Approved");
+                var totalUsers = await _context.Users.CountAsync();
+                var pendingRequests = await _context.Companies.CountAsync(c => c.Status == "Pending");
+                var approvedCompanies = await _context.Companies.CountAsync(c => c.Status == "Approved");
+                var rejectedCompanies = await _context.Companies.CountAsync(c => c.Status == "Rejected");
+                var totalTexts = await _context.Texts.CountAsync();
+                var totalActions = await _context.Actions.CountAsync();
+                var totalPayments = await _context.Payments.CountAsync();
+                var totalSubscriptions = await _context.CompanySubscriptions.CountAsync();
+
+                // Email verification stats
+                var emailVerificationStats = new
+                {
+                    verified = await _context.Users.CountAsync(u => u.IsEmailVerified),
+                    unverified = await _context.Users.CountAsync(u => !u.IsEmailVerified)
+                };
+
+                // User role distribution
+                var userRoleDistribution = await _context.Users
+                    .GroupBy(u => u.Role)
+                    .Select(g => new { role = g.Key, count = g.Count() })
+                    .ToListAsync();
+
+                // Company status distribution
+                var companyStatusDistribution = await _context.Companies
+                    .GroupBy(c => c.Status)
+                    .Select(g => new { status = g.Key, count = g.Count() })
+                    .ToListAsync();
+
+                // Recent companies (last 10)
+                var recentCompanies = await _context.Companies
+                    .Include(c => c.Users)
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Take(10)
+                    .Select(c => new
+                    {
+                        companyId = c.CompanyId,
+                        companyName = c.CompanyName,
+                        industry = c.Industry,
+                        status = c.Status,
+                        createdAt = c.CreatedAt,
+                        managerName = c.Users
+                            .Where(u => u.Role == "SubscriptionManager")
+                            .Select(u => u.Name)
+                            .FirstOrDefault() ?? "N/A"
+                    })
+                    .ToListAsync();
+
+                // Monthly growth (last 6 months) - Fixed approach
+                var sixMonthsAgo = DateTime.Now.AddMonths(-6);
+                
+                // Get companies grouped by month
+                var companiesGrouped = await _context.Companies
+                    .Where(c => c.CreatedAt >= sixMonthsAgo)
+                    .GroupBy(c => new { c.CreatedAt.Year, c.CreatedAt.Month })
+                    .Select(g => new
+                    {
+                        year = g.Key.Year,
+                        month = g.Key.Month,
+                        companies = g.Count()
+                    })
+                    .ToListAsync();
+
+                // Get users grouped by month (only if CreatedAt is not null)
+                var usersGrouped = await _context.Users
+                    .Where(u => u.CreatedAt.HasValue && u.CreatedAt.Value >= sixMonthsAgo)
+                    .GroupBy(u => new { u.CreatedAt.Value.Year, u.CreatedAt.Value.Month })
+                    .Select(g => new
+                    {
+                        year = g.Key.Year,
+                        month = g.Key.Month,
+                        users = g.Count()
+                    })
+                    .ToListAsync();
+
+                // Combine the results
+                var monthlyGrowth = companiesGrouped.Select(c => new
+                {
+                    month = c.month.ToString("00") + "/" + c.year,
+                    companies = c.companies,
+                    users = usersGrouped.FirstOrDefault(u => u.year == c.year && u.month == c.month)?.users ?? 0
+                }).OrderBy(x => x.month).ToList();
+
+                // Subscription stats
+                var subscriptionStats = new
+                {
+                    active = await _context.CompanySubscriptions.CountAsync(s => s.Status == "active"),
+                    expired = await _context.CompanySubscriptions.CountAsync(s => s.Status == "expired"),
+                    canceled = await _context.CompanySubscriptions.CountAsync(s => s.Status == "canceled")
+                };
+
+                // Payment stats
+                var paymentStats = new
+                {
+                    succeeded = await _context.Payments.CountAsync(p => p.Status == "succeeded"),
+                    pending = await _context.Payments.CountAsync(p => p.Status == "pending"),
+                    failed = await _context.Payments.CountAsync(p => p.Status == "failed"),
+                    totalRevenue = await _context.Payments
+                        .Where(p => p.Status == "succeeded")
+                        .SumAsync(p => (decimal?)p.Amount) ?? 0m
+                };
+
+                return Ok(new
+                {
+                    totalCompanies,
+                    totalUsers,
+                    pendingRequests,
+                    approvedCompanies,
+                    rejectedCompanies,
+                    totalTexts,
+                    totalActions,
+                    totalPayments,
+                    totalSubscriptions,
+                    emailVerificationStats,
+                    userRoleDistribution,
+                    companyStatusDistribution,
+                    recentCompanies,
+                    monthlyGrowth,
+                    subscriptionStats,
+                    paymentStats
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details
+                Console.WriteLine($"Dashboard error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                // Return a basic response with error info
+                return StatusCode(500, new { 
+                    message = "Error fetching dashboard data", 
+                    error = ex.Message 
+                });
+            }
+        }
+
         [HttpGet("pending-companies")]
         public async Task<IActionResult> GetPendingCompanies()
         {
@@ -264,340 +413,342 @@ namespace server.Controllers
             return Ok(new { message = "User role updated successfully" });
         }
 
-   [HttpDelete("users/{userId}")]
-public async Task<IActionResult> DeleteUser(int userId)
-{
-    try
-    {
-        // Check if user is a SuperAdmin
-        var userRole = HttpContext.Session.GetString("UserRole");
-        if (userRole != "SuperAdmin")
+        [HttpDelete("users/{userId}")]
+        public async Task<IActionResult> DeleteUser(int userId)
         {
-            return Forbid();
-        }
-
-        // Find user
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null)
-        {
-            return NotFound(new { message = "User not found" });
-        }
-
-        // Prevent deleting a SubscriptionManager
-        if (user.Role == "SubscriptionManager")
-        {
-            return BadRequest(new { message = "Cannot delete a Subscription Manager" });
-        }
-
-        // --- UPDATED DELETION LOGIC ---
-
-        // 1. Delete notifications for this user (notifications sent TO the user)
-        var userNotifications = await _context.Notifications
-                                            .Where(n => n.UserId == userId)
-                                            .ToListAsync();
-        _context.Notifications.RemoveRange(userNotifications);
-
-        // 2. Find all actions where this user is responsible or created by this user
-        var responsibleActions = await _context.Actions
-                                                .Where(a => a.ResponsibleId == userId)
-                                                .ToListAsync();
-
-        var createdByActions = await _context.Actions
-                                            .Where(a => a.CreatedById == userId)
-                                            .ToListAsync();
-
-        // Combine both lists and get unique actions
-        var allUserActions = responsibleActions.Union(createdByActions).Distinct().ToList();
-
-        // Delete notifications that reference these actions
-        if (allUserActions.Any())
-        {
-            var actionIds = allUserActions.Select(a => a.ActionId).ToList();
-            var actionNotifications = await _context.Notifications
-                                                   .Where(n => n.RelatedActionId.HasValue && actionIds.Contains(n.RelatedActionId.Value))
-                                                   .ToListAsync();
-            _context.Notifications.RemoveRange(actionNotifications);
-        }
-
-        // Delete the actions
-        _context.Actions.RemoveRange(allUserActions);
-
-        // 3. Delete all Revue entities created by this user
-        var revueRequirements = await _context.RevueRequirements
-                                              .Where(rr => rr.CreatedById == userId)
-                                              .ToListAsync();
-        _context.RevueRequirements.RemoveRange(revueRequirements);
-
-        var revueLegalTexts = await _context.RevueLegalTexts
-                                           .Where(rlt => rlt.CreatedById == userId)
-                                           .ToListAsync();
-        _context.RevueLegalTexts.RemoveRange(revueLegalTexts);
-
-        var revueActions = await _context.RevueActions
-                                        .Where(ra => ra.CreatedById == userId)
-                                        .ToListAsync();
-        _context.RevueActions.RemoveRange(revueActions);
-
-        var revueStakeholders = await _context.RevueStakeholders
-                                             .Where(rs => rs.CreatedById == userId)
-                                             .ToListAsync();
-        _context.RevueStakeholders.RemoveRange(revueStakeholders);
-
-        // 4. Finally, delete the user
-        _context.Users.Remove(user);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "User deleted successfully" });
-    }
-    catch (Exception ex)
-    {
-        // Log the exception
-        Console.WriteLine($"Error deleting user: {ex.Message}");
-        return StatusCode(500, new { message = "An error occurred while deleting the user", details = ex.Message });
-    }
-}
-[HttpGet("companies/detailed")]
-public async Task<IActionResult> GetAllCompaniesDetailed()
-{
-    // Check if user is a SuperAdmin
-    var userRole = HttpContext.Session.GetString("UserRole");
-    if (userRole != "SuperAdmin")
-    {
-        return Forbid();
-    }
-
-    // Get all companies with detailed information
-    var companies = await _context.Companies
-        .Select(c => new
-        {
-            companyId = c.CompanyId,
-            companyName = c.CompanyName,
-            industry = c.Industry,
-            status = c.Status,
-            createdAt = c.CreatedAt,
-            isEmailVerified = c.IsEmailVerified,
-            totalUsers = c.Users.Count(),
-            totalTexts = c.Texts.Count(),
-            totalActions = c.Actions.Count(),
-            subscriptionManagerName = c.Users
-                .Where(u => u.Role == "SubscriptionManager")
-                .Select(u => u.Name)
-                .FirstOrDefault(),
-            subscriptionManagerEmail = c.Users
-                .Where(u => u.Role == "SubscriptionManager")
-                .Select(u => u.Email)
-                .FirstOrDefault()
-        })
-        .OrderByDescending(c => c.createdAt)
-        .ToListAsync();
-
-    return Ok(companies);
-}
-
-[HttpPut("companies/{companyId}")]
-public async Task<IActionResult> UpdateCompany(int companyId, [FromBody] UpdateCompanyRequest request)
-{
-    // Check if user is a SuperAdmin
-    var userRole = HttpContext.Session.GetString("UserRole");
-    if (userRole != "SuperAdmin")
-    {
-        return Forbid();
-    }
-
-    // Find company
-    var company = await _context.Companies.FindAsync(companyId);
-    if (company == null)
-    {
-        return NotFound(new { message = "Company not found" });
-    }
-
-    // Validate request
-    if (string.IsNullOrEmpty(request.CompanyName) || string.IsNullOrEmpty(request.Industry))
-    {
-        return BadRequest(new { message = "Company name and industry are required" });
-    }
-
-    // Check if status is valid
-    var validStatuses = new[] { "Pending", "Approved", "Rejected" };
-    if (!string.IsNullOrEmpty(request.Status) && !validStatuses.Contains(request.Status))
-    {
-        return BadRequest(new { message = "Invalid status" });
-    }
-
-    try
-    {
-        // Update company
-        company.CompanyName = request.CompanyName.Trim();
-        company.Industry = request.Industry.Trim();
-        
-        if (!string.IsNullOrEmpty(request.Status))
-        {
-            company.Status = request.Status;
-        }
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            companyId = company.CompanyId,
-            companyName = company.CompanyName,
-            industry = company.Industry,
-            status = company.Status,
-            createdAt = company.CreatedAt,
-            message = "Company updated successfully"
-        });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new { message = "Failed to update company" });
-    }
-}
-
-       [HttpDelete("companies/{companyId}")]
-public async Task<IActionResult> DeleteCompany(int companyId)
-{
-    try
-    {
-        // Check if user is a SuperAdmin
-        var userRole = HttpContext.Session.GetString("UserRole");
-        if (userRole != "SuperAdmin")
-        {
-            return Forbid();
-        }
-
-        // Find company
-        var company = await _context.Companies.FindAsync(companyId);
-        if (company == null)
-        {
-            return NotFound(new { message = "Company not found" });
-        }
-
-        // Get all users from this company
-        var companyUserIds = await _context.Users
-            .Where(u => u.CompanyId == companyId)
-            .Select(u => u.UserId)
-            .ToListAsync();
-
-        // Get counts for reporting
-        var userCount = companyUserIds.Count;
-        var textCount = await _context.Texts.CountAsync(t => t.CompanyId == companyId);
-        var actionCount = await _context.Actions.CountAsync(a => a.CompanyId == companyId);
-        var subscriptionCount = await _context.CompanySubscriptions.CountAsync(cs => cs.CompanyId == companyId);
-        var paymentCount = await _context.Payments.CountAsync(p => p.CompanyId == companyId);
-
-        // --- MANUAL DELETION OF ENTITIES THAT REFERENCE USERS ---
-
-        // 1. Delete all compliance evaluations and their related data
-        var evaluationsToDelete = await _context.ComplianceEvaluations
-            .Where(ce => companyUserIds.Contains(ce.UserId))
-            .ToListAsync();
-
-        var evaluationIds = evaluationsToDelete.Select(e => e.EvaluationId).ToList();
-
-        // Delete evaluation-related entities first
-        if (evaluationIds.Any())
-        {
-            // Delete observations
-            var observations = await _context.Observations
-                .Where(o => evaluationIds.Contains(o.EvaluationId))
-                .ToListAsync();
-            _context.Observations.RemoveRange(observations);
-
-            // Delete monitoring parameters
-            var monitoringParams = await _context.MonitoringParameters
-                .Where(mp => evaluationIds.Contains(mp.EvaluationId))
-                .ToListAsync();
-            _context.MonitoringParameters.RemoveRange(monitoringParams);
-
-            // Delete evaluation attachments
-            var attachments = await _context.EvaluationAttachments
-                .Where(ea => evaluationIds.Contains(ea.EvaluationId))
-                .ToListAsync();
-            _context.EvaluationAttachments.RemoveRange(attachments);
-
-            // Delete evaluation history
-            var history = await _context.EvaluationHistory
-                .Where(eh => evaluationIds.Contains(eh.EvaluationId))
-                .ToListAsync();
-            _context.EvaluationHistory.RemoveRange(history);
-        }
-
-        // Delete the evaluations themselves
-        _context.ComplianceEvaluations.RemoveRange(evaluationsToDelete);
-
-        // 2. Delete all revue-related entities created by company users
-        var revueRequirements = await _context.RevueRequirements
-            .Where(rr => companyUserIds.Contains(rr.CreatedById))
-            .ToListAsync();
-        _context.RevueRequirements.RemoveRange(revueRequirements);
-
-        var revueLegalTexts = await _context.RevueLegalTexts
-            .Where(rlt => companyUserIds.Contains(rlt.CreatedById))
-            .ToListAsync();
-        _context.RevueLegalTexts.RemoveRange(revueLegalTexts);
-
-        var revueActions = await _context.RevueActions
-            .Where(ra => companyUserIds.Contains(ra.CreatedById))
-            .ToListAsync();
-        _context.RevueActions.RemoveRange(revueActions);
-
-        var revueStakeholders = await _context.RevueStakeholders
-            .Where(rs => companyUserIds.Contains(rs.CreatedById))
-            .ToListAsync();
-        _context.RevueStakeholders.RemoveRange(revueStakeholders);
-
-        // 3. Delete revue de directions created by company users
-        var revueDeDirections = await _context.RevueDeDirections
-            .Where(r => companyUserIds.Contains(r.CreatedById))
-            .ToListAsync();
-        _context.RevueDeDirections.RemoveRange(revueDeDirections);
-
-        // 4. Delete notifications for company users
-        var notifications = await _context.Notifications
-            .Where(n => companyUserIds.Contains(n.UserId))
-            .ToListAsync();
-        _context.Notifications.RemoveRange(notifications);
-
-        // 5. Delete action-related notifications
-        var actionNotifications = await _context.Notifications
-            .Where(n => n.RelatedActionId.HasValue && 
-                       _context.Actions.Any(a => a.ActionId == n.RelatedActionId.Value && a.CompanyId == companyId))
-            .ToListAsync();
-        _context.Notifications.RemoveRange(actionNotifications);
-
-        // 6. Now delete the company (this will cascade to Users, Texts, Actions, CompanySubscriptions, Payments)
-        _context.Companies.Remove(company);
-        
-        await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            message = "Company deleted successfully",
-            deletedCounts = new
+            try
             {
-                users = userCount,
-                texts = textCount,
-                actions = actionCount,
-                subscriptions = subscriptionCount,
-                payments = paymentCount,
-                evaluations = evaluationsToDelete.Count,
-                revues = revueDeDirections.Count,
-                observations = evaluationIds.Any() ? await _context.Observations.CountAsync(o => evaluationIds.Contains(o.EvaluationId)) : 0,
-                monitoringParameters = evaluationIds.Any() ? await _context.MonitoringParameters.CountAsync(mp => evaluationIds.Contains(mp.EvaluationId)) : 0
+                // Check if user is a SuperAdmin
+                var userRole = HttpContext.Session.GetString("UserRole");
+                if (userRole != "SuperAdmin")
+                {
+                    return Forbid();
+                }
+
+                // Find user
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                // Prevent deleting a SubscriptionManager
+                if (user.Role == "SubscriptionManager")
+                {
+                    return BadRequest(new { message = "Cannot delete a Subscription Manager" });
+                }
+
+                // --- UPDATED DELETION LOGIC ---
+
+                // 1. Delete notifications for this user (notifications sent TO the user)
+                var userNotifications = await _context.Notifications
+                                                    .Where(n => n.UserId == userId)
+                                                    .ToListAsync();
+                _context.Notifications.RemoveRange(userNotifications);
+
+                // 2. Find all actions where this user is responsible or created by this user
+                var responsibleActions = await _context.Actions
+                                                        .Where(a => a.ResponsibleId == userId)
+                                                        .ToListAsync();
+
+                var createdByActions = await _context.Actions
+                                                    .Where(a => a.CreatedById == userId)
+                                                    .ToListAsync();
+
+                // Combine both lists and get unique actions
+                var allUserActions = responsibleActions.Union(createdByActions).Distinct().ToList();
+
+                // Delete notifications that reference these actions
+                if (allUserActions.Any())
+                {
+                    var actionIds = allUserActions.Select(a => a.ActionId).ToList();
+                    var actionNotifications = await _context.Notifications
+                                                           .Where(n => n.RelatedActionId.HasValue && actionIds.Contains(n.RelatedActionId.Value))
+                                                           .ToListAsync();
+                    _context.Notifications.RemoveRange(actionNotifications);
+                }
+
+                // Delete the actions
+                _context.Actions.RemoveRange(allUserActions);
+
+                // 3. Delete all Revue entities created by this user
+                var revueRequirements = await _context.RevueRequirements
+                                                      .Where(rr => rr.CreatedById == userId)
+                                                      .ToListAsync();
+                _context.RevueRequirements.RemoveRange(revueRequirements);
+
+                var revueLegalTexts = await _context.RevueLegalTexts
+                                                   .Where(rlt => rlt.CreatedById == userId)
+                                                   .ToListAsync();
+                _context.RevueLegalTexts.RemoveRange(revueLegalTexts);
+
+                var revueActions = await _context.RevueActions
+                                                .Where(ra => ra.CreatedById == userId)
+                                                .ToListAsync();
+                _context.RevueActions.RemoveRange(revueActions);
+
+                var revueStakeholders = await _context.RevueStakeholders
+                                                     .Where(rs => rs.CreatedById == userId)
+                                                     .ToListAsync();
+                _context.RevueStakeholders.RemoveRange(revueStakeholders);
+
+                // 4. Finally, delete the user
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "User deleted successfully" });
             }
-        });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new { message = "An error occurred while deleting the company", details = ex.Message });
-    }
-}
-public class UpdateCompanyRequest
-{
-    public string CompanyName { get; set; }
-    public string Industry { get; set; }
-    public string Status { get; set; }
-}
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Error deleting user: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred while deleting the user", details = ex.Message });
+            }
+        }
+
+        [HttpGet("companies/detailed")]
+        public async Task<IActionResult> GetAllCompaniesDetailed()
+        {
+            // Check if user is a SuperAdmin
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            // Get all companies with detailed information
+            var companies = await _context.Companies
+                .Select(c => new
+                {
+                    companyId = c.CompanyId,
+                    companyName = c.CompanyName,
+                    industry = c.Industry,
+                    status = c.Status,
+                    createdAt = c.CreatedAt,
+                    isEmailVerified = c.IsEmailVerified,
+                    totalUsers = c.Users.Count(),
+                    totalTexts = c.Texts.Count(),
+                    totalActions = c.Actions.Count(),
+                    subscriptionManagerName = c.Users
+                        .Where(u => u.Role == "SubscriptionManager")
+                        .Select(u => u.Name)
+                        .FirstOrDefault(),
+                    subscriptionManagerEmail = c.Users
+                        .Where(u => u.Role == "SubscriptionManager")
+                        .Select(u => u.Email)
+                        .FirstOrDefault()
+                })
+                .OrderByDescending(c => c.createdAt)
+                .ToListAsync();
+
+            return Ok(companies);
+        }
+
+        [HttpPut("companies/{companyId}")]
+        public async Task<IActionResult> UpdateCompany(int companyId, [FromBody] UpdateCompanyRequest request)
+        {
+            // Check if user is a SuperAdmin
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            // Find company
+            var company = await _context.Companies.FindAsync(companyId);
+            if (company == null)
+            {
+                return NotFound(new { message = "Company not found" });
+            }
+
+            // Validate request
+            if (string.IsNullOrEmpty(request.CompanyName) || string.IsNullOrEmpty(request.Industry))
+            {
+                return BadRequest(new { message = "Company name and industry are required" });
+            }
+
+            // Check if status is valid
+            var validStatuses = new[] { "Pending", "Approved", "Rejected" };
+            if (!string.IsNullOrEmpty(request.Status) && !validStatuses.Contains(request.Status))
+            {
+                return BadRequest(new { message = "Invalid status" });
+            }
+
+            try
+            {
+                // Update company
+                company.CompanyName = request.CompanyName.Trim();
+                company.Industry = request.Industry.Trim();
+                
+                if (!string.IsNullOrEmpty(request.Status))
+                {
+                    company.Status = request.Status;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    companyId = company.CompanyId,
+                    companyName = company.CompanyName,
+                    industry = company.Industry,
+                    status = company.Status,
+                    createdAt = company.CreatedAt,
+                    message = "Company updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to update company" });
+            }
+        }
+
+        [HttpDelete("companies/{companyId}")]
+        public async Task<IActionResult> DeleteCompany(int companyId)
+        {
+            try
+            {
+                // Check if user is a SuperAdmin
+                var userRole = HttpContext.Session.GetString("UserRole");
+                if (userRole != "SuperAdmin")
+                {
+                    return Forbid();
+                }
+
+                // Find company
+                var company = await _context.Companies.FindAsync(companyId);
+                if (company == null)
+                {
+                    return NotFound(new { message = "Company not found" });
+                }
+
+                // Get all users from this company
+                var companyUserIds = await _context.Users
+                    .Where(u => u.CompanyId == companyId)
+                    .Select(u => u.UserId)
+                    .ToListAsync();
+
+                // Get counts for reporting
+                var userCount = companyUserIds.Count;
+                var textCount = await _context.Texts.CountAsync(t => t.CompanyId == companyId);
+                var actionCount = await _context.Actions.CountAsync(a => a.CompanyId == companyId);
+                var subscriptionCount = await _context.CompanySubscriptions.CountAsync(cs => cs.CompanyId == companyId);
+                var paymentCount = await _context.Payments.CountAsync(p => p.CompanyId == companyId);
+
+                // --- MANUAL DELETION OF ENTITIES THAT REFERENCE USERS ---
+
+                // 1. Delete all compliance evaluations and their related data
+                var evaluationsToDelete = await _context.ComplianceEvaluations
+                    .Where(ce => companyUserIds.Contains(ce.UserId))
+                    .ToListAsync();
+
+                var evaluationIds = evaluationsToDelete.Select(e => e.EvaluationId).ToList();
+
+                // Delete evaluation-related entities first
+                if (evaluationIds.Any())
+                {
+                    // Delete observations
+                    var observations = await _context.Observations
+                        .Where(o => evaluationIds.Contains(o.EvaluationId))
+                        .ToListAsync();
+                    _context.Observations.RemoveRange(observations);
+
+                    // Delete monitoring parameters
+                    var monitoringParams = await _context.MonitoringParameters
+                        .Where(mp => evaluationIds.Contains(mp.EvaluationId))
+                        .ToListAsync();
+                    _context.MonitoringParameters.RemoveRange(monitoringParams);
+
+                    // Delete evaluation attachments
+                    var attachments = await _context.EvaluationAttachments
+                        .Where(ea => evaluationIds.Contains(ea.EvaluationId))
+                        .ToListAsync();
+                    _context.EvaluationAttachments.RemoveRange(attachments);
+
+                    // Delete evaluation history
+                    var history = await _context.EvaluationHistory
+                        .Where(eh => evaluationIds.Contains(eh.EvaluationId))
+                        .ToListAsync();
+                    _context.EvaluationHistory.RemoveRange(history);
+                }
+
+                // Delete the evaluations themselves
+                _context.ComplianceEvaluations.RemoveRange(evaluationsToDelete);
+
+                // 2. Delete all revue-related entities created by company users
+                var revueRequirements = await _context.RevueRequirements
+                    .Where(rr => companyUserIds.Contains(rr.CreatedById))
+                    .ToListAsync();
+                _context.RevueRequirements.RemoveRange(revueRequirements);
+
+                var revueLegalTexts = await _context.RevueLegalTexts
+                    .Where(rlt => companyUserIds.Contains(rlt.CreatedById))
+                    .ToListAsync();
+                _context.RevueLegalTexts.RemoveRange(revueLegalTexts);
+
+                var revueActions = await _context.RevueActions
+                    .Where(ra => companyUserIds.Contains(ra.CreatedById))
+                    .ToListAsync();
+                _context.RevueActions.RemoveRange(revueActions);
+
+                var revueStakeholders = await _context.RevueStakeholders
+                    .Where(rs => companyUserIds.Contains(rs.CreatedById))
+                    .ToListAsync();
+                _context.RevueStakeholders.RemoveRange(revueStakeholders);
+
+                // 3. Delete revue de directions created by company users
+                var revueDeDirections = await _context.RevueDeDirections
+                    .Where(r => companyUserIds.Contains(r.CreatedById))
+                    .ToListAsync();
+                _context.RevueDeDirections.RemoveRange(revueDeDirections);
+
+                // 4. Delete notifications for company users
+                var notifications = await _context.Notifications
+                    .Where(n => companyUserIds.Contains(n.UserId))
+                    .ToListAsync();
+                _context.Notifications.RemoveRange(notifications);
+
+                // 5. Delete action-related notifications
+                var actionNotifications = await _context.Notifications
+                    .Where(n => n.RelatedActionId.HasValue && 
+                               _context.Actions.Any(a => a.ActionId == n.RelatedActionId.Value && a.CompanyId == companyId))
+                    .ToListAsync();
+                _context.Notifications.RemoveRange(actionNotifications);
+
+                // 6. Now delete the company (this will cascade to Users, Texts, Actions, CompanySubscriptions, Payments)
+                _context.Companies.Remove(company);
+                
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Company deleted successfully",
+                    deletedCounts = new
+                    {
+                        users = userCount,
+                        texts = textCount,
+                        actions = actionCount,
+                        subscriptions = subscriptionCount,
+                        payments = paymentCount,
+                        evaluations = evaluationsToDelete.Count,
+                        revues = revueDeDirections.Count,
+                        observations = evaluationIds.Any() ? await _context.Observations.CountAsync(o => evaluationIds.Contains(o.EvaluationId)) : 0,
+                        monitoringParameters = evaluationIds.Any() ? await _context.MonitoringParameters.CountAsync(mp => evaluationIds.Contains(mp.EvaluationId)) : 0
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while deleting the company", details = ex.Message });
+            }
+        }
+
+        public class UpdateCompanyRequest
+        {
+            public string CompanyName { get; set; }
+            public string Industry { get; set; }
+            public string Status { get; set; }
+        }
 
         public class UpdateUserRequest
         {

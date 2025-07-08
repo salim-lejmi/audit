@@ -16,18 +16,18 @@ namespace server.Services
 
         public async Task SendEmailVerificationAsync(string email, string name, string verificationLink)
         {
-            var subject = "Verify Your Email - Prevention Plus";
+            var subject = "Vérifiez votre adresse e-mail - Prevention Plus";
             var body = $@"
                 <html>
                 <body>
-                    <h2>Welcome to Prevention Plus, {name}!</h2>
-                    <p>Thank you for registering your company with Prevention Plus.</p>
-                    <p>Please click the link below to verify your email address:</p>
-                    <p><a href='{verificationLink}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Verify Email</a></p>
-                    <p>Once your email is verified, your company registration will be sent to our administrators for approval.</p>
-                    <p>If you didn't create this account, please ignore this email.</p>
+                    <h2>Bienvenue sur Prevention Plus, {name} !</h2>
+                    <p>Merci d'avoir inscrit votre entreprise sur Prevention Plus.</p>
+                    <p>Veuillez cliquer sur le lien ci-dessous pour vérifier votre adresse e-mail :</p>
+                    <p><a href='{verificationLink}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Vérifier l'adresse e-mail</a></p>
+                    <p>Une fois votre e-mail vérifié, l'inscription de votre entreprise sera transmise à nos administrateurs pour approbation.</p>
+                    <p>Si vous n'êtes pas à l'origine de cette inscription, veuillez ignorer cet e-mail.</p>
                     <br>
-                    <p>Best regards,<br>Prevention Plus Team</p>
+                    <p>Cordialement,<br>L'équipe Prevention Plus</p>
                 </body>
                 </html>";
 
@@ -36,18 +36,18 @@ namespace server.Services
 
         public async Task SendUserWelcomeEmailAsync(string email, string name, string verificationLink)
         {
-            var subject = "Welcome to Prevention Plus - Verify Your Account";
+            var subject = "Bienvenue sur Prevention Plus - Vérifiez votre compte";
             var body = $@"
                 <html>
                 <body>
-                    <h2>Welcome to Prevention Plus, {name}!</h2>
-                    <p>An account has been created for you by your company administrator.</p>
-                    <p>Please click the link below to verify your email address and activate your account:</p>
-                    <p><a href='{verificationLink}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Verify Email & Activate Account</a></p>
-                    <p>Once verified, you'll be able to log in to your account.</p>
-                    <p>If you didn't expect this email, please contact your company administrator.</p>
+                    <h2>Bienvenue sur Prevention Plus, {name} !</h2>
+                    <p>Un compte a été créé pour vous par l’administrateur de votre entreprise.</p>
+                    <p>Veuillez cliquer sur le lien ci-dessous pour vérifier votre adresse e-mail et activer votre compte :</p>
+                    <p><a href='{verificationLink}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Vérifier et activer le compte</a></p>
+                    <p>Une fois vérifié, vous pourrez vous connecter à votre compte.</p>
+                    <p>Si vous ne vous attendiez pas à recevoir cet e-mail, veuillez contacter l’administrateur de votre entreprise.</p>
                     <br>
-                    <p>Best regards,<br>Prevention Plus Team</p>
+                    <p>Cordialement,<br>L'équipe Prevention Plus</p>
                 </body>
                 </html>";
 
@@ -56,7 +56,7 @@ namespace server.Services
 
         public async Task SendQuoteEmailAsync(string to, string clientName, string quoteNumber, string message)
         {
-            string subject = $"Quote #{quoteNumber} - Prevention Plus";
+            string subject = $"Devis #{quoteNumber} - Prevention Plus";
             
             string htmlContent = $@"
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
@@ -64,12 +64,12 @@ namespace server.Services
                     <h1>Prevention Plus</h1>
                 </div>
                 <div style='padding: 20px; background-color: #f5f5f5; border: 1px solid #ddd;'>
-                    <p>Hello {clientName},</p>
+                    <p>Bonjour {clientName},</p>
                     <p>{message}</p>
-                    <p>Quote Number: <strong>{quoteNumber}</strong></p>
-                    <p>Please contact us if you have any questions regarding this quote.</p>
-                    <p>Best regards,</p>
-                    <p>Prevention Plus Team</p>
+                    <p>Numéro du devis : <strong>{quoteNumber}</strong></p>
+                    <p>N'hésitez pas à nous contacter si vous avez des questions concernant ce devis.</p>
+                    <p>Cordialement,</p>
+                    <p>L'équipe Prevention Plus</p>
                 </div>
             </div>";
 
@@ -106,8 +106,8 @@ namespace server.Services
             }
             catch (Exception ex)
             {
-                // Log the exception (implement proper logging)
-                Console.WriteLine($"Email sending failed: {ex.Message}");
+                // Enregistrer l’erreur (ajouter un vrai système de journalisation)
+                Console.WriteLine($"Échec de l’envoi de l’e-mail : {ex.Message}");
                 throw;
             }
         }

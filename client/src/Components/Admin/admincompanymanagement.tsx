@@ -158,7 +158,6 @@ const AdminCompanyManagement: React.FC = () => {
       <div className="container">
         <div className="section-header">
           <h2>Gestion des entreprises</h2>
-          <p className="text-muted">Voir et gérer toutes les entreprises du système</p>
         </div>
 
         <div className="controls-row">

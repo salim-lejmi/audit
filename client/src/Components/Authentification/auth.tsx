@@ -213,9 +213,7 @@ const Auth: React.FC = () => {
                 >
                   {loginIsLoading ? 'Connexion en cours...' : 'Connexion'}
                 </button>
-                <p className="forgot-password-link">
-                  <a href="#!">Mot de passe oublié ?</a>
-                </p>
+                
               </form>
             ) : (
               <form className="auth-form" onSubmit={handleSignup}>

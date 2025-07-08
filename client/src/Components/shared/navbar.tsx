@@ -122,7 +122,21 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
                 <i className="fas fa-file-invoice-dollar"></i>
                 <span className="nav-label">Devis</span>
               </Link>
+              
             </div>
+            
+            
+          )}
+             {(userRole === 'SuperAdmin') && (
+            <div className="nav-item">
+              <Link to={`${getBasePath()}/dashboardd`} className="nav-button">
+                <i className="fas fa-file-invoice-dollar"></i>
+                <span className="nav-label">Dashboard</span>
+              </Link>
+              
+            </div>
+            
+            
           )}
           {(userRole === 'SubscriptionManager') && (
             <div className="nav-item">
@@ -132,6 +146,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
               </Link>
             </div>
           )}
+
           {/* Text Management link */}
           {(userRole === 'SuperAdmin' || userRole === 'SubscriptionManager') && (
             <div className="nav-item">
