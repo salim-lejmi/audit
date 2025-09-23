@@ -652,7 +652,7 @@ const ActionPlan: React.FC = () => {
               </button>
             </div>
             
-            <div className="modal-content">
+<div className="modal-content" style={{ padding: '24px' }}>
               {isAuditor && actionDialog.mode === 'edit' && (
                 <div className="info-alert">
                   En tant qu'auditeur, vous pouvez uniquement modifier la progression et le statut de cette action.

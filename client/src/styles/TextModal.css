@@ -8,9 +8,12 @@
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Changed from center to flex-start */
   z-index: 1000;
   padding: 20px;
+  overflow-y: auto;
+  /* Add padding-top to create space from top */
+  padding-top: 40px;
 }
 
 .modal-container {
@@ -18,10 +21,12 @@
   border-radius: 12px;
   width: 100%;
   max-width: 900px;
-  max-height: 90vh;
+  max-height: calc(100vh - 80px); /* Adjust to account for padding */
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* Remove margin: auto as it's not needed with flexbox */
+  position: relative;
 }
 
 /* Header */
@@ -545,6 +550,10 @@
     max-width: 100%;
     margin: 20px;
     max-height: calc(100vh - 40px);
+  }
+
+  .modal-overlay {
+    padding-top: 20px; /* Reduce top padding on mobile */
   }
 
   .modal-header,

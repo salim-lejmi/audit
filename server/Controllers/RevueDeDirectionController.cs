@@ -34,7 +34,7 @@ namespace server.Controllers
             var companyId = HttpContext.Session.GetInt32("CompanyId");
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             IQueryable<RevueDeDirection> query = _context.RevueDeDirections
@@ -74,7 +74,7 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             if (userRole != "SubscriptionManager")
@@ -85,7 +85,7 @@ namespace server.Controllers
             var domain = await _context.Domains.FindAsync(request.DomainId);
             if (domain == null)
             {
-                return BadRequest(new { message = "Invalid domain" });
+                return BadRequest(new { message = "Domaine invalide" });
             }
 
             var review = new RevueDeDirection
@@ -93,7 +93,7 @@ namespace server.Controllers
                 CompanyId = companyId.Value,
                 DomainId = request.DomainId,
                 ReviewDate = request.ReviewDate,
-                Status = "Draft",
+                Status = "Brouillon",
                 CreatedById = userId.Value,
                 CreatedAt = DateTime.Now
             };
@@ -112,7 +112,7 @@ namespace server.Controllers
             var companyId = HttpContext.Session.GetInt32("CompanyId");
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections
@@ -125,7 +125,7 @@ namespace server.Controllers
 
             if (review == null)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             var result = new
@@ -194,7 +194,7 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             if (userRole != "SubscriptionManager")
@@ -205,18 +205,18 @@ namespace server.Controllers
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
-            if (review.Status != "In Progress")
+            if (review.Status != "En cours")
             {
-                return BadRequest(new { message = "Review can only be completed from In Progress status" });
+                return BadRequest(new { message = "La revue ne peut être complétée qu'à partir du statut En cours" });
             }
 
-            review.Status = "Completed";
+            review.Status = "Terminé";
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Review completed successfully" });
+            return Ok(new { message = "Revue complétée avec succès" });
         }
 
         [HttpGet("{id}/available-requirements")]
@@ -226,7 +226,7 @@ namespace server.Controllers
             var companyId = HttpContext.Session.GetInt32("CompanyId");
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections
@@ -235,7 +235,7 @@ namespace server.Controllers
 
             if (review == null)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             var selectedTextIds = review.LegalTexts.Select(lt => lt.TextId).ToList();
@@ -269,7 +269,7 @@ namespace server.Controllers
             var userRole = HttpContext.Session.GetString("UserRole");
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             if (userRole != "SubscriptionManager")
@@ -280,7 +280,7 @@ namespace server.Controllers
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (request.ReviewDate.HasValue)
@@ -290,8 +290,7 @@ namespace server.Controllers
                 review.Status = request.Status;
 
             await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Review updated successfully" });
+            return Ok(new { message = "Revue mise à jour avec succès" });
         }
 
         // DELETE: api/revue/{id}
@@ -303,7 +302,7 @@ namespace server.Controllers
             var userRole = HttpContext.Session.GetString("UserRole");
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             if (userRole != "SubscriptionManager")
@@ -314,13 +313,13 @@ namespace server.Controllers
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             _context.RevueDeDirections.Remove(review);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Review deleted successfully" });
+            return Ok(new { message = "Revue supprimée avec succès" });
         }
 
         // POST: api/revue/{id}/legaltext
@@ -333,7 +332,7 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             if (userRole != "SubscriptionManager" && userRole != "Auditor")
@@ -344,18 +343,18 @@ namespace server.Controllers
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var text = await _context.Texts.FindAsync(request.TextId);
             if (text == null || text.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Text not found" });
+                return NotFound(new { message = "Texte non trouvé" });
             }
 
             var legalText = new RevueLegalText
@@ -386,7 +385,7 @@ namespace server.Controllers
             var userRole = HttpContext.Session.GetString("UserRole");
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             if (userRole != "SubscriptionManager" && userRole != "Auditor")
@@ -397,12 +396,12 @@ namespace server.Controllers
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var textRequirement = await _context.TextRequirements
@@ -411,7 +410,7 @@ namespace server.Controllers
 
             if (textRequirement == null || textRequirement.Text.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Text requirement not found" });
+                return NotFound(new { message = "Exigence textuelle non trouvée" });
             }
 
             var requirement = new RevueRequirement
@@ -439,7 +438,7 @@ namespace server.Controllers
             var userRole = HttpContext.Session.GetString("UserRole");
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             if (userRole != "SubscriptionManager" && userRole != "Auditor")
@@ -450,12 +449,12 @@ namespace server.Controllers
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var action = new RevueAction
@@ -484,7 +483,7 @@ namespace server.Controllers
             var userRole = HttpContext.Session.GetString("UserRole");
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             if (userRole != "SubscriptionManager" && userRole != "Auditor")
@@ -495,12 +494,12 @@ namespace server.Controllers
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var stakeholder = new RevueStakeholder
@@ -530,24 +529,24 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var legalText = await _context.RevueLegalTexts.FindAsync(legalTextId);
             if (legalText == null || legalText.RevueId != id)
             {
-                return NotFound(new { message = "Legal text not found" });
+                return NotFound(new { message = "Texte légal non trouvé" });
             }
 
             // Check permissions: SubscriptionManager can delete any, Auditor can only delete their own
@@ -558,7 +557,7 @@ namespace server.Controllers
 
             _context.RevueLegalTexts.Remove(legalText);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Legal text deleted successfully" });
+            return Ok(new { message = "Texte légal supprimé avec succès" });
         }
 
         [HttpDelete("{id}/requirement/{requirementId}")]
@@ -570,24 +569,24 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var requirement = await _context.RevueRequirements.FindAsync(requirementId);
             if (requirement == null || requirement.RevueId != id)
             {
-                return NotFound(new { message = "Requirement not found" });
+                return NotFound(new { message = "Exigence non trouvée" });
             }
 
             if (userRole == "Auditor" && requirement.CreatedById != userId.Value)
@@ -597,7 +596,7 @@ namespace server.Controllers
 
             _context.RevueRequirements.Remove(requirement);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Requirement deleted successfully" });
+            return Ok(new { message = "Exigence supprimée avec succès" });
         }
 
         [HttpDelete("{id}/action/{actionId}")]
@@ -609,24 +608,24 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var action = await _context.RevueActions.FindAsync(actionId);
             if (action == null || action.RevueId != id)
             {
-                return NotFound(new { message = "Action not found" });
+                return NotFound(new { message = "Action non trouvée" });
             }
 
             if (userRole == "Auditor" && action.CreatedById != userId.Value)
@@ -636,7 +635,7 @@ namespace server.Controllers
 
             _context.RevueActions.Remove(action);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Action deleted successfully" });
+            return Ok(new { message = "Action supprimée avec succès" });
         }
 
         [HttpDelete("{id}/stakeholder/{stakeholderId}")]
@@ -648,24 +647,24 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var stakeholder = await _context.RevueStakeholders.FindAsync(stakeholderId);
             if (stakeholder == null || stakeholder.RevueId != id)
             {
-                return NotFound(new { message = "Stakeholder not found" });
+                return NotFound(new { message = "Partie prenante non trouvée" });
             }
 
             if (userRole == "Auditor" && stakeholder.CreatedById != userId.Value)
@@ -675,8 +674,9 @@ namespace server.Controllers
 
             _context.RevueStakeholders.Remove(stakeholder);
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Stakeholder deleted successfully" });
+            return Ok(new { message = "Partie prenante supprimée avec succès" });
         }
+
         [HttpPut("{id}/legaltext/{legalTextId}")]
         public async Task<IActionResult> UpdateLegalText(int id, int legalTextId, [FromBody] UpdateLegalTextRequest request)
         {
@@ -686,24 +686,24 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var legalText = await _context.RevueLegalTexts.FindAsync(legalTextId);
             if (legalText == null || legalText.RevueId != id)
             {
-                return NotFound(new { message = "Legal text not found" });
+                return NotFound(new { message = "Texte légal non trouvé" });
             }
 
             // Check permissions: SubscriptionManager can modify any, Auditor can only modify their own
@@ -720,7 +720,7 @@ namespace server.Controllers
             legalText.FollowUp = request.FollowUp;
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Legal text updated successfully" });
+            return Ok(new { message = "Texte légal mis à jour avec succès" });
         }
 
         // PUT: api/revue/{id}/requirement/{requirementId}
@@ -733,24 +733,24 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var requirement = await _context.RevueRequirements.FindAsync(requirementId);
             if (requirement == null || requirement.RevueId != id)
             {
-                return NotFound(new { message = "Requirement not found" });
+                return NotFound(new { message = "Exigence non trouvée" });
             }
 
             if (userRole == "Auditor" && requirement.CreatedById != userId.Value)
@@ -764,7 +764,7 @@ namespace server.Controllers
             requirement.FollowUp = request.FollowUp;
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Requirement updated successfully" });
+            return Ok(new { message = "Exigence mise à jour avec succès" });
         }
 
         // PUT: api/revue/{id}/action/{actionId}
@@ -777,24 +777,24 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var action = await _context.RevueActions.FindAsync(actionId);
             if (action == null || action.RevueId != id)
             {
-                return NotFound(new { message = "Action not found" });
+                return NotFound(new { message = "Action non trouvée" });
             }
 
             if (userRole == "Auditor" && action.CreatedById != userId.Value)
@@ -810,7 +810,7 @@ namespace server.Controllers
             action.FollowUp = request.FollowUp;
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Action updated successfully" });
+            return Ok(new { message = "Action mise à jour avec succès" });
         }
 
         // PUT: api/revue/{id}/stakeholder/{stakeholderId}
@@ -823,24 +823,24 @@ namespace server.Controllers
 
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var review = await _context.RevueDeDirections.FindAsync(id);
             if (review == null || review.CompanyId != companyId.Value)
             {
-                return NotFound(new { message = "Review not found" });
+                return NotFound(new { message = "Revue non trouvée" });
             }
 
             if (review.Status != "In Progress")
             {
-                return BadRequest(new { message = "Cannot modify review in current status" });
+                return BadRequest(new { message = "Impossible de modifier la revue dans son statut actuel" });
             }
 
             var stakeholder = await _context.RevueStakeholders.FindAsync(stakeholderId);
             if (stakeholder == null || stakeholder.RevueId != id)
             {
-                return NotFound(new { message = "Stakeholder not found" });
+                return NotFound(new { message = "Partie prenante non trouvée" });
             }
 
             if (userRole == "Auditor" && stakeholder.CreatedById != userId.Value)
@@ -856,7 +856,7 @@ namespace server.Controllers
             stakeholder.FollowUp = request.FollowUp;
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Stakeholder updated successfully" });
+            return Ok(new { message = "Partie prenante mise à jour avec succès" });
         }
 
         // POST: api/revue/{id}/generate-pdf
@@ -869,7 +869,7 @@ namespace server.Controllers
                 var companyId = HttpContext.Session.GetInt32("CompanyId");
                 if (!userId.HasValue || !companyId.HasValue)
                 {
-                    return Unauthorized(new { message = "Not authenticated" });
+                    return Unauthorized(new { message = "Non authentifié" });
                 }
 
                 var review = await _context.RevueDeDirections
@@ -882,15 +882,15 @@ namespace server.Controllers
 
                 if (review == null)
                 {
-                    return NotFound(new { message = "Review not found" });
+                    return NotFound(new { message = "Revue non trouvée" });
                 }
 
-                if (review.Status != "Completed" && review.Status != "Canceled")
+                if (review.Status != "Complété" && review.Status != "Annulé")
                 {
-                    return BadRequest(new { message = "PDF can only be generated for completed or canceled reviews" });
+                    return BadRequest(new { message = "Le PDF ne peut être généré que pour les revues terminées ou annulées" });
                 }
 
-                var pdfFileName = $"review_{review.RevueId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                var pdfFileName = $"revue_{review.RevueId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
                 var directory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "pdfs");
                 var pdfPath = Path.Combine(directory, pdfFileName);
 
@@ -900,7 +900,6 @@ namespace server.Controllers
                 }
 
                 byte[] pdfBytes;
-
                 using (var stream = new MemoryStream())
                 {
                     using (var writer = new PdfWriter(stream))
@@ -911,18 +910,18 @@ namespace server.Controllers
                         var regularFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
 
                         // Title
-                        document.Add(new Paragraph($"Review ID: {review.RevueId}")
+                        document.Add(new Paragraph($"ID de la revue : {review.RevueId}")
                             .SetFont(boldFont)
                             .SetFontSize(20));
 
                         // Review Info
-                        document.Add(new Paragraph($"Domain: {review.Domain?.Name ?? "N/A"}")
+                        document.Add(new Paragraph($"Domaine : {review.Domain?.Name ?? "N/A"}")
                             .SetFont(regularFont));
-                        document.Add(new Paragraph($"Review Date: {review.ReviewDate:yyyy-MM-dd}")
+                        document.Add(new Paragraph($"Date de la revue : {review.ReviewDate:yyyy-MM-dd}")
                             .SetFont(regularFont));
-                        document.Add(new Paragraph($"Status: {review.Status ?? "N/A"}")
+                        document.Add(new Paragraph($"Statut : {review.Status ?? "N/A"}")
                             .SetFont(regularFont));
-                        document.Add(new Paragraph($"Generated on: {DateTime.Now}")
+                        document.Add(new Paragraph($"Généré le : {DateTime.Now}")
                             .SetFont(regularFont));
                         document.Add(new Paragraph("\n"));
 
@@ -959,21 +958,21 @@ namespace server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error generating PDF" });
+                return StatusCode(500, new { message = "Erreur lors de la génération du PDF" });
             }
         }
 
         private void AddLegalTextsSection(Document document, IEnumerable<RevueLegalText> legalTexts, PdfFont boldFont, PdfFont regularFont)
         {
-            document.Add(new Paragraph("Legal Texts").SetFont(boldFont).SetFontSize(14));
+            document.Add(new Paragraph("Textes légaux").SetFont(boldFont).SetFontSize(14));
 
             var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 16, 16, 16, 16, 16 }));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Reference").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Penalties").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Incentives").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Risks").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Opportunities").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Référence").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Pénalités").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Incitations").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Risques").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Opportunités").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Suivi").SetFont(boldFont)));
 
             foreach (var lt in legalTexts)
             {
@@ -991,13 +990,13 @@ namespace server.Controllers
 
         private void AddRequirementsSection(Document document, IEnumerable<RevueRequirement> requirements, PdfFont boldFont, PdfFont regularFont)
         {
-            document.Add(new Paragraph("Requirements").SetFont(boldFont).SetFontSize(14));
+            document.Add(new Paragraph("Exigences").SetFont(boldFont).SetFontSize(14));
 
             var table = new Table(UnitValue.CreatePercentArray(new float[] { 25, 25, 25, 25 }));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Description").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Implementation").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Mise en œuvre").SetFont(boldFont)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Communication").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Suivi").SetFont(boldFont)));
 
             foreach (var req in requirements)
             {
@@ -1020,9 +1019,9 @@ namespace server.Controllers
             var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 20, 20, 20, 20 }));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Description").SetFont(boldFont)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Source").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Status").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Statut").SetFont(boldFont)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Observation").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Suivi").SetFont(boldFont)));
 
             foreach (var act in actions)
             {
@@ -1039,14 +1038,14 @@ namespace server.Controllers
 
         private void AddStakeholdersSection(Document document, IEnumerable<RevueStakeholder> stakeholders, PdfFont boldFont, PdfFont regularFont)
         {
-            document.Add(new Paragraph("Stakeholders").SetFont(boldFont).SetFontSize(14));
+            document.Add(new Paragraph("Parties prenantes").SetFont(boldFont).SetFontSize(14));
 
             var table = new Table(UnitValue.CreatePercentArray(new float[] { 20, 20, 20, 20, 20 }));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Name").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Relationship Status").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Reason").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Nom").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Statut de la relation").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Raison").SetFont(boldFont)));
             table.AddHeaderCell(new Cell().Add(new Paragraph("Action").SetFont(boldFont)));
-            table.AddHeaderCell(new Cell().Add(new Paragraph("Follow Up").SetFont(boldFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Suivi").SetFont(boldFont)));
 
             foreach (var stake in stakeholders)
             {
@@ -1107,38 +1106,39 @@ namespace server.Controllers
             public string Action { get; set; }
             public string FollowUp { get; set; }
         }
+
         public class UpdateLegalTextRequest
-{
-    public string Penalties { get; set; }
-    public string Incentives { get; set; }
-    public string Risks { get; set; }
-    public string Opportunities { get; set; }
-    public string FollowUp { get; set; }
-}
+        {
+            public string Penalties { get; set; }
+            public string Incentives { get; set; }
+            public string Risks { get; set; }
+            public string Opportunities { get; set; }
+            public string FollowUp { get; set; }
+        }
 
-public class UpdateRequirementRequest
-{
-    public string Implementation { get; set; }
-    public string Communication { get; set; }
-    public string FollowUp { get; set; }
-}
+        public class UpdateRequirementRequest
+        {
+            public string Implementation { get; set; }
+            public string Communication { get; set; }
+            public string FollowUp { get; set; }
+        }
 
-public class UpdateActionRequest
-{
-    public string Description { get; set; }
-    public string Source { get; set; }
-    public string Status { get; set; }
-    public string Observation { get; set; }
-    public string FollowUp { get; set; }
-}
+        public class UpdateActionRequest
+        {
+            public string Description { get; set; }
+            public string Source { get; set; }
+            public string Status { get; set; }
+            public string Observation { get; set; }
+            public string FollowUp { get; set; }
+        }
 
-public class UpdateStakeholderRequest
-{
-    public string StakeholderName { get; set; }
-    public string RelationshipStatus { get; set; }
-    public string Reason { get; set; }
-    public string Action { get; set; }
-    public string FollowUp { get; set; }
-}
+        public class UpdateStakeholderRequest
+        {
+            public string StakeholderName { get; set; }
+            public string RelationshipStatus { get; set; }
+            public string Reason { get; set; }
+            public string Action { get; set; }
+            public string FollowUp { get; set; }
+        }
     }
 }

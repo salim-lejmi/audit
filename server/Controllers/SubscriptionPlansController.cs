@@ -17,55 +17,56 @@ namespace server.Controllers
             _context = context;
         }
 
-        // GET: api/subscription-plans
-        [HttpGet]
-        public async Task<IActionResult> GetSubscriptionPlans()
+[HttpGet]
+public async Task<IActionResult> GetSubscriptionPlans()
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    
+    // SuperAdmin gets all plans, SubscriptionManager gets only active plans
+    if (userRole != "SuperAdmin" && userRole != "SubscriptionManager")
+    {
+        return StatusCode(403, new { message = "Access denied. Super Admin or Subscription Manager only." });
+    }
+
+    try
+    {
+        var query = _context.SubscriptionPlans.AsQueryable();
+        
+        // If SubscriptionManager, only show active plans
+        // If SuperAdmin, show all plans but indicate which are deactivated
+        if (userRole == "SubscriptionManager")
         {
-            var userRole = HttpContext.Session.GetString("UserRole");
-            
-            // SuperAdmin gets all plans, SubscriptionManager gets only active plans
-            if (userRole != "SuperAdmin" && userRole != "SubscriptionManager")
-            {
-                return StatusCode(403, new { message = "Access denied. Super Admin or Subscription Manager only." });
-            }
-
-            try
-            {
-                var query = _context.SubscriptionPlans.AsQueryable();
-                
-                // If SubscriptionManager, only show active plans
-                if (userRole == "SubscriptionManager")
-                {
-                    query = query.Where(p => p.IsActive);
-                }
-
-                var plans = await query
-                    .OrderByDescending(p => p.CreatedAt)
-                    .ToListAsync();
-
-                var planResponses = plans.Select(p => new
-                {
-                    planId = p.PlanId,
-                    name = p.Name,
-                    description = p.Description,
-                    basePrice = p.BasePrice,
-                    userLimit = p.UserLimit,
-                    discount = p.Discount,
-                    taxRate = p.TaxRate,
-                    features = string.IsNullOrEmpty(p.Features) ? new string[0] : JsonSerializer.Deserialize<string[]>(p.Features),
-                    isActive = p.IsActive,
-                    createdAt = p.CreatedAt,
-                    updatedAt = p.UpdatedAt
-                }).ToList();
-
-                return Ok(planResponses);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Failed to retrieve subscription plans", error = ex.Message });
-            }
+            query = query.Where(p => p.IsActive);
         }
 
+        var plans = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+
+        var planResponses = plans.Select(p => new
+        {
+            planId = p.PlanId,
+            name = p.Name,
+            description = p.Description,
+            basePrice = p.BasePrice,
+            userLimit = p.UserLimit,
+            discount = p.Discount,
+            taxRate = p.TaxRate,
+            features = string.IsNullOrEmpty(p.Features) ? new string[0] : JsonSerializer.Deserialize<string[]>(p.Features),
+            isActive = p.IsActive,
+            createdAt = p.CreatedAt,
+            updatedAt = p.UpdatedAt,
+            // Add status indicator for better UX
+            status = p.IsActive ? "Active" : "Deactivated"
+        }).ToList();
+
+        return Ok(planResponses);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Failed to retrieve subscription plans", error = ex.Message });
+    }
+}
         // GET: api/subscription-plans/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSubscriptionPlan(int id)
@@ -227,36 +228,62 @@ namespace server.Controllers
             }
         }
 
-        // DELETE: api/subscription-plans/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSubscriptionPlan(int id)
+// DELETE: api/subscription-plans/5
+[HttpDelete("{id}")]
+public async Task<IActionResult> DeleteSubscriptionPlan(int id)
+{
+    // Check if user is SuperAdmin
+    var userRole = HttpContext.Session.GetString("UserRole");
+    if (userRole != "SuperAdmin")
+    {
+        return StatusCode(403, new { message = "Access denied. Super Admin only." });
+    }
+
+    var plan = await _context.SubscriptionPlans.FindAsync(id);
+    if (plan == null)
+    {
+        return NotFound(new { message = "Subscription plan not found" });
+    }
+
+    try
+    {
+        // Check if there are active subscriptions using this plan
+        var activeSubscriptions = await _context.CompanySubscriptions
+            .Where(cs => cs.PlanId == id && cs.Status == "active" && cs.EndDate > DateTime.Now)
+            .CountAsync();
+
+        if (activeSubscriptions > 0)
         {
-            // Check if user is SuperAdmin
-            var userRole = HttpContext.Session.GetString("UserRole");
-            if (userRole != "SuperAdmin")
-            {
-                return StatusCode(403, new { message = "Access denied. Super Admin only." });
-            }
+            // Instead of hard delete, soft delete by marking as inactive
+            // This preserves the plan for existing subscribers while preventing new subscriptions
+            plan.IsActive = false;
+            plan.UpdatedAt = DateTime.Now;
+            
+            await _context.SaveChangesAsync();
 
-            var plan = await _context.SubscriptionPlans.FindAsync(id);
-            if (plan == null)
-            {
-                return NotFound(new { message = "Subscription plan not found" });
-            }
-
-            try
-            {
-                _context.SubscriptionPlans.Remove(plan);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { message = "Subscription plan deleted successfully" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Failed to delete subscription plan", error = ex.Message });
-            }
+            return Ok(new { 
+                message = $"Subscription plan deactivated successfully. {activeSubscriptions} active subscriptions will continue until they expire.",
+                activeSubscriptions = activeSubscriptions,
+                deactivated = true
+            });
         }
+        else
+        {
+            // No active subscriptions, safe to hard delete
+            _context.SubscriptionPlans.Remove(plan);
+            await _context.SaveChangesAsync();
 
+            return Ok(new { 
+                message = "Subscription plan deleted successfully",
+                deleted = true 
+            });
+        }
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Failed to delete subscription plan", error = ex.Message });
+    }
+}
         public class CreateSubscriptionPlanRequest
         {
             public string Name { get; set; }

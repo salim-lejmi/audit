@@ -275,7 +275,7 @@ const QuotesPage: React.FC = () => {
 
       <div className="action-bar">
         <button 
-          className="btn btn-primary"
+          className="btn-q btn-q-primary"
           onClick={() => setShowCreateForm(!showCreateForm)}
         >
           <i className="fas fa-plus"></i>
@@ -457,13 +457,13 @@ const QuotesPage: React.FC = () => {
             )}
 
             <div className="form-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => {
+              <button type="button" className="btn-q btn-q-secondary" onClick={() => {
                 setShowCreateForm(false);
                 resetForm();
               }}>
                 Annuler
               </button>
-              <button type="submit" className="btn btn-primary">
+              <button type="submit" className="btn-q btn-q-primary">
                 Créer le plan
               </button>
             </div>
@@ -527,7 +527,7 @@ const QuotesPage: React.FC = () => {
 
                   <div className="plan-details">
                     {isEditing ? (
-                      <form onSubmit={handleUpdatePlan} className="edit-form">
+                      <form onSubmit={handleUpdatePlan} className="edit-form-q">
                         <div className="form-row">
                           <div className="form-group">
                             <label>Prix de base</label>
@@ -591,10 +591,10 @@ const QuotesPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="form-actions">
-                          <button type="button" className="btn btn-secondary" onClick={() => setEditingPlan(null)}>
+                          <button type="button" className="btn-q btn-q-secondary" onClick={() => setEditingPlan(null)}>
                             Annuler
                           </button>
-                          <button type="submit" className="btn btn-primary">
+                          <button type="submit" className="btn-q btn-q-primary">
                             Enregistrer les modifications
                           </button>
                         </div>
@@ -640,21 +640,21 @@ const QuotesPage: React.FC = () => {
                   {!isEditing && (
                     <div className="plan-actions">
                       <button
-                        className="btn btn-outline-primary"
+                        className="btn-q btn-q-outline-primary"
                         onClick={() => setEditingPlan(plan)}
                       >
                         <i className="fas fa-edit"></i>
                         Modifier
                       </button>
                       <button
-                        className={`btn ${plan.isActive ? 'btn-outline-warning' : 'btn-outline-success'}`}
+                        className={`btn-q ${plan.isActive ? 'btn-q-outline-warning' : 'btn-q-outline-success'}`}
                         onClick={() => togglePlanStatus(plan.planId)}
                       >
                         <i className={`fas ${plan.isActive ? 'fa-pause' : 'fa-play'}`}></i>
                         {plan.isActive ? 'Désactiver' : 'Activer'}
                       </button>
                       <button
-                        className="btn btn-outline-danger"
+                        className="btn-q btn-q-outline-danger"
                         onClick={() => handleDeletePlan(plan.planId)}
                       >
                         <i className="fas fa-trash"></i>

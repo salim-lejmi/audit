@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Button, Form, Badge } from 'react-bootstrap';
 import Modal from '../shared/modal';
 import axios from 'axios';
+import { 
+  Search, 
+  Filter, 
+  RefreshCw, 
+  Trash2
+} from 'lucide-react';
 import '../../styles/admincompanymanagement.css';
 
 interface Company {
@@ -33,6 +39,7 @@ const AdminCompanyManagement: React.FC = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Tous');
+  const [showFilters, setShowFilters] = useState(false);
 
   const [editForm, setEditForm] = useState<UpdateCompanyForm>({
     companyName: '',
@@ -109,6 +116,16 @@ const AdminCompanyManagement: React.FC = () => {
     return <Badge bg={variant}>{status}</Badge>;
   };
 
+  const applyFilters = () => {
+    fetchCompanies();
+  };
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('Tous');
+    fetchCompanies();
+  };
+
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = 
       company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -121,76 +138,125 @@ const AdminCompanyManagement: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  if (loading) {
-    return <div className="loading-container">Chargement des entreprises...</div>;
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
+  const uniqueStatuses = ['Tous', ...new Set(companies.map(company => company.status))];
 
   const editModalFooter = (
     <>
-      <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+      <button className="btn-secondary" onClick={() => setShowEditModal(false)}>
         Annuler
-      </Button>
-      <Button variant="primary" type="submit" form="editForm">
+      </button>
+      <button className="btn-primary" type="submit" form="editForm">
         Mettre à jour l'entreprise
-      </Button>
+      </button>
     </>
   );
 
   const deleteModalFooter = (
     <>
-      <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+      <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
         Annuler
-      </Button>
-      <Button variant="danger" onClick={handleDeleteConfirm}>
+      </button>
+      <button className="btn-danger" onClick={handleDeleteConfirm}>
         Supprimer l'entreprise
-      </Button>
+      </button>
     </>
   );
 
-  const uniqueStatuses = ['Tous', ...new Set(companies.map(company => company.status))];
-
   return (
-    <section className="manage-companies-section">
-      <div className="container">
-        <div className="section-header">
-          <h2>Gestion des entreprises</h2>
-        </div>
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <h1>Gestion des entreprises</h1>
+      </div>
 
-        <div className="controls-row">
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Rechercher des entreprises..."
-              className="search-input"
+      {/* Search and Filters */}
+      <div className="controls-section">
+        <div className="search-row">
+          <div className="search-box">
+            <Search className="search-icon" size={20} />
+            <input 
+              type="text" 
+              placeholder="Rechercher des entreprises..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
             />
+            {searchTerm && (
+              <button 
+                className="search-clear" 
+                onClick={() => {
+                  setSearchTerm('');
+                  applyFilters();
+                }}
+              >
+                ×
+              </button>
+            )}
           </div>
-          
-          <div className="filter-group">
-            <select 
-              className="filter-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              {uniqueStatuses.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </div>
+          <button 
+            className={`btn-filter ${showFilters ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={18} />
+            Filtres
+          </button>
         </div>
 
-        {companies.length === 0 ? (
-          <div className="no-companies-message">
+        {showFilters && (
+          <div className="filters-panel">
+            <div className="filters-header">
+              <h3>Filtres avancés</h3>
+              <button className="btn-reset" onClick={resetFilters}>
+                <RefreshCw size={16} />
+                Réinitialiser
+              </button>
+            </div>
+            
+            <div className="filters-grid">
+              <div className="form-group">
+                <label>Statut</label>
+                <select 
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  {uniqueStatuses.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="filters-actions">
+              <button className="btn-apply" onClick={applyFilters}>
+                Appliquer les filtres
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Results */}
+      <div className="results-section">
+        <div className="results-info">
+          {companies.length > 0 ? `${companies.length} entreprise${companies.length > 1 ? 's' : ''} trouvée${companies.length > 1 ? 's' : ''}` : 'Aucun résultat'}
+        </div>
+        
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Chargement des entreprises...</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <p>{error}</p>
+          </div>
+        ) : companies.length === 0 ? (
+          <div className="empty-state">
             <p>Aucune entreprise trouvée.</p>
           </div>
         ) : (
-          <div className="companies-table-container">
-            <table className="companies-table">
+          <div className="table-container">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Nom de l'entreprise</th>
@@ -233,13 +299,13 @@ const AdminCompanyManagement: React.FC = () => {
                       <span className="badge bg-warning">{company.totalActions}</span>
                     </td>
                     <td>{new Date(company.createdAt).toLocaleDateString('fr-FR')}</td>
-                    <td className="actions-cell">
+                    <td>
                       <button 
-                        className="action-btn delete"
+                        className="btn-action btn-delete" 
                         onClick={() => openDeleteModal(company)}
                         title="Supprimer l'entreprise"
                       >
-                        <i className="fas fa-trash"></i>
+                        <Trash2 size={16} />
                       </button>
                     </td>
                   </tr>
@@ -301,23 +367,25 @@ const AdminCompanyManagement: React.FC = () => {
         footer={deleteModalFooter}
         size="sm"
       >
-        <div className="alert alert-danger">
-          <strong>Attention !</strong> Cette action est irréversible.
-        </div>
-        <p>Êtes-vous sûr de vouloir supprimer <strong>{selectedCompany?.companyName}</strong> ?</p>
-        {selectedCompany && (
-          <div className="deletion-details">
-            <p>Cela supprimera également :</p>
-            <ul>
-              <li>{selectedCompany.totalUsers} utilisateurs</li>
-              <li>{selectedCompany.totalTexts} textes</li>
-              <li>{selectedCompany.totalActions} actions</li>
-              <li>Toutes les évaluations de conformité, revues et autres données associées</li>
-            </ul>
+        <div className="delete-confirmation">
+          <div className="alert alert-danger">
+            <strong>Attention !</strong> Cette action est irréversible.
           </div>
-        )}
+          <p>Êtes-vous sûr de vouloir supprimer <strong>{selectedCompany?.companyName}</strong> ?</p>
+          {selectedCompany && (
+            <div className="deletion-details">
+              <p>Cela supprimera également :</p>
+              <ul>
+                <li>{selectedCompany.totalUsers} utilisateurs</li>
+                <li>{selectedCompany.totalTexts} textes</li>
+                <li>{selectedCompany.totalActions} actions</li>
+                <li>Toutes les évaluations de conformité, revues et autres données associées</li>
+              </ul>
+            </div>
+          )}
+        </div>
       </Modal>
-    </section>
+    </div>
   );
 };
 

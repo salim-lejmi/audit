@@ -304,9 +304,9 @@ namespace server.Controllers
             {
                 await _notificationService.CreateNotificationAsync(
                     request.ResponsibleId.Value,
-                    "New Action Assigned",
-                    $"You have been assigned a new action: {request.Description}",
-                    "ActionAssigned",
+                 "Nouvelle action assignée",
+        $"Une nouvelle action vous a été assignée : {request.Description}",
+        "ActionAssignée",
                     action.ActionId
                 );
             }
@@ -464,9 +464,10 @@ public async Task<IActionResult> UpdateAction(int actionId, [FromBody] UpdateAct
     {
         await _notificationService.CreateNotificationAsync(
             action.ResponsibleId.Value,
-            "Action Assigned to You",
-            $"You have been assigned an action: {action.Description}",
-            "ActionAssigned",
+         "Action assignée pour vous",
+$"Une action vous a été assignée : {action.Description}",
+"ActionAssignée",
+
             action.ActionId
         );
     }

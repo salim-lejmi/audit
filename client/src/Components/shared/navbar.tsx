@@ -202,10 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
                     <i className="fas fa-users"></i>
                     <span>Gérer les utilisateurs</span>
                   </Link>
-                  <Link to="/admin/roles" className="dropdown-item">
-                    <i className="fas fa-user-tag"></i>
-                    <span>Gérer les rôles</span>
-                  </Link>
+              
                   <Link to="/admin/pending-requests" className="dropdown-item">
                     <i className="fas fa-clock"></i>
                     <span>Demandes en attente</span>
@@ -231,10 +228,7 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
                     <i className="fas fa-users"></i>
                     <span>Gérer les utilisateurs</span>
                   </Link>
-                  <Link to="/company/roles" className="dropdown-item">
-                    <i className="fas fa-user-tag"></i>
-                    <span>Gérer les rôles</span>
-                  </Link>
+          
                 </div>
               )}
             </div>

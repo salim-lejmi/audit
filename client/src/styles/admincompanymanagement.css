@@ -16,24 +16,6 @@
 }
 
 /* Header */
-.section-header {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 24px 0;
-  margin-bottom: 0;
-}
-
-.section-header h2 {
-color: #1f2937;
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin: 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-
-}
 
 /* Controls Section */
 .controls-row {
@@ -207,10 +189,6 @@ color: #1f2937;
   color: #065f46;
 }
 
-.text-muted {
-  background: #f3f4f6;
-  color: #6b7280;
-}
 
 /* Primary Button */
 .btn-primary {
@@ -269,91 +247,6 @@ color: #1f2937;
   100% { transform: rotate(360deg); }
 }
 
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 16px;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  animation: modal-appear 0.2s ease-out;
-}
-
-@keyframes modal-appear {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-}
-
-.modal-header h2 {
-  color: white;
-  font-weight: 600;
-  font-size: 18px;
-  margin: 0;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-
-.modal-close:hover {
-  opacity: 1;
-}
-
-.modal-body {
-  padding: 24px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-}
 
 .btn-secondary {
   background: #6b7280;
@@ -407,13 +300,7 @@ color: #1f2937;
     padding-right: 16px;
   }
 
-  .section-header {
-    padding: 16px 0;
-  }
-
-  .section-header h2 {
-    font-size: 24px;
-  }
+  
 
   .controls-row {
     flex-direction: column;

@@ -444,7 +444,6 @@ const RevueDeDirectionPage: React.FC = () => {
               <div className="form-group">
                 <label>Date de revue</label>
                 <div className="date-input-wrapper">
-                  <Calendar size={16} className="date-icon" />
                   <input
                     type="date"
                     value={newReview.reviewDate}
@@ -484,7 +483,6 @@ const RevueDeDirectionPage: React.FC = () => {
               <div className="form-group">
                 <label>Date de revue</label>
                 <div className="date-input-wrapper">
-                  <Calendar size={16} className="date-icon" />
                   <input
                     type="date"
                     value={editReview.reviewDate.split('T')[0]}

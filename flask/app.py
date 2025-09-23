@@ -41,6 +41,178 @@ class NLPService:
             logger.error(f"Error analyzing action description: {str(e)}")
             return self._get_fallback_response(description)
     
+    def generate_taxonomy_suggestion(self, existing_domains=None):
+        """Generate a new taxonomy suggestion"""
+        try:
+            prompt = self._create_taxonomy_prompt(existing_domains)
+            
+            # Generate response using Gemini
+            response = self.model.generate_content(prompt)
+            
+            # Parse and structure the response
+            return self._parse_taxonomy_response(response.text)
+            
+        except Exception as e:
+            logger.error(f"Error generating taxonomy suggestion: {str(e)}")
+            return self._get_fallback_taxonomy_response()
+    
+    def _create_taxonomy_prompt(self, existing_domains=None):
+        """Create a detailed prompt for taxonomy generation in French"""
+        base_prompt = """
+        Vous êtes un expert en taxonomie d'audit et de conformité.
+        
+        Générez une suggestion de taxonomie pour un système d'audit qui comprend :
+        - 1 domaine principal
+        - 1 ou 2 thèmes pour ce domaine
+        - 1 ou 2 sous-thèmes pour chaque thème
+        
+        Les domaines couramment utilisés incluent : Santé et sécurité au travail, Environnement, Qualité, Sécurité informatique, Ressources humaines, Finance, Gouvernance, etc.
+        
+        """
+        
+        if existing_domains:
+            base_prompt += f"\nDomaines existants à éviter : {', '.join(existing_domains)}\n"
+        
+        base_prompt += """
+        Format de réponse JSON requis :
+        {
+            "domain": {
+                "name": "Nom du domaine concis et professionnel",
+                "themes": [
+                    {
+                        "name": "Nom du thème 1",
+                        "subthemes": [
+                            "Sous-thème 1.1",
+                            "Sous-thème 1.2"
+                        ]
+                    },
+                    {
+                        "name": "Nom du thème 2",
+                        "subthemes": [
+                            "Sous-thème 2.1"
+                        ]
+                    }
+                ]
+            }
+        }
+        
+        Exemple de qualité attendue :
+        Domaine: "Environnement"
+        Thème: "Gestion des déchets industriels"
+        Sous-thèmes: ["Réduction et recyclage des déchets", "Traitement et élimination sécurisée des déchets dangereux"]
+        
+        IMPORTANT :
+        - Noms courts et professionnels
+        - Vocabulaire d'audit et de conformité
+        - Évitez les descriptions longues
+        - Répondez UNIQUEMENT avec du JSON valide
+        - Tout en français
+        """
+        
+        return base_prompt
+    
+    def _parse_taxonomy_response(self, response_text):
+        """Parse and validate taxonomy response"""
+        try:
+            # Clean the response text
+            response_text = response_text.strip()
+            
+            # Remove markdown code blocks if present
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+                
+            response_text = response_text.strip()
+            
+            # Try to extract JSON from the response
+            json_start = response_text.find('{')
+            json_end = response_text.rfind('}') + 1
+            
+            if json_start != -1 and json_end != -1:
+                json_str = response_text[json_start:json_end]
+                parsed_response = json.loads(json_str)
+                
+                # Validate and set defaults for required fields
+                validated_response = self._validate_taxonomy_response(parsed_response)
+                return validated_response
+            else:
+                return self._get_fallback_taxonomy_response()
+                
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error: {str(e)}")
+            return self._get_fallback_taxonomy_response()
+        except Exception as e:
+            logger.error(f"Error parsing taxonomy response: {str(e)}")
+            return self._get_fallback_taxonomy_response()
+    
+    def _validate_taxonomy_response(self, response):
+        """Validate and ensure all required fields are present"""
+        try:
+            domain = response.get('domain', {})
+            domain_name = domain.get('name', 'Nouveau Domaine')
+            themes = domain.get('themes', [])
+            
+            # Ensure we have at least one theme
+            if not themes:
+                themes = [
+                    {
+                        'name': 'Thème Principal',
+                        'subthemes': ['Sous-thème 1', 'Sous-thème 2']
+                    }
+                ]
+            
+            # Validate each theme
+            validated_themes = []
+            for theme in themes[:2]:  # Limit to 2 themes
+                theme_name = theme.get('name', 'Thème')
+                subthemes = theme.get('subthemes', [])
+                
+                # Ensure we have at least one subtheme
+                if not subthemes:
+                    subthemes = ['Sous-thème principal']
+                
+                validated_themes.append({
+                    'name': theme_name,
+                    'subthemes': subthemes[:2]  # Limit to 2 subthemes
+                })
+            
+            return {
+                'domain': {
+                    'name': domain_name,
+                    'themes': validated_themes
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error validating taxonomy response: {str(e)}")
+            return self._get_fallback_taxonomy_response()
+    
+    def _get_fallback_taxonomy_response(self):
+        """Get fallback taxonomy response when service fails"""
+        return {
+            'domain': {
+                'name': 'Sécurité Informatique',
+                'themes': [
+                    {
+                        'name': 'Protection des données',
+                        'subthemes': [
+                            'Chiffrement et sécurisation',
+                            'Sauvegarde et archivage'
+                        ]
+                    },
+                    {
+                        'name': 'Contrôle d\'accès',
+                        'subthemes': [
+                            'Authentification et autorisation'
+                        ]
+                    }
+                ]
+            }
+        }
+    
     def _create_analysis_prompt(self, description, domain=None, theme=None):
         """Create a detailed prompt for Gemini AI in French"""
         base_prompt = f"""
@@ -246,6 +418,29 @@ def analyze_action():
             "success": False,
             "error": "Erreur interne du serveur",
             "analysis": nlp_service._get_fallback_response(data.get('description', ''))
+        }), 200  # Return 200 with fallback data
+
+@app.route('/suggest-taxonomy', methods=['POST'])
+def suggest_taxonomy():
+    """Generate taxonomy suggestions using AI"""
+    try:
+        data = request.get_json()
+        existing_domains = data.get('existing_domains', []) if data else []
+        
+        # Generate taxonomy suggestion
+        suggestion = nlp_service.generate_taxonomy_suggestion(existing_domains)
+        
+        return jsonify({
+            "success": True,
+            "suggestion": suggestion
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in suggest_taxonomy endpoint: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": "Erreur interne du serveur",
+            "suggestion": nlp_service._get_fallback_taxonomy_response()
         }), 200  # Return 200 with fallback data
 
 @app.route('/batch-analyze', methods=['POST'])

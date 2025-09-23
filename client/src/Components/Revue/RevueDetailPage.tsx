@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Modal, Button } from 'react-bootstrap';
 import { Edit, Trash2 } from 'lucide-react';
 import '../../styles/revueDetail.css';
 
@@ -565,22 +564,23 @@ const RevueDetailPage: React.FC = () => {
                       <td>
                         <div className="action-buttons">
                           {canModifyItem(lt.createdById) && (
-                          <button 
-      onClick={() => handleEditLegalText(lt)}
-      className="btn-action btn-edit"
-      title="Modifier"
-    >
-      <Edit size={16} />
-    </button>
+                            <button 
+                              onClick={() => handleEditLegalText(lt)}
+                              className="btn-action btn-edit"
+                              title="Modifier"
+                            >
+                              <Edit size={16} />
+                            </button>
                           )}
                           {canDeleteItem(lt.createdById) && (
-<button 
-      onClick={() => handleDeleteLegalText(lt.legalTextId)}
-      className="btn-action btn-delete"
-      title="Supprimer"
-    >
-      <Trash2 size={16} />
-    </button>                          )}
+                            <button 
+                              onClick={() => handleDeleteLegalText(lt.legalTextId)}
+                              className="btn-action btn-delete"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     )}
@@ -625,22 +625,23 @@ const RevueDetailPage: React.FC = () => {
                       <td>
                         <div className="action-buttons">
                           {canModifyItem(req.createdById) && (
-<button 
-      onClick={() => handleEditRequirement(req)}
-      className="btn-action btn-edit"
-      title="Modifier"
-    >
-      <Edit size={16} />
-    </button>
-  )}
-  {canDeleteItem(req.createdById) && (
-    <button 
-      onClick={() => handleDeleteRequirement(req.requirementId)}
-      className="btn-action btn-delete"
-      title="Supprimer"
-    >
-      <Trash2 size={16} />
-    </button>                          )}
+                            <button 
+                              onClick={() => handleEditRequirement(req)}
+                              className="btn-action btn-edit"
+                              title="Modifier"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          )}
+                          {canDeleteItem(req.createdById) && (
+                            <button 
+                              onClick={() => handleDeleteRequirement(req.requirementId)}
+                              className="btn-action btn-delete"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     )}
@@ -685,22 +686,23 @@ const RevueDetailPage: React.FC = () => {
                       <td>
                         <div className="action-buttons">
                           {canModifyItem(act.createdById) && (
-<button 
-      onClick={() => handleEditAction(act)}
-      className="btn-action btn-edit"
-      title="Modifier"
-    >
-      <Edit size={16} />
-    </button>
-  )}
-  {canDeleteItem(act.createdById) && (
-    <button 
-      onClick={() => handleDeleteAction(act.actionId)}
-      className="btn-action btn-delete"
-      title="Supprimer"
-    >
-      <Trash2 size={16} />
-    </button>                          )}
+                            <button 
+                              onClick={() => handleEditAction(act)}
+                              className="btn-action btn-edit"
+                              title="Modifier"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          )}
+                          {canDeleteItem(act.createdById) && (
+                            <button 
+                              onClick={() => handleDeleteAction(act.actionId)}
+                              className="btn-action btn-delete"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     )}
@@ -745,22 +747,23 @@ const RevueDetailPage: React.FC = () => {
                       <td>
                         <div className="action-buttons">
                           {canModifyItem(stake.createdById) && (
-<button 
-      onClick={() => handleEditStakeholder(stake)}
-      className="btn-action btn-edit"
-      title="Modifier"
-    >
-      <Edit size={16} />
-    </button>
-  )}
-  {canDeleteItem(stake.createdById) && (
-    <button 
-      onClick={() => handleDeleteStakeholder(stake.stakeholderId)}
-      className="btn-action btn-delete"
-      title="Supprimer"
-    >
-      <Trash2 size={16} />
-    </button>                          )}
+                            <button 
+                              onClick={() => handleEditStakeholder(stake)}
+                              className="btn-action btn-edit"
+                              title="Modifier"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          )}
+                          {canDeleteItem(stake.createdById) && (
+                            <button 
+                              onClick={() => handleDeleteStakeholder(stake.stakeholderId)}
+                              className="btn-action btn-delete"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     )}
@@ -772,296 +775,288 @@ const RevueDetailPage: React.FC = () => {
         </section>
 
         {/* Legal Text Modal */}
-        <Modal show={showLegalTextModal} onHide={() => handleCloseModal('legalText')}>
-          <Modal.Header closeButton>
-            <Modal.Title>{editingLegalText ? 'Modifier le texte légal' : 'Ajouter un texte légal'}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium">Texte</label>
-                <select
-                  value={legalTextForm.textId}
-                  onChange={e => setLegalTextForm({ ...legalTextForm, textId: parseInt(e.target.value) })}
-                  className="w-full p-2 border rounded"
-                  disabled={editingLegalText} // Disable when editing
-                >
-                  <option value={0}>Sélectionner un texte</option>
-                  {texts.length > 0 ? (
-                    texts.map(text => (
-                      <option key={text.textId} value={text.textId}>{text.reference}</option>
-                    ))
-                  ) : (
-                    <option value={0}>Aucun texte disponible</option>
-                  )}
-                </select>              
+        {showLegalTextModal && (
+          <div className="modal-overlay" onClick={() => handleCloseModal('legalText')}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', width: '90vw', maxWidth: '600px' }}>
+              <div className="modal-header">
+                <h2>{editingLegalText ? 'Modifier le texte légal' : 'Ajouter un texte légal'}</h2>
+                <button className="modal-close" onClick={() => handleCloseModal('legalText')}>&times;</button>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Sanctions</label>
-                <input
-                  type="text"
-                  value={legalTextForm.penalties}
-                  onChange={e => setLegalTextForm({ ...legalTextForm, penalties: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer les sanctions"
-                />
+              <div className="modal-body" style={{ maxHeight: 'calc(90vh - 140px)', overflowY: 'auto' }}>
+                <div className="form-group">
+                  <label>Texte</label>
+                  <select
+                    value={legalTextForm.textId}
+                    onChange={e => setLegalTextForm({ ...legalTextForm, textId: parseInt(e.target.value) })}
+                    disabled={editingLegalText}
+                  >
+                    <option value={0}>Sélectionner un texte</option>
+                    {texts.length > 0 ? (
+                      texts.map(text => (
+                        <option key={text.textId} value={text.textId}>{text.reference}</option>
+                      ))
+                    ) : (
+                      <option value={0}>Aucun texte disponible</option>
+                    )}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Sanctions</label>
+                  <input
+                    type="text"
+                    value={legalTextForm.penalties}
+                    onChange={e => setLegalTextForm({ ...legalTextForm, penalties: e.target.value })}
+                    placeholder="Entrer les sanctions"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Incitations</label>
+                  <input
+                    type="text"
+                    value={legalTextForm.incentives}
+                    onChange={e => setLegalTextForm({ ...legalTextForm, incentives: e.target.value })}
+                    placeholder="Entrer les incitations"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Risques</label>
+                  <input
+                    type="text"
+                    value={legalTextForm.risks}
+                    onChange={e => setLegalTextForm({ ...legalTextForm, risks: e.target.value })}
+                    placeholder="Entrer les risques"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Opportunités</label>
+                  <input
+                    type="text"
+                    value={legalTextForm.opportunities}
+                    onChange={e => setLegalTextForm({ ...legalTextForm, opportunities: e.target.value })}
+                    placeholder="Entrer les opportunités"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Suivi</label>
+                  <input
+                    type="text"
+                    value={legalTextForm.followUp}
+                    onChange={e => setLegalTextForm({ ...legalTextForm, followUp: e.target.value })}
+                    placeholder="Entrer le suivi"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Incitations</label>
-                <input
-                  type="text"
-                  value={legalTextForm.incentives}
-                  onChange={e => setLegalTextForm({ ...legalTextForm, incentives: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer les incitations"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Risques</label>
-                <input
-                  type="text"
-                  value={legalTextForm.risks}
-                  onChange={e => setLegalTextForm({ ...legalTextForm, risks: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer les risques"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Opportunités</label>
-                <input
-                  type="text"
-                  value={legalTextForm.opportunities}
-                  onChange={e => setLegalTextForm({ ...legalTextForm, opportunities: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer les opportunités"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Suivi</label>
-                <input
-                  type="text"
-                  value={legalTextForm.followUp}
-                  onChange={e => setLegalTextForm({ ...legalTextForm, followUp: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer le suivi"
-                />
+              <div className="modal-footer">
+                <button className="btn-secondary" onClick={() => handleCloseModal('legalText')}>Fermer</button>
+                <button className="btn-primary" onClick={handleAddLegalText}>
+                  {editingLegalText ? 'Modifier' : 'Ajouter'}
+                </button>
               </div>
             </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => handleCloseModal('legalText')}>Fermer</Button>
-            <Button variant="primary" onClick={handleAddLegalText}>
-              {editingLegalText ? 'Modifier' : 'Ajouter'}
-            </Button>
-          </Modal.Footer>
-        </Modal>
+          </div>
+        )}
 
         {/* Requirement Modal */}
-        <Modal show={showRequirementModal} onHide={() => handleCloseModal('requirement')}>
-          <Modal.Header closeButton>
-            <Modal.Title>{editingRequirement ? 'Modifier l\'exigence' : 'Ajouter une exigence'}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium">Exigence</label>
-                <select
-                  value={requirementForm.textRequirementId}
-                  onChange={e => setRequirementForm({ ...requirementForm, textRequirementId: parseInt(e.target.value) })}
-                  className="w-full p-2 border rounded"
-                  disabled={editingRequirement} // Disable when editing
-                >
-                  <option value={0}>Sélectionner une exigence</option>
-                  {availableRequirements.length > 0 ? (
-                    availableRequirements.map(req => (
-                      <option key={req.requirementId} value={req.requirementId}>
-                        {req.description}
-                      </option>
-                    ))
-                  ) : (
-                    <option value={0}>Aucune exigence disponible (ajouter des textes légaux d'abord)</option>
-                  )}
-                </select>
+        {showRequirementModal && (
+          <div className="modal-overlay" onClick={() => handleCloseModal('requirement')}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', width: '90vw', maxWidth: '600px' }}>
+              <div className="modal-header">
+                <h2>{editingRequirement ? 'Modifier l\'exigence' : 'Ajouter une exigence'}</h2>
+                <button className="modal-close" onClick={() => handleCloseModal('requirement')}>&times;</button>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Mise en œuvre</label>
-                <input
-                  type="text"
-                  value={requirementForm.implementation}
-                  onChange={e => setRequirementForm({ ...requirementForm, implementation: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer la mise en œuvre"
-                />
+              <div className="modal-body" style={{ maxHeight: 'calc(90vh - 140px)', overflowY: 'auto' }}>
+                <div className="form-group">
+                  <label>Exigence</label>
+                  <select
+                    value={requirementForm.textRequirementId}
+                    onChange={e => setRequirementForm({ ...requirementForm, textRequirementId: parseInt(e.target.value) })}
+                    disabled={editingRequirement}
+                  >
+                    <option value={0}>Sélectionner une exigence</option>
+                    {availableRequirements.length > 0 ? (
+                      availableRequirements.map(req => (
+                        <option key={req.requirementId} value={req.requirementId}>
+                          {req.description}
+                        </option>
+                      ))
+                    ) : (
+                      <option value={0}>Aucune exigence disponible (ajouter des textes légaux d'abord)</option>
+                    )}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Mise en œuvre</label>
+                  <input
+                    type="text"
+                    value={requirementForm.implementation}
+                    onChange={e => setRequirementForm({ ...requirementForm, implementation: e.target.value })}
+                    placeholder="Entrer la mise en œuvre"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Communication</label>
+                  <input
+                    type="text"
+                    value={requirementForm.communication}
+                    onChange={e => setRequirementForm({ ...requirementForm, communication: e.target.value })}
+                    placeholder="Entrer la communication"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Suivi</label>
+                  <input
+                    type="text"
+                    value={requirementForm.followUp}
+                    onChange={e => setRequirementForm({ ...requirementForm, followUp: e.target.value })}
+                    placeholder="Entrer le suivi"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Communication</label>
-                <input
-                  type="text"
-                  value={requirementForm.communication}
-                  onChange={e => setRequirementForm({ ...requirementForm, communication: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer la communication"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Suivi</label>
-                <input
-                  type="text"
-                  value={requirementForm.followUp}
-                  onChange={e => setRequirementForm({ ...requirementForm, followUp: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer le suivi"
-                />
+              <div className="modal-footer">
+                <button className="btn-secondary" onClick={() => handleCloseModal('requirement')}>Fermer</button>
+                <button className="btn-primary" onClick={handleAddRequirement}>
+                  {editingRequirement ? 'Modifier' : 'Ajouter'}
+                </button>
               </div>
             </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => handleCloseModal('requirement')}>Fermer</Button>
-            <Button variant="primary" onClick={handleAddRequirement}>
-              {editingRequirement ? 'Modifier' : 'Ajouter'}
-            </Button>
-          </Modal.Footer>
-        </Modal>
+          </div>
+        )}
 
         {/* Action Modal */}
-        <Modal show={showActionModal} onHide={() => handleCloseModal('action')}>
-          <Modal.Header closeButton>
-            <Modal.Title>{editingAction ? 'Modifier l\'action' : 'Ajouter une action'}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium">Description</label>
-                <input
-                  type="text"
-                  value={actionForm.description}
-                  onChange={e => setActionForm({ ...actionForm, description: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer la description"
-                />
+        {showActionModal && (
+          <div className="modal-overlay" onClick={() => handleCloseModal('action')}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', width: '90vw', maxWidth: '600px' }}>
+              <div className="modal-header">
+                <h2>{editingAction ? 'Modifier l\'action' : 'Ajouter une action'}</h2>
+                <button className="modal-close" onClick={() => handleCloseModal('action')}>&times;</button>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Source</label>
-                <input
-                  type="text"
-                  value={actionForm.source}
-                  onChange={e => setActionForm({ ...actionForm, source: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer la source"
-                />
+              <div className="modal-body" style={{ maxHeight: 'calc(90vh - 140px)', overflowY: 'auto' }}>
+                <div className="form-group">
+                  <label>Description</label>
+                  <input
+                    type="text"
+                    value={actionForm.description}
+                    onChange={e => setActionForm({ ...actionForm, description: e.target.value })}
+                    placeholder="Entrer la description"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Source</label>
+                  <input
+                    type="text"
+                    value={actionForm.source}
+                    onChange={e => setActionForm({ ...actionForm, source: e.target.value })}
+                    placeholder="Entrer la source"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Statut</label>
+                  <select
+                    value={actionForm.status}
+                    onChange={e => setActionForm({ ...actionForm, status: e.target.value })}
+                  >
+                    <option value="">Sélectionner le statut</option>
+                    <option value="Pending">En attente</option>
+                    <option value="In Progress">En cours</option>
+                    <option value="Completed">Terminé</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Observation</label>
+                  <textarea
+                    value={actionForm.observation}
+                    onChange={e => setActionForm({ ...actionForm, observation: e.target.value })}
+                    placeholder="Entrer l'observation"
+                    rows={3}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Suivi</label>
+                  <textarea
+                    value={actionForm.followUp}
+                    onChange={e => setActionForm({ ...actionForm, followUp: e.target.value })}
+                    placeholder="Entrer le suivi"
+                    rows={3}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Statut</label>
-                <select
-                  value={actionForm.status}
-                  onChange={e => setActionForm({ ...actionForm, status: e.target.value })}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Sélectionner le statut</option>
-                  <option value="Pending">En attente</option>
-                  <option value="In Progress">En cours</option>
-                  <option value="Completed">Terminé</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Observation</label>
-                <textarea
-                  value={actionForm.observation}
-                  onChange={e => setActionForm({ ...actionForm, observation: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer l'observation"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Suivi</label>
-                <textarea
-                  value={actionForm.followUp}
-                  onChange={e => setActionForm({ ...actionForm, followUp: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer le suivi"
-                  rows={3}
-                />
+              <div className="modal-footer">
+                <button className="btn-secondary" onClick={() => handleCloseModal('action')}>Fermer</button>
+                <button className="btn-primary" onClick={handleAddAction}>
+                  {editingAction ? 'Modifier' : 'Ajouter'}
+                </button>
               </div>
             </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => handleCloseModal('action')}>Fermer</Button>
-            <Button variant="primary" onClick={handleAddAction}>
-              {editingAction ? 'Modifier' : 'Ajouter'}
-            </Button>
-          </Modal.Footer>
-        </Modal>
+          </div>
+        )}
 
         {/* Stakeholder Modal */}
-        <Modal show={showStakeholderModal} onHide={() => handleCloseModal('stakeholder')}>
-          <Modal.Header closeButton>
-            <Modal.Title>{editingStakeholder ? 'Modifier la partie prenante' : 'Ajouter une partie prenante'}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium">Nom</label>
-                <input
-                  type="text"
-                  value={stakeholderForm.stakeholderName}
-                  onChange={e => setStakeholderForm({ ...stakeholderForm, stakeholderName: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer le nom"
-                />
+        {showStakeholderModal && (
+          <div className="modal-overlay" onClick={() => handleCloseModal('stakeholder')}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', width: '90vw', maxWidth: '600px' }}>
+              <div className="modal-header">
+                <h2>{editingStakeholder ? 'Modifier la partie prenante' : 'Ajouter une partie prenante'}</h2>
+                <button className="modal-close" onClick={() => handleCloseModal('stakeholder')}>&times;</button>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Statut de la relation</label>
-                <select
-                  value={stakeholderForm.relationshipStatus}
-                  onChange={e => setStakeholderForm({ ...stakeholderForm, relationshipStatus: e.target.value })}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Sélectionner le statut</option>
-                  <option value="Need/Expectation">Besoin/Attente</option>
-                  <option value="Complaint">Plainte</option>
-                  <option value="Observation">Observation</option>
-                </select>
+              <div className="modal-body" style={{ maxHeight: 'calc(90vh - 140px)', overflowY: 'auto' }}>
+                <div className="form-group">
+                  <label>Nom</label>
+                  <input
+                    type="text"
+                    value={stakeholderForm.stakeholderName}
+                    onChange={e => setStakeholderForm({ ...stakeholderForm, stakeholderName: e.target.value })}
+                    placeholder="Entrer le nom"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Statut de la relation</label>
+                  <select
+                    value={stakeholderForm.relationshipStatus}
+                    onChange={e => setStakeholderForm({ ...stakeholderForm, relationshipStatus: e.target.value })}
+                  >
+                    <option value="">Sélectionner le statut</option>
+                    <option value="Need/Expectation">Besoin/Attente</option>
+                    <option value="Complaint">Plainte</option>
+                    <option value="Observation">Observation</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Raison</label>
+                  <textarea
+                    value={stakeholderForm.reason}
+                    onChange={e => setStakeholderForm({ ...stakeholderForm, reason: e.target.value })}
+                    placeholder="Entrer la raison"
+                    rows={3}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Action</label>
+                  <textarea
+                    value={stakeholderForm.action}
+                    onChange={e => setStakeholderForm({ ...stakeholderForm, action: e.target.value })}
+                    placeholder="Entrer l'action"
+                    rows={3}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Suivi</label>
+                  <textarea
+                    value={stakeholderForm.followUp}
+                    onChange={e => setStakeholderForm({ ...stakeholderForm, followUp: e.target.value })}
+                    placeholder="Entrer le suivi"
+                    rows={3}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Raison</label>
-                <textarea
-                  value={stakeholderForm.reason}
-                  onChange={e => setStakeholderForm({ ...stakeholderForm, reason: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer la raison"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Action</label>
-                <textarea
-                  value={stakeholderForm.action}
-                  onChange={e => setStakeholderForm({ ...stakeholderForm, action: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer l'action"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Suivi</label>
-                <textarea
-                  value={stakeholderForm.followUp}
-                  onChange={e => setStakeholderForm({ ...stakeholderForm, followUp: e.target.value })}
-                  className="w-full p-2 border rounded"
-                  placeholder="Entrer le suivi"
-                  rows={3}
-                />
+              <div className="modal-footer">
+                <button className="btn-secondary" onClick={() => handleCloseModal('stakeholder')}>Fermer</button>
+                <button className="btn-primary" onClick={handleAddStakeholder}>
+                  {editingStakeholder ? 'Modifier' : 'Ajouter'}
+                </button>
               </div>
             </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => handleCloseModal('stakeholder')}>Fermer</Button>
-            <Button variant="primary" onClick={handleAddStakeholder}>
-              {editingStakeholder ? 'Modifier' : 'Ajouter'}
-            </Button>
-          </Modal.Footer>
-        </Modal>
+          </div>
+        )}
       </div>
     </div>
   );

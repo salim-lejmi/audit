@@ -5,6 +5,7 @@ using server.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace server.Controllers
 {
@@ -72,6 +73,102 @@ namespace server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { domainId = domain.DomainId, message = "Domain created successfully" });
+        }
+
+        [HttpPost("batch-create")]
+        public async Task<IActionResult> BatchCreateTaxonomy([FromBody] BatchCreateTaxonomyRequest request)
+        {
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            if (!userId.HasValue || userRole != "SuperAdmin")
+            {
+                return Forbid();
+            }
+
+            if (request?.Domain == null || string.IsNullOrEmpty(request.Domain.Name))
+            {
+                return BadRequest(new { message = "Domain information is required" });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Check for duplicate domain name
+                var duplicateExists = await _context.Domains
+                    .AnyAsync(d => d.Name.ToLower() == request.Domain.Name.ToLower());
+                if (duplicateExists)
+                {
+                    return BadRequest(new { message = "Un domaine avec ce nom existe déjà" });
+                }
+
+                // Create domain
+                var domain = new Domain
+                {
+                    Name = request.Domain.Name,
+                    CreatedById = userId.Value,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Domains.Add(domain);
+                await _context.SaveChangesAsync();
+
+                var createdThemeIds = new List<int>();
+
+                // Create themes
+                if (request.Domain.Themes != null)
+                {
+                    foreach (var themeRequest in request.Domain.Themes)
+                    {
+                        if (string.IsNullOrEmpty(themeRequest.Name)) continue;
+
+                        var theme = new Theme
+                        {
+                            Name = themeRequest.Name,
+                            DomainId = domain.DomainId,
+                            CreatedById = userId.Value,
+                            CreatedAt = DateTime.Now
+                        };
+
+                        _context.Themes.Add(theme);
+                        await _context.SaveChangesAsync();
+                        createdThemeIds.Add(theme.ThemeId);
+
+                        // Create subthemes
+                        if (themeRequest.Subthemes != null)
+                        {
+                            foreach (var subthemeName in themeRequest.Subthemes)
+                            {
+                                if (string.IsNullOrEmpty(subthemeName)) continue;
+
+                                var subtheme = new SubTheme
+                                {
+                                    Name = subthemeName,
+                                    ThemeId = theme.ThemeId,
+                                    CreatedById = userId.Value,
+                                    CreatedAt = DateTime.Now
+                                };
+
+                                _context.SubThemes.Add(subtheme);
+                            }
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { 
+                    domainId = domain.DomainId, 
+                    themeIds = createdThemeIds,
+                    message = "Taxonomy created successfully" 
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, new { message = "An error occurred while creating the taxonomy: " + ex.Message });
+            }
         }
 
         [HttpPut("domains/{id}")]
@@ -555,6 +652,23 @@ namespace server.Controllers
         {
             public string Name { get; set; }
             public int ThemeId { get; set; }
+        }
+
+        public class BatchCreateTaxonomyRequest
+        {
+            public DomainWithThemes Domain { get; set; }
+        }
+
+        public class DomainWithThemes
+        {
+            public string Name { get; set; }
+            public List<ThemeWithSubthemes> Themes { get; set; } = new List<ThemeWithSubthemes>();
+        }
+
+        public class ThemeWithSubthemes
+        {
+            public string Name { get; set; }
+            public List<string> Subthemes { get; set; } = new List<string>();
         }
     }
 }

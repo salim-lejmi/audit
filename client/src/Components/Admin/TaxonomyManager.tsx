@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios, { AxiosError } from 'axios';
 import '../../styles/TaxonomyManager.css';
 
-// Define interfaces for the taxonomy entities
 interface Domain {
   domainId: number;
   name: string;
@@ -20,27 +19,32 @@ interface SubTheme {
   themeId: number;
 }
 
-// Interface for API error response
 interface ApiErrorResponse {
   message: string;
 }
 
+interface TaxonomySuggestion {
+  domain: {
+    name: string;
+    themes: {
+      name: string;
+      subthemes: string[];
+    }[];
+  };
+}
+
 const TaxonomyManager: React.FC = () => {
-  // State for domains, themes, subthemes
   const [domains, setDomains] = useState<Domain[]>([]);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [subThemes, setSubThemes] = useState<SubTheme[]>([]);
   
-  // State for selected items
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
   
-  // State for new items
   const [newDomainName, setNewDomainName] = useState('');
   const [newThemeName, setNewThemeName] = useState('');
   const [newSubThemeName, setNewSubThemeName] = useState('');
   
-  // State for editing
   const [editingDomain, setEditingDomain] = useState<Domain | null>(null);
   const [editingTheme, setEditingTheme] = useState<Theme | null>(null);
   const [editingSubTheme, setEditingSubTheme] = useState<SubTheme | null>(null);
@@ -48,11 +52,13 @@ const TaxonomyManager: React.FC = () => {
   const [editThemeName, setEditThemeName] = useState('');
   const [editSubThemeName, setEditSubThemeName] = useState('');
   
-  // State for loading and errors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const [suggestion, setSuggestion] = useState<TaxonomySuggestion | null>(null);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
 
-  // Helper function to extract error message from API response
   const getErrorMessage = (err: unknown): string => {
     if (axios.isAxiosError(err)) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
@@ -139,6 +145,60 @@ const TaxonomyManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Generate AI suggestion
+  const generateSuggestion = async (): Promise<void> => {
+    setLoadingSuggestion(true);
+    setError(null);
+    
+    try {
+      const existingDomains = domains.map(d => d.name);
+      const response = await axios.post('http://localhost:5000/suggest-taxonomy', {
+        existing_domains: existingDomains
+      });
+      
+      if (response.data.success) {
+        setSuggestion(response.data.suggestion);
+        setShowSuggestion(true);
+      } else {
+        setError('Erreur lors de la génération de la suggestion');
+      }
+    } catch (err) {
+      console.error('Error generating suggestion:', err);
+      setError('Erreur lors de la génération de la suggestion');
+    } finally {
+      setLoadingSuggestion(false);
+    }
+  };
+
+  // Approve suggestion and create taxonomy
+  const approveSuggestion = async (): Promise<void> => {
+    if (!suggestion) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await axios.post('/api/taxonomy/batch-create', {
+        domain: suggestion.domain
+      });
+      
+      setShowSuggestion(false);
+      setSuggestion(null);
+      loadDomains();
+    } catch (err) {
+      console.error('Error approving suggestion:', err);
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reject suggestion
+  const rejectSuggestion = (): void => {
+    setShowSuggestion(false);
+    setSuggestion(null);
   };
 
   // Create a new domain
@@ -415,6 +475,73 @@ const TaxonomyManager: React.FC = () => {
     <div className="taxonomy-manager">
       <h2>Gérer la taxonomie</h2>
       
+      {/* AI Suggestion Button */}
+      <div className="suggestion-section">
+        <button 
+          onClick={generateSuggestion}
+          disabled={loadingSuggestion || loading}
+          className="suggestion-button"
+        >
+          {loadingSuggestion ? 'Génération en cours...' : 'Suggérer une taxonomie'}
+        </button>
+      </div>
+
+      {/* AI Suggestion Modal */}
+      {showSuggestion && suggestion && (
+        <div className="suggestion-modal">
+          <div className="suggestion-content">
+            <h3>Suggestion de taxonomie</h3>
+            
+            <div className="suggestion-preview">
+              <div className="domain-preview">
+                <h4>Domaine: {suggestion.domain.name}</h4>
+                
+                {suggestion.domain.themes.map((theme, themeIndex) => (
+                  <div key={themeIndex} className="theme-preview">
+                    <h5>Thème: {theme.name}</h5>
+                    
+                    {theme.subthemes.length > 0 && (
+                      <div className="subthemes-preview">
+                        <h6>Sous-thèmes:</h6>
+                        <ul>
+                          {theme.subthemes.map((subtheme, subthemeIndex) => (
+                            <li key={subthemeIndex}>{subtheme}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="suggestion-actions">
+              <button 
+                onClick={approveSuggestion}
+                disabled={loading}
+                className="approve-button"
+              >
+                Approuver
+              </button>
+              <button 
+                onClick={rejectSuggestion}
+                disabled={loading}
+                className="reject-button"
+              >
+                Rejeter
+              </button>
+              <button 
+                onClick={generateSuggestion}
+                disabled={loadingSuggestion || loading}
+                className="retry-button"
+              >
+                Essayer une autre suggestion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {error && <div className="error-message">{error}</div>}
       
       <div className="taxonomy-container">
@@ -460,7 +587,7 @@ const TaxonomyManager: React.FC = () => {
                         updateDomain();
                       }}
                       disabled={loading}
-                      className="save-button"
+                      className="save-button-t"
                     >
                       Sauvegarder
                     </button>
@@ -557,7 +684,7 @@ const TaxonomyManager: React.FC = () => {
                         updateTheme();
                       }}
                       disabled={loading}
-                      className="save-button"
+                      className="save-button-t"
                     >
                       Sauvegarder
                     </button>
@@ -657,7 +784,7 @@ const TaxonomyManager: React.FC = () => {
                         updateSubTheme();
                       }}
                       disabled={loading}
-                      className="save-button"
+                      className="save-button-t"
                     >
                       Sauvegarder
                     </button>

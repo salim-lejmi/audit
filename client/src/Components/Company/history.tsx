@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import '../../styles/history.css'; 
+import {
+  Search,
+  Filter,
+  RefreshCw,
+  ChevronsLeft,
+  ChevronsRight,
+  ChevronLeft,
+  ChevronRight,
+  FileText
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import '../../styles/revuedirection.css';
 
 interface HistoryItem {
   id: number;
@@ -8,9 +19,26 @@ interface HistoryItem {
   document: string;
   source: string;
   createdAt: string;
-  modifiedAt: string;
   pdfPath?: string;
-  type: 'compliance' | 'action' | 'revue' | 'text';
+  type:
+    | 'compliance'
+    | 'action'
+    | 'revue'
+    | 'text'
+    | 'revue_action'
+    | 'revue_legal_text'
+    | 'revue_requirement'
+    | 'revue_stakeholder'
+    | 'company'
+    | 'user'
+    | 'payment'
+    | 'subscription'
+    | 'observation'
+    | 'monitoring'
+    | 'attachment';
+  entityId: number;
+  details?: string;
+  status?: string;
 }
 
 interface PaginationInfo {
@@ -19,6 +47,25 @@ interface PaginationInfo {
   totalItems: number;
   pageSize: number;
 }
+
+const sources = [
+  { value: 'all', label: 'Toutes les activités' },
+  { value: 'compliance', label: 'Évaluations de conformité' },
+  { value: 'action', label: "Plans d'action" },
+  { value: 'revue', label: 'Revues de direction' },
+  { value: 'revue_action', label: 'Actions de revue' },
+  { value: 'revue_legal_text', label: 'Textes légaux de revue' },
+  { value: 'revue_requirement', label: 'Exigences de revue' },
+  { value: 'revue_stakeholder', label: 'Parties prenantes' },
+  { value: 'text', label: 'Textes réglementaires' },
+  { value: 'company', label: 'Entreprises' },
+  { value: 'user', label: 'Utilisateurs' },
+  { value: 'payment', label: 'Paiements' },
+  { value: 'subscription', label: 'Abonnements' },
+  { value: 'observation', label: 'Observations' },
+  { value: 'monitoring', label: 'Paramètres de suivi' },
+  { value: 'attachment', label: 'Pièces jointes' }
+];
 
 const HistoryPage: React.FC = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -33,22 +80,23 @@ const HistoryPage: React.FC = () => {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    pageSize: 10
+    pageSize: 20
   });
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [availableUsers, setAvailableUsers] = useState<string[]>([]);
-
-  const sources = [
-    { value: 'all', label: 'Toutes les sources' },
-    { value: 'compliance', label: 'Évaluation de conformité' },
-    { value: 'action', label: 'Plan d\'action' },
-    { value: 'revue', label: 'Revue de direction' },
-    { value: 'text', label: 'Textes réglementaires' }
-  ];
+  const [showFilters, setShowFilters] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchHistoryData();
-  }, [pagination.currentPage, searchTerm, sourceFilter, userFilter, dateFromFilter, dateToFilter]);
+    // eslint-disable-next-line
+  }, [
+    pagination.currentPage,
+    searchTerm,
+    sourceFilter,
+    userFilter,
+    dateFromFilter,
+    dateToFilter
+  ]);
 
   const fetchHistoryData = async () => {
     try {
@@ -69,23 +117,18 @@ const HistoryPage: React.FC = () => {
       setAvailableUsers(response.data.availableUsers);
       setError(null);
     } catch (err: any) {
-      setError('Erreur lors du chargement de l\'historique');
-      console.error('Error fetching history:', err);
+      setError("Erreur lors du chargement de l'historique");
+      setHistoryItems([]);
+      setAvailableUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePageChange = (newPage: number) => {
-    setPagination(prev => ({ ...prev, currentPage: newPage }));
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-  };
-
-  const handleFilterChange = (filterType: string, value: string) => {
+  const handleFilterChange = (
+    filterType: string,
+    value: string
+  ) => {
     switch (filterType) {
       case 'source':
         setSourceFilter(value);
@@ -103,6 +146,11 @@ const HistoryPage: React.FC = () => {
     setPagination(prev => ({ ...prev, currentPage: 1 }));
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
   const clearFilters = () => {
     setSearchTerm('');
     setSourceFilter('all');
@@ -112,19 +160,10 @@ const HistoryPage: React.FC = () => {
     setPagination(prev => ({ ...prev, currentPage: 1 }));
   };
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      setPagination(prev => ({ ...prev, currentPage: page }));
     }
-  };
-
-  const openGoogleSearch = () => {
-    const searchQuery = searchTerm || 'prévention sécurité environnement';
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
   };
 
   const downloadPDF = async (item: HistoryItem) => {
@@ -134,10 +173,11 @@ const HistoryPage: React.FC = () => {
     }
 
     try {
-      const response = await axios.get(`/api/history/download-pdf/${item.id}?type=${item.type}`, {
-        responseType: 'blob'
-      });
-      
+      const response = await axios.get(
+        `/api/history/download-pdf/${item.entityId}?type=${item.type}`,
+        { responseType: 'blob' }
+      );
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -148,7 +188,6 @@ const HistoryPage: React.FC = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Error downloading PDF:', err);
       alert('Erreur lors du téléchargement du PDF');
     }
   };
@@ -157,7 +196,10 @@ const HistoryPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
+      year: 'numeric'
+    }) +
+    ' ' +
+    new Date(dateString).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -168,247 +210,286 @@ const HistoryPage: React.FC = () => {
       compliance: { label: 'Conformité', className: 'badge-compliance' },
       action: { label: 'Action', className: 'badge-action' },
       revue: { label: 'Revue', className: 'badge-revue' },
-      text: { label: 'Texte', className: 'badge-text' }
+      revue_action: { label: 'Action Revue', className: 'badge-revue-action' },
+      revue_legal_text: { label: 'Texte Légal', className: 'badge-revue-legal' },
+      revue_requirement: { label: 'Exigence', className: 'badge-revue-requirement' },
+      revue_stakeholder: { label: 'Partie Prenante', className: 'badge-revue-stakeholder' },
+      text: { label: 'Texte', className: 'badge-text' },
+      company: { label: 'Entreprise', className: 'badge-company' },
+      user: { label: 'Utilisateur', className: 'badge-user' },
+      payment: { label: 'Paiement', className: 'badge-payment' },
+      subscription: { label: 'Abonnement', className: 'badge-subscription' },
+      observation: { label: 'Observation', className: 'badge-observation' },
+      monitoring: { label: 'Suivi', className: 'badge-monitoring' },
+      attachment: { label: 'Pièce jointe', className: 'badge-attachment' }
     };
-    
-    const badge = badges[source as keyof typeof badges] || { label: source, className: 'badge-default' };
-    return <span className={`source-badge ${badge.className}`}>{badge.label}</span>;
+
+    const badge =
+      badges[source as keyof typeof badges] ||
+      { label: source, className: 'badge-default' };
+    return (
+      <span className={`status-badge ${badge.className}`}>
+        {badge.label}
+      </span>
+    );
   };
 
-  if (loading) {
-    return (
-      <div className="history-page">
-        <div className="container">
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <p>Chargement de l'historique...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getStatusBadge = (status: string | undefined) => {
+    if (!status) return null;
 
-  if (error) {
+    const statusBadges = {
+      Active: { className: 'status-en-cours', label: 'Actif' },
+      Pending: { className: 'status-en-attente', label: 'En attente' },
+      Completed: { className: 'status-terminée', label: 'Terminé' },
+      'In Progress': { className: 'status-en-cours', label: 'En cours' },
+      Draft: { className: 'status-en-attente', label: 'Brouillon' },
+      Canceled: { className: 'status-annulée', label: 'Annulé' },
+      succeeded: { className: 'status-terminée', label: 'Réussi' },
+      failed: { className: 'status-annulée', label: 'Échoué' },
+      expired: { className: 'status-annulée', label: 'Expiré' }
+    };
+
+    const statusBadge =
+      statusBadges[status as keyof typeof statusBadges] ||
+      { className: 'status-badge', label: status };
+
     return (
-      <div className="history-page">
-        <div className="container">
+      <span className={`status-badge ${statusBadge.className}`}>
+        {statusBadge.label}
+      </span>
+    );
+  };
+
+  const getDisplayDetails = (details: string | undefined) => {
+    if (!details) return '';
+    const maxLength = 60;
+    if (details.length <= maxLength) return details;
+    const truncated = details.substring(0, maxLength);
+    const lastDash = truncated.lastIndexOf(' - ');
+    const lastComma = truncated.lastIndexOf(', ');
+    const lastSpace = truncated.lastIndexOf(' ');
+
+    const breakPoint = Math.max(lastDash, lastComma, lastSpace);
+    const cutPoint = breakPoint > maxLength * 0.5 ? breakPoint : maxLength;
+
+    return details.substring(0, cutPoint) + '...';
+  };
+
+  return (
+    <div className="page-container">
+      {/* Header */}
+      <div className="page-header">
+        <h1>Historique des Activités</h1>
+      </div>
+
+      {/* Controls Section */}
+      <div className="controls-section">
+        <div className="search-row">
+          <div className="search-box">
+            <Search className="search-icon" size={20} />
+            <input
+              type="text"
+              placeholder="Rechercher dans l'historique..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
+          <button
+            className={`btn-filter${showFilters ? ' active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={18} />
+            Filtres
+          </button>
+        </div>
+        {showFilters && (
+          <div className="filters-panel">
+            <div className="filters-header">
+              <h3>Filtres avancés</h3>
+              <button className="btn-reset" onClick={clearFilters}>
+                <RefreshCw size={16} />
+                Réinitialiser
+              </button>
+            </div>
+            <div className="filters-grid">
+              <div className="form-group">
+                <label>Type d'activité</label>
+                <select
+                  value={sourceFilter}
+                  onChange={e =>
+                    handleFilterChange('source', e.target.value)
+                  }
+                >
+                  {sources.map(source => (
+                    <option key={source.value} value={source.value}>
+                      {source.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Utilisateur</label>
+                <select
+                  value={userFilter}
+                  onChange={e =>
+                    handleFilterChange('user', e.target.value)
+                  }
+                >
+                  <option value="all">Tous les utilisateurs</option>
+                  {availableUsers.map(user => (
+                    <option key={user} value={user}>
+                      {user}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Date de début</label>
+                <input
+                  type="date"
+                  value={dateFromFilter}
+                  onChange={e =>
+                    handleFilterChange('dateFrom', e.target.value)
+                  }
+                />
+              </div>
+              <div className="form-group">
+                <label>Date de fin</label>
+                <input
+                  type="date"
+                  value={dateToFilter}
+                  onChange={e =>
+                    handleFilterChange('dateTo', e.target.value)
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Results Section */}
+      <div className="results-section">
+        <div className="results-info">
+          {pagination.totalItems > 0
+            ? `${pagination.totalItems} activité${
+                pagination.totalItems > 1 ? 's' : ''
+              } trouvée${pagination.totalItems > 1 ? 's' : ''}`
+            : 'Aucun résultat'}
+        </div>
+
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Chargement...</p>
+          </div>
+        ) : error ? (
           <div className="error-state">
             <p>{error}</p>
-            <button onClick={fetchHistoryData} className="retry-btn">
+            <button className="btn-primary" onClick={fetchHistoryData}>
               Réessayer
             </button>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`history-page ${isFullscreen ? 'fullscreen' : ''}`}>
-      <div className="container">
-        {/* Header */}
-        <div className="page-header">
-          <h1>Historique des Documents</h1>
-        </div>
-
-        {/* Filters Section */}
-        <div className="filters-section">
-          <div className="filters-grid">
-            <div className="filter-group">
-              <label>🔍 Recherche</label>
-              <input
-                type="text"
-                placeholder="Rechercher dans les documents..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="search-input"
-              />
-            </div>
-
-            <div className="filter-group">
-              <label>📂 Source</label>
-              <select
-                value={sourceFilter}
-                onChange={(e) => handleFilterChange('source', e.target.value)}
-                className="filter-select"
-              >
-                {sources.map(source => (
-                  <option key={source.value} value={source.value}>
-                    {source.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>👤 Utilisateur</label>
-              <select
-                value={userFilter}
-                onChange={(e) => handleFilterChange('user', e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">Tous les utilisateurs</option>
-                {availableUsers.map(user => (
-                  <option key={user} value={user}>{user}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>📅 Date de début</label>
-              <input
-                type="date"
-                value={dateFromFilter}
-                onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                className="date-input"
-              />
-            </div>
-
-            <div className="filter-group">
-              <label>📅 Date de fin</label>
-              <input
-                type="date"
-                value={dateToFilter}
-                onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                className="date-input"
-              />
-            </div>
-
-            <div className="filter-actions">
-              <button onClick={clearFilters} className="clear-filters-btn">
-              Effacer
-              </button>
-            </div>
+        ) : historyItems.length === 0 ? (
+          <div className="empty-state">
+            <p>Aucune activité trouvée</p>
+            <p>Essayez de modifier vos critères de recherche</p>
           </div>
-        </div>
-
-        {/* Results Summary */}
-        <div className="results-summary">
-          <p>
-            <strong>{pagination.totalItems}</strong> document{pagination.totalItems > 1 ? 's' : ''} trouvé{pagination.totalItems > 1 ? 's' : ''}
-            {searchTerm && ` pour "${searchTerm}"`}
-          </p>
-        </div>
-
-        {/* History Table */}
-        <div className="table-section">
-          {historyItems.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📄</div>
-              <div className="empty-state-text">Aucun document trouvé</div>
-              <div className="empty-state-subtext">
-                Essayez de modifier vos critères de recherche
-              </div>
-            </div>
-          ) : (
+        ) : (
+          <>
             <div className="table-container">
-              <table className="history-table">
+              <table className="data-table">
                 <thead>
                   <tr>
-                    <th>N°</th>
+                    <th>#</th>
                     <th>Utilisateur</th>
-                    <th>Document</th>
-                    <th>Source</th>
-                    <th>Date de création</th>
-                    <th>Date de modification</th>
+                    <th>Activité</th>
+                    <th>Type</th>
+                    <th>Détails</th>
+                    <th>Statut</th>
+                    <th>Date</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {historyItems.map((item, index) => (
-                    <tr key={item.id}>
-                      <td className="row-number">
-                        {(pagination.currentPage - 1) * pagination.pageSize + index + 1}
+                  {historyItems.map((item, idx) => (
+                    <tr key={`${item.type}-${item.id}`}>
+                      <td>
+                        {(pagination.currentPage - 1) *
+                          pagination.pageSize +
+                          idx +
+                          1}
                       </td>
-                      <td className="user-cell">
-                        <div className="user-info">
-                          <span className="user-name">{item.user}</span>
-                        </div>
+                      <td>
+                        <span className="user-name">{item.user}</span>
                       </td>
-                      <td className="document-cell">
-                        <div className="document-info">
-                          <span className="document-title">{item.document}</span>
-                        </div>
+                      <td>
+                        <span
+                          className="document-title"
+                          title={item.document}
+                        >
+                          {item.document.length > 50
+                            ? `${item.document.substring(0, 50)}...`
+                            : item.document}
+                        </span>
                       </td>
-                      <td className="source-cell">
-                        {getSourceBadge(item.source)}
+                      <td>{getSourceBadge(item.source)}</td>
+                      <td>
+                        {item.details && (
+                          <span
+                            className="details-text"
+                            title={item.details}
+                          >
+                            {getDisplayDetails(item.details)}
+                          </span>
+                        )}
                       </td>
-                      <td className="date-cell">
-                        {formatDate(item.createdAt)}
-                      </td>
-                      <td className="date-cell">
-                        {formatDate(item.modifiedAt)}
+                      <td>{getStatusBadge(item.status)}</td>
+                      <td>
+                        <span className="date-text">
+                          {formatDate(item.createdAt)}
+                        </span>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="pagination-section">
-            <div className="pagination-info">
-              Page {pagination.currentPage} sur {pagination.totalPages}
-              ({pagination.totalItems} éléments au total)
-            </div>
-            <div className="pagination-controls">
-              <button
-                onClick={() => handlePageChange(1)}
-                disabled={pagination.currentPage === 1}
-                className="pagination-btn"
-              >
-                ⏮️ Premier
-              </button>
-              <button
-                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
-                className="pagination-btn"
-              >
-                ⬅️ Précédent
-              </button>
-              
-              {/* Page numbers */}
-              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                let pageNum;
-                if (pagination.totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (pagination.currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                  pageNum = pagination.totalPages - 4 + i;
-                } else {
-                  pageNum = pagination.currentPage - 2 + i;
-                }
-                
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`pagination-btn ${pagination.currentPage === pageNum ? 'active' : ''}`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === pagination.totalPages}
-                className="pagination-btn"
-              >
-                Suivant ➡️
-              </button>
-              <button
-                onClick={() => handlePageChange(pagination.totalPages)}
-                disabled={pagination.currentPage === pagination.totalPages}
-                className="pagination-btn"
-              >
-                Dernier ⏭️
-              </button>
-            </div>
-          </div>
+            {pagination.totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  className="page-btn"
+                  onClick={() => goToPage(1)}
+                  disabled={pagination.currentPage === 1}
+                >
+                  <ChevronsLeft size={16} />
+                </button>
+                <button
+                  className="page-btn"
+                  onClick={() => goToPage(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="page-info">
+                  Page {pagination.currentPage} sur {pagination.totalPages}
+                </span>
+                <button
+                  className="page-btn"
+                  onClick={() => goToPage(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <button
+                  className="page-btn"
+                  onClick={() => goToPage(pagination.totalPages)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                >
+                  <ChevronsRight size={16} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
