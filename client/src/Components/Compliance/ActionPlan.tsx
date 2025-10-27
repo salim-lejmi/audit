@@ -349,33 +349,29 @@ const ActionPlan: React.FC = () => {
 
       <div className="content-container">
         <div className="main-panel">
-          {/* Top Actions */}
-          <div className="panel-header">
-         
-            <div className="header-actions">
-              <button className="btn-secondary" onClick={handleExportPdf}>
-                <FileText size={16} />
-                Exporter en PDF
-              </button>
-              {!isAuditor && (
-                <button className="btn-primary" onClick={handleCreateAction}>
-                  <Plus size={16} />
-                  Nouvelle Action
+          {/* Controls section - matches other pages so shared CSS applies */}
+          <div className="controls-section">
+            <div className="search-row" style={{ alignItems: 'center', gap: '12px' }}>
+              <div className="header-left">
+                <button 
+                  className={`btn-filter ${showFilters ? 'active' : ''}`}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  {showFilters ? <X size={16} /> : <Filter size={16} />}
+                  {showFilters ? 'Masquer les Filtres' : 'Filtres'}
                 </button>
-              )}
+              </div>
+
+              <div className="header-actions">
+                {!isAuditor && (
+                  <button className="btn-primary" onClick={handleCreateAction}>
+                    <Plus size={16} />
+                    Nouvelle Action
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          
-          {/* Filters */}
-          <div className="filters-section">
-            <button 
-              className={`btn-filter ${showFilters ? 'active' : ''}`}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? <X size={16} /> : <Filter size={16} />}
-              {showFilters ? 'Masquer les Filtres' : 'Afficher les Filtres'}
-            </button>
-            
+
             {showFilters && (
               <div className="filters-panel">
                 <div className="filters-header">
@@ -832,4 +828,4 @@ const ActionPlan: React.FC = () => {
   );
 };
 
-export default ActionPlan;
+export default ActionPlan;  

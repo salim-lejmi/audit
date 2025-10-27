@@ -316,14 +316,8 @@ const ComplianceRequirementEvaluation: React.FC<ComplianceRequirementEvaluationP
           Textes Applicables
         </button>
         <div className="right-actions">
-          <button className="btn-secondary" onClick={handleSaveToHistory}>
-            <Save size={16} />
-            Enregistrer dans l'Historique
-          </button>
-          <button className="btn-secondary" onClick={handleExportPdf}>
-            <Printer size={16} />
-            Exporter en PDF
-          </button>
+         
+         
           <button className="btn-primary" onClick={() => navigate(`/company/action-plan?textId=${textId}`)}>
             Plan d'Action
             <ArrowRight size={16} />

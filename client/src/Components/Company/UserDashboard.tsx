@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/subscriptiondashboard.css';
@@ -43,95 +43,154 @@ const UserDashboard: React.FC = () => {
         const response = await axios.get('/api/company/user-dashboard-info');
         setUserInfo(response.data);
         setLoading(false);
-        
-        // Fetch AI tips for user's actions
         await fetchActionTips();
-      } catch (error) {
+      } catch (err) {
         setError('Échec du chargement des informations utilisateur');
         setLoading(false);
-        console.error(error);
+        console.error(err);
       }
     };
 
     fetchUserInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchActionTips = async () => {
     try {
       setLoadingTips(true);
-      // Get user's recent actions
       const actionsResponse = await axios.get('/api/action-plan?pageSize=5');
-      
+
       if (actionsResponse.data.actions && actionsResponse.data.actions.length > 0) {
         const tips: ActionTip[] = [];
-        
-        // Get tips for each action
-        for (const action of actionsResponse.data.actions.slice(0, 3)) { // Limit to 3 most recent
+        for (const action of actionsResponse.data.actions.slice(0, 3)) {
           try {
             const tipsResponse = await axios.get(`/api/action-plan/${action.actionId}/tips`);
             if (tipsResponse.data.success && tipsResponse.data.tips && tipsResponse.data.tips.analysis) {
               tips.push({
                 actionId: action.actionId,
                 description: action.description,
-                analysis: tipsResponse.data.tips.analysis
+                analysis: tipsResponse.data.tips.analysis,
               });
             }
           } catch (tipError) {
             console.error(`Error fetching tips for action ${action.actionId}:`, tipError);
           }
         }
-        
         setActionTips(tips);
       }
-    } catch (error) {
-      console.error('Error fetching action tips:', error);
+    } catch (err) {
+      console.error('Error fetching action tips:', err);
     } finally {
       setLoadingTips(false);
     }
   };
 
-  // Helper function to safely get priority level class
   const getPriorityClass = (priority: string) => {
     if (!priority) return 'medium';
     return priority.toLowerCase();
   };
 
-  // Helper function to safely get status class
   const getStatusClass = (status: string) => {
     if (!status) return 'pending';
     return status.toLowerCase();
   };
 
-  if (loading) {
-    return <div className="loading-container">Chargement du tableau de bord...</div>;
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
-
-  // Calculate completion percentage
   const assignedActions = userInfo?.assignedActions || 0;
   const completedActions = userInfo?.completedActions || 0;
-  const completionPercentage = assignedActions > 0 
-    ? Math.round((completedActions / assignedActions) * 100) 
+  const pendingEvaluations = userInfo?.pendingEvaluations || 0;
+  const completionPercentage = assignedActions > 0
+    ? Math.round((completedActions / assignedActions) * 100)
     : 0;
+
+  // Build auditor-oriented stat cards with unique links (or no link)
+  const statCards = useMemo(() => {
+    const cards: {
+      key: string;
+      title: string;
+      value: React.ReactNode;
+      subtitle?: string;
+      link?: { to: string; label: string };
+      icon?: string;
+      className?: string;
+    }[] = [];
+
+    // 1) Completion (only if there are assigned actions)
+    if (assignedActions > 0) {
+      cards.push({
+        key: 'completion',
+        title: "Taux d'Accomplissement",
+        value: `${completionPercentage}%`,
+        subtitle: `Basé sur ${assignedActions} actions`,
+        link: { to: '/user/action-plan', label: 'Voir mes actions' },
+        icon: 'fas fa-chart-line',
+        className: 'compliance',
+      });
+
+      // 2) Action summary (counts) — links to a different page to avoid duplication
+      cards.push({
+        key: 'actions-summary',
+        title: "Résumé des Actions",
+        value: `${completedActions}/${assignedActions}`,
+        subtitle: `${assignedActions - completedActions} en cours`,
+        // use a different sensible route to avoid duplicate link targets
+        link: { to: '/user/revue', label: "Revue des actions" },
+        icon: 'fas fa-tasks',
+        className: 'actions',
+      });
+    } else {
+      // If none assigned, show informative card without duplicating links
+      cards.push({
+        key: 'no-actions',
+        title: "Plans d'Action",
+        value: '-',
+        subtitle: 'Aucune action assignée',
+        link: { to: '/user/action-plan', label: "Parcourir les actions" },
+        icon: 'fas fa-tasks',
+        className: 'actions',
+      });
+    }
+
+    // 3) Pending evaluations — always relevant to auditors
+    cards.push({
+      key: 'pending-evals',
+      title: 'Évaluations à Vérifier',
+      value: pendingEvaluations,
+      subtitle: `${completedActions} actions terminées`,
+      link: { to: '/user/compliance', label: 'Gérer les évaluations' },
+      icon: 'fas fa-clipboard-check',
+      className: 'evaluations',
+    });
+
+    // 4) AI tips count — no link (to avoid duplicating the action-plan target)
+    if (actionTips && actionTips.length > 0) {
+      cards.push({
+        key: 'ai-tips',
+        title: 'Conseils IA Récents',
+        value: actionTips.length,
+        subtitle: 'Analyses disponibles pour vos actions',
+        icon: 'fas fa-robot',
+        className: 'texts',
+      });
+    }
+
+    return cards;
+  }, [assignedActions, completedActions, pendingEvaluations, completionPercentage, actionTips]);
 
   return (
     <section className="subscription-dashboard">
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <div className="dashboard-title">
-            <h2>Bienvenue, {userInfo?.userName}</h2>
-            <p className="text-muted">
-              {userInfo?.role === 'Auditor' 
-                ? 'Gérez vos actions assignées et évaluations de conformité' 
-                : 'Accédez aux ressources de votre tableau de bord'}
-            </p>
+  <div className="dashboard-title">
+    <h4>Tableau de Bord Utilisateur</h4>
+    <p>
+      {userInfo?.companyName
+        ? `Bienvenue, ${userInfo.userName} - ${userInfo.companyName}`
+        : 'Accédez aux ressources de votre tableau de bord'}
+    </p>
           </div>
         </div>
 
-        {/* User Overview Card */}
+        {/* User Overview */}
         <div className="overview-card">
           <div className="card-header">
             <h5>Aperçu de l'Utilisateur</h5>
@@ -172,7 +231,28 @@ const UserDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* AI-Powered Tips Section */}
+        {/* Auditor stat cards (no Textes card, no duplicate links) */}
+        <div className="stats-container">
+          {statCards.map(card => (
+            <div key={card.key} className={`stat-card ${card.className || ''}`}>
+              <div className="stat-icon">
+                <i className={card.icon || 'fas fa-info-circle'}></i>
+              </div>
+              <div className="stat-content">
+                <h5 className="stat-title">{card.title}</h5>
+                <p className="stat-value">{card.value}</p>
+                {card.subtitle && <span className="stat-subtitle">{card.subtitle}</span>}
+                {card.link && (
+                  <Link to={card.link.to} className="stat-link">
+                    {card.link.label} <i className="fas fa-arrow-right"></i>
+                  </Link>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* AI-Powered Tips (kept as-is) */}
         <div className="overview-card">
           <div className="card-header">
             <h5>
@@ -187,7 +267,7 @@ const UserDashboard: React.FC = () => {
               </div>
             ) : actionTips.length > 0 ? (
               <div className="tips-grid">
-                {actionTips.map((tip, index) => (
+                {actionTips.map((tip) => (
                   <div key={tip.actionId} className="tip-card">
                     <div className="tip-header">
                       <span className={`priority-badge ${getPriorityClass(tip.analysis.priority_level)}`}>
@@ -200,7 +280,7 @@ const UserDashboard: React.FC = () => {
                     <div className="tip-content">
                       <h6>{tip.description && tip.description.length > 50 ? `${tip.description.substring(0, 50)}...` : tip.description}</h6>
                       <p className="risk-assessment">{tip.analysis.risk_assessment || 'Analyse en cours...'}</p>
-                      
+
                       {tip.analysis.recommended_tips && tip.analysis.recommended_tips.length > 0 && (
                         <div className="recommended-tips">
                           <strong>Conseils recommandés:</strong>
@@ -211,11 +291,11 @@ const UserDashboard: React.FC = () => {
                           </ul>
                         </div>
                       )}
-                      
+
                       <div className="timeline">
                         <strong>Délai suggéré:</strong> {tip.analysis.suggested_timeline || '2-4 semaines'}
                       </div>
-                      
+
                       {tip.analysis.compliance_areas && tip.analysis.compliance_areas.length > 0 && (
                         <div className="compliance-areas">
                           <strong>Domaines de conformité:</strong>
@@ -238,104 +318,6 @@ const UserDashboard: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Task Statistics */}
-        <div className="overview-card">
-          <div className="card-header">
-            <h5>Aperçu des Tâches</h5>
-          </div>
-          <div className="card-body">
-            <div className="info-grid">
-              <div className="info-column">
-                <div className="info-item">
-                  <span className="info-label">Actions Assignées :</span>
-                  <span>{assignedActions}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Actions Terminées :</span>
-                  <span>{completedActions}</span>
-                </div>
-              </div>
-              <div className="info-column">
-                <div className="info-item">
-                  <span className="info-label">Achèvement des Tâches :</span>
-                  <span>{completionPercentage}%</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Évaluations en Attente :</span>
-                  <span>{userInfo?.pendingEvaluations || 0}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="overview-card">
-          <div className="card-header">
-            <h5>Actions Rapides</h5>
-          </div>
-          <div className="card-body">
-            <div className="actions-grid">
-              <Link to="/user/action-plan" className="action-button primary">
-                <i className="fas fa-tasks"></i>
-                Plans d'Action
-              </Link>
-              <Link to="/user/compliance" className="action-button primary">
-                <i className="fas fa-check-square"></i>
-                Évaluation de la Conformité
-              </Link>
-              <Link to="/user/revue" className="action-button info">
-                <i className="fas fa-folder-open"></i>
-                Revue de Direction
-              </Link>
-              <Link to="/user/profile" className="action-button info">
-                <i className="fas fa-user"></i>
-                Mon Profil
-              </Link>
-              <button 
-                className="action-button danger"
-                onClick={() => {
-                  axios.post('/api/auth/logout')
-                    .then(() => window.location.href = '/')
-                }}
-              >
-                <i className="fas fa-sign-out-alt"></i>
-                Déconnexion
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Progress */}
-        {assignedActions > 0 && (
-          <div className="overview-card">
-            <div className="card-header">
-              <h5>Progrès des Actions</h5>
-            </div>
-            <div className="card-body">
-              <div style={{ display: 'flex', alignItems: 'center', margin: '10px 0' }}>
-                <div style={{ flex: '1', height: '24px', background: '#e9ecef', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div 
-                    style={{ 
-                      width: `${completionPercentage}%`, 
-                      height: '100%', 
-                      background: '#007bff',
-                      transition: 'width 1s ease-in-out'
-                    }} 
-                  />
-                </div>
-                <span style={{ marginLeft: '10px', fontWeight: '500' }}>
-                  {completionPercentage}%
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
-                <span>{completedActions} terminé</span>
-                <span>{assignedActions - completedActions} restant</span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

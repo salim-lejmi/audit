@@ -184,6 +184,14 @@ const Navbar: React.FC<NavbarProps> = ({ userRole = 'User' }) => {
               </Link>
             </div>
           )}
+{(userRole === 'SubscriptionManager' || userRole === 'Auditor') && (
+  <div className="nav-item">
+    <Link to={`${getBasePath()}/revue`} className="nav-button">
+      <i className="fas fa-folder-open"></i>
+      <span className="nav-label">Revue</span>
+    </Link>
+  </div>
+)}
 
           {/* Management dropdown */}
           {userRole === 'SuperAdmin' && (
