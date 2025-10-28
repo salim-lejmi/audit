@@ -13,7 +13,11 @@ interface SubscriptionPlan {
   features: string[];
   isActive: boolean;
 }
-
+interface ActionableUpdates {
+  basePrice?: number;
+  discount?: number;
+  userLimit?: number;
+}
 interface NewSubscriptionPlan {
   name: string;
   description: string;
@@ -32,6 +36,43 @@ interface PlanTemplate {
   planData: NewSubscriptionPlan;
 }
 
+interface PlanSuggestion {
+  planId: number;
+  planName: string;
+  currentMetrics: {
+    adoptionRate: number;
+    avgUsers: number;
+    subscribers: number;
+  };
+  insights: string[];
+  recommendations: string[];
+  suggestedChanges: {
+    [key: string]: any;
+  };
+  actionableUpdates?: ActionableUpdates;  // ✨ NEW
+  priorityScore: number;
+  riskLevel: string;
+}
+interface MarketInsight {
+  type: string;
+  icon: string;
+  text: string;
+  status: string;
+}
+
+interface AnalysisResult {
+  planSuggestions: PlanSuggestion[];
+  marketInsights: MarketInsight[];
+  analysisDate: string;
+  methodology: string;
+  globalMetrics: {
+    actionCompletionRate?: number;
+    complianceRate?: number;
+    avgUsersPerCompany?: number;
+    totalActiveCompanies?: number;
+  };
+}
+
 const QuotesPage: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +82,11 @@ const QuotesPage: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showTemplateDrawer, setShowTemplateDrawer] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  
+  // NLP Analysis states
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   
   const [newPlan, setNewPlan] = useState<NewSubscriptionPlan>({
     name: '',
@@ -140,6 +186,126 @@ const QuotesPage: React.FC = () => {
       console.error('Error fetching plans:', err);
     } finally {
       setLoading(false);
+    }
+  };
+const handleApplySuggestion = async (planId: number, updates: ActionableUpdates) => {
+  if (!window.confirm('Êtes-vous sûr de vouloir appliquer ces changements au plan ?')) {
+    return;
+  }
+
+  try {
+    console.log('🔄 Applying changes to plan:', planId, updates);
+    
+    // Get the current plan
+    const currentPlan = plans.find(p => p.planId === planId);
+    if (!currentPlan) {
+      setError('Plan non trouvé');
+      return;
+    }
+
+    // Merge updates with current plan
+    const updatedPlan = {
+      ...currentPlan,
+      ...updates
+    };
+
+    // Send update to backend
+    const response = await axios.put(`/api/subscription-plans/${planId}`, updatedPlan);
+    
+    // Update local state
+    setPlans(plans.map(p => p.planId === planId ? response.data : p));
+    
+    setSuccessMessage('Changements appliqués avec succès!');
+    
+    // Close modal and refresh analysis
+    setShowAnalysisModal(false);
+    setTimeout(() => {
+      setSuccessMessage('');
+      // Optionally regenerate analysis
+      // handleGenerateAnalysis();
+    }, 3000);
+    
+  } catch (err: any) {
+    console.error('❌ Error applying changes:', err);
+    setError('Erreur lors de l\'application des changements: ' + (err.response?.data?.message || err.message));
+  }
+};
+
+  // Helper functions for styling - DEFINE BEFORE handleGenerateAnalysis
+  const getRiskBadgeClass = (riskLevel: string) => {
+    switch (riskLevel) {
+      case 'critical':
+        return 'risk-badge-critical';
+      case 'high':
+        return 'risk-badge-high';
+      case 'medium':
+        return 'risk-badge-medium';
+      default:
+        return 'risk-badge-low';
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'good':
+        return 'status-badge-good';
+      case 'warning':
+        return 'status-badge-warning';
+      case 'critical':
+        return 'status-badge-critical';
+      default:
+        return 'status-badge-info';
+    }
+  };
+
+  const handleGenerateAnalysis = async () => {
+    try {
+      console.log('🔹 Starting analysis generation...');
+      setAnalysisLoading(true);
+      setShowAnalysisModal(true);
+      setAnalysisResult(null);
+      
+      // Fetch subscription insights
+      console.log('➡️ Fetching subscription insights...');
+      const statsResponse = await axios.get('/api/statistics/subscription-insights');
+      console.log('✅ Statistics received:', statsResponse.data);
+      const statistics = statsResponse.data;
+      
+      // Prepare plans data for analysis
+      const plansForAnalysis = plans.map(plan => ({
+        planId: plan.planId,
+        name: plan.name,
+        basePrice: plan.basePrice,
+        userLimit: plan.userLimit,
+        discount: plan.discount,
+        features: plan.features
+      }));
+      
+      console.log('➡️ Calling Flask NLP service...');
+      console.log('📊 Sending data:', { statistics, plans: plansForAnalysis });
+      
+      // Call Flask NLP service
+      const analysisResponse = await axios.post('http://localhost:5000/analyze-subscription-performance', {
+        statistics: statistics,
+        plans: plansForAnalysis
+      });
+      
+      console.log('✅ Analysis response:', analysisResponse.data);
+      
+      if (analysisResponse.data.success) {
+        setAnalysisResult(analysisResponse.data.analysis);
+        console.log('✅ Analysis result set successfully');
+      } else {
+        setError('Échec de l\'analyse NLP. Veuillez réessayer.');
+        console.error('❌ Analysis failed:', analysisResponse.data);
+      }
+    } catch (err: any) {
+      console.error('❌ Error generating analysis:', err);
+      console.log('🔍 Error response data:', err.response?.data);
+      setError('Erreur lors de la génération de l\'analyse: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setAnalysisLoading(false);
+      console.log('🏁 Analysis generation complete');
     }
   };
 
@@ -281,8 +447,207 @@ const QuotesPage: React.FC = () => {
           <i className="fas fa-plus"></i>
           Créer un nouveau plan
         </button>
+        
+        <button 
+          className="btn-q btn-q-secondary"
+          onClick={handleGenerateAnalysis}
+          disabled={plans.length === 0}
+        >
+          <i className="fas fa-brain"></i>
+          Générer des suggestions NLP
+        </button>
       </div>
 
+      {/* Analysis Modal */}
+      {showAnalysisModal && (
+        <div className="modal-overlay" onClick={() => setShowAnalysisModal(false)}>
+          <div className="analysis-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <i className="fas fa-brain"></i>
+                Analyse NLP des Plans d'Abonnement
+              </h2>
+              <button className="close-btn" onClick={() => setShowAnalysisModal(false)}>×</button>
+            </div>
+            
+            <div className="modal-content">
+              {analysisLoading ? (
+                <div className="loading-spinner">
+                  <i className="fas fa-spinner fa-spin"></i>
+                  <p>Analyse en cours... Traitement des données avec NLP</p>
+                </div>
+              ) : analysisResult ? (
+                <>
+                  {/* Global Metrics */}
+                  {analysisResult.globalMetrics && (
+                    <div className="global-metrics">
+                      <h3>Métriques Globales</h3>
+                      <div className="metrics-grid">
+                        {analysisResult.globalMetrics.actionCompletionRate !== undefined && (
+                          <div className="metric-card">
+                            <i className="fas fa-tasks"></i>
+                            <span className="metric-value">{analysisResult.globalMetrics.actionCompletionRate}%</span>
+                            <span className="metric-label">Taux de complétion</span>
+                          </div>
+                        )}
+                        {analysisResult.globalMetrics.complianceRate !== undefined && (
+                          <div className="metric-card">
+                            <i className="fas fa-check-circle"></i>
+                            <span className="metric-value">{analysisResult.globalMetrics.complianceRate}%</span>
+                            <span className="metric-label">Taux de conformité</span>
+                          </div>
+                        )}
+                        {analysisResult.globalMetrics.avgUsersPerCompany !== undefined && (
+                          <div className="metric-card">
+                            <i className="fas fa-users"></i>
+                            <span className="metric-value">{analysisResult.globalMetrics.avgUsersPerCompany.toFixed(1)}</span>
+                            <span className="metric-label">Moy. utilisateurs/entreprise</span>
+                          </div>
+                        )}
+                        {analysisResult.globalMetrics.totalActiveCompanies !== undefined && (
+                          <div className="metric-card">
+                            <i className="fas fa-building"></i>
+                            <span className="metric-value">{analysisResult.globalMetrics.totalActiveCompanies}</span>
+                            <span className="metric-label">Entreprises actives</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Market Insights */}
+                  {analysisResult.marketInsights && analysisResult.marketInsights.length > 0 && (
+                    <div className="market-insights">
+                      <h3>Insights du Marché</h3>
+                      <div className="insights-list">
+                        {analysisResult.marketInsights.map((insight, index) => (
+                          <div key={index} className={`insight-item ${getStatusBadgeClass(insight.status)}`}>
+                            <span className="insight-icon">{insight.icon}</span>
+                            <span className="insight-text">{insight.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Plan Suggestions */}
+                  {analysisResult.planSuggestions && analysisResult.planSuggestions.length > 0 && (
+                    <div className="plan-suggestions">
+                      <h3>Suggestions par Plan (Triées par Priorité)</h3>
+{analysisResult.planSuggestions.map((suggestion, index) => (
+  <div key={index} className="suggestion-card">
+    <div className="suggestion-header">
+      <h4>{suggestion.planName}</h4>
+      <div className="suggestion-badges">
+        <span className={`priority-badge priority-${suggestion.priorityScore > 7 ? 'high' : suggestion.priorityScore > 4 ? 'medium' : 'low'}`}>
+          Priorité: {suggestion.priorityScore}/10
+        </span>
+        <span className={`risk-badge ${getRiskBadgeClass(suggestion.riskLevel)}`}>
+          Risque: {suggestion.riskLevel}
+        </span>
+      </div>
+    </div>
+                          {/* Current Metrics */}
+                          <div className="current-metrics">
+                            <div className="metric-item">
+                              <i className="fas fa-chart-line"></i>
+                              <span>Taux d'adoption: <strong>{suggestion.currentMetrics.adoptionRate}%</strong></span>
+                            </div>
+                            <div className="metric-item">
+                              <i className="fas fa-users"></i>
+                              <span>Moy. utilisateurs: <strong>{suggestion.currentMetrics.avgUsers}</strong></span>
+                            </div>
+                            <div className="metric-item">
+                              <i className="fas fa-user-check"></i>
+                              <span>Abonnés: <strong>{suggestion.currentMetrics.subscribers}</strong></span>
+                            </div>
+                          </div>
+
+                          {/* Insights */}
+                          {suggestion.insights && suggestion.insights.length > 0 && (
+                            <div className="insights-section">
+                              <h5><i className="fas fa-lightbulb"></i> Insights</h5>
+                              <ul>
+                                {suggestion.insights.map((insight, i) => (
+                                  <li key={i}>{insight}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Recommendations */}
+                          {suggestion.recommendations && suggestion.recommendations.length > 0 && (
+                            <div className="recommendations-section">
+                              <h5><i className="fas fa-clipboard-list"></i> Recommandations</h5>
+                              <ul>
+                                {suggestion.recommendations.map((rec, i) => (
+                                  <li key={i}>{rec}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Suggested Changes */}
+    {suggestion.suggestedChanges && Object.keys(suggestion.suggestedChanges).length > 0 && (
+      <div className="suggested-changes">
+        <div className="changes-header">
+          <h5><i className="fas fa-edit"></i> Changements Suggérés</h5>
+          {suggestion.actionableUpdates && Object.keys(suggestion.actionableUpdates).length > 0 && (
+            <button
+              className="btn-apply-changes"
+              onClick={() => handleApplySuggestion(suggestion.planId, suggestion.actionableUpdates!)}
+            >
+              <i className="fas fa-check-circle"></i>
+              Appliquer tous les changements
+            </button>
+          )}
+        </div>
+        <div className="changes-grid">
+          {Object.entries(suggestion.suggestedChanges).map(([key, value]) => (
+            <div key={key} className="change-item">
+              <strong>{key}:</strong>
+              {typeof value === 'object' && value !== null ? (
+                <div className="change-details">
+                  {value.current !== undefined && <div>Actuel: {value.current}</div>}
+                  {value.suggested !== undefined && <div className="suggested-value">Suggéré: {value.suggested}</div>}
+                  {value.reason && <div className="change-reason"><em>{value.reason}</em></div>}
+                </div>
+              ) : (
+                <span>{String(value)}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+))}                    </div>
+                  )}
+
+                  {/* Methodology */}
+                  <div className="analysis-footer">
+                    <p className="methodology">
+                      <i className="fas fa-info-circle"></i>
+                      <strong>Méthodologie:</strong> {analysisResult.methodology}
+                    </p>
+                    <p className="analysis-date">
+                      <i className="fas fa-calendar"></i>
+                      Généré le: {new Date(analysisResult.analysisDate).toLocaleString('fr-FR')}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="no-analysis">
+                  <i className="fas fa-exclamation-circle"></i>
+                  <p>Aucune analyse disponible</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Form - keeping your existing code */}
       {showCreateForm && (
         <div className="plan-form-card">
           <div className="card-header">

@@ -27,7 +27,7 @@ namespace server.Controllers
             {
                 var userId = HttpContext.Session.GetInt32("UserId");
                 var companyId = HttpContext.Session.GetInt32("CompanyId");
-                
+
                 if (!userId.HasValue || !companyId.HasValue)
                 {
                     return Unauthorized(new { message = "Not authenticated" });
@@ -55,7 +55,7 @@ namespace server.Controllers
 
                 // 2. Requirement conformity statistics
                 var textIds = await textsQuery.Select(t => t.TextId).ToListAsync();
-                
+
                 var requirementsByStatus = await _context.TextRequirements
                     .Where(tr => textIds.Contains(tr.TextId))
                     .GroupJoin(
@@ -77,7 +77,7 @@ namespace server.Controllers
 
                 // 3. Action progress statistics
                 var actions = await _context.Actions
-                    .Where(a => a.CompanyId == companyId.Value && 
+                    .Where(a => a.CompanyId == companyId.Value &&
                                (domainId == null || textsQuery.Any(t => t.TextId == a.TextId)))
                     .ToListAsync();
 
@@ -91,7 +91,7 @@ namespace server.Controllers
                     .ToList();
 
                 var actionProgressGroups = new List<object>();
-                
+
                 // Group actions by progress ranges
                 actionProgressGroups.Add(new
                 {
@@ -116,7 +116,7 @@ namespace server.Controllers
 
                 // 4. Action progress by responsible person
                 var actionsByResponsible = await _context.Actions
-                    .Where(a => a.CompanyId == companyId.Value && 
+                    .Where(a => a.CompanyId == companyId.Value &&
                            a.ResponsibleId.HasValue &&
                            (domainId == null || textsQuery.Any(t => t.TextId == a.TextId)))
                     .GroupBy(a => new { a.ResponsibleId, ResponsibleName = a.Responsible.Name })
@@ -158,5 +158,78 @@ namespace server.Controllers
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+[HttpGet("subscription-insights")]
+public async Task<IActionResult> GetSubscriptionInsights()
+{
+    var userRole = HttpContext.Session.GetString("UserRole");
+    if (userRole != "SuperAdmin")
+    {
+        return StatusCode(403, new { message = "Access denied. Super Admin only." });
+    }
+
+    try
+    {
+        // Gather comprehensive statistics for NLP analysis
+        var totalCompanies = await _context.Companies.CountAsync();
+        var activeCompanies = await _context.Companies
+            .Where(c => c.Status == "Approved")
+            .CountAsync();
+        
+        // Get subscription distribution
+        var subscriptionDistribution = await _context.CompanySubscriptions
+            .Include(cs => cs.Plan)
+            .Include(cs => cs.Company)
+                .ThenInclude(c => c.Users)
+            .Where(cs => cs.Status == "active")
+            .GroupBy(cs => cs.PlanId)
+            .Select(g => new
+            {
+                planId = g.Key,
+                count = g.Count(),
+                planName = g.First().Plan.Name,
+                avgUsers = g.Average(cs => cs.Company.Users.Count)
+            })
+            .ToListAsync();
+
+        // Get average users per company - FIXED VERSION
+        var companiesWithUsers = await _context.Companies
+            .Include(c => c.Users)
+            .Where(c => c.Users.Any())
+            .ToListAsync(); // Materialize to memory first
+        
+        var avgUsersPerCompany = companiesWithUsers.Any() 
+            ? companiesWithUsers.Average(c => c.Users.Count) 
+            : 0;
+
+        // Get action statistics across all companies
+        var totalActions = await _context.Actions.CountAsync();
+        var completedActions = await _context.Actions
+            .Where(a => a.Status == "completed")
+            .CountAsync();
+
+        // Get text statistics
+        var totalTexts = await _context.Texts.CountAsync();
+        var compliantTexts = await _context.Texts
+            .Where(t => t.Status == "compliant")
+            .CountAsync();
+
+        return Ok(new
+        {
+            totalCompanies,
+            activeCompanies,
+            subscriptionDistribution,
+            avgUsersPerCompany,
+            totalActions,
+            completedActions,
+            totalTexts,
+            compliantTexts,
+            analysisTimestamp = DateTime.Now
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = ex.Message });
+    }
+}
     }
 }
