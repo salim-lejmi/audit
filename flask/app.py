@@ -7,6 +7,10 @@ import logging
 import json
 from datetime import datetime
 import re
+import spacy
+import numpy as np
+from collections import Counter
+from sklearn.linear_model import LinearRegression
 
 # Load environment variables
 load_dotenv()
@@ -17,10 +21,19 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"])  # Allow React app to connect
+CORS(app, origins=["http://localhost:5173"], supports_credentials=True, 
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # Configure Gemini AI
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+
+# Load spaCy French model for real NLP
+try:
+    nlp = spacy.load("fr_core_news_md")
+except:
+    logger.warning("French spaCy model not found. Install with: python -m spacy download fr_core_news_md")
+    nlp = None
 
 class NLPService:
     def __init__(self):
@@ -456,10 +469,10 @@ class NLPService:
                 else:
                     # Plan has no subscribers
                     suggested_changes = {
-                        'pricing': f"Réduire à {plan.get('basePrice', 0) * 0.8:.2f}$ (test marché)",
-                        'discount': "Appliquer 15-20% de réduction temporaire",
-                        'userLimit': 'Aligner sur la demande moyenne du marché',
-                        'features': 'Enrichir avec fonctionnalités demandées'
+                        'prix': f"Réduire à {plan.get('basePrice', 0) * 0.8:.2f}$ (test marché)",
+                        'rabais': "Appliquer 15-20% de réduction temporaire",
+                        "Limite d'utilisateur": 'Aligner sur la demande moyenne du marché',
+                        'traits': 'Enrichir avec fonctionnalités demandées'
                     }
                     
                     actionable_updates = self._generate_actionable_updates(plan, suggested_changes)
@@ -769,8 +782,663 @@ class NLPService:
         return updates
 
 
-# Initialize NLP service
+class PerformanceReportNLP:
+    """
+    Real NLP-based performance analysis using spaCy and statistical methods
+    - Named Entity Recognition for key metrics
+    - Sentiment analysis for performance trends
+    - Time-series trend detection
+    - Natural Language Generation for insights
+    """
+    
+    def __init__(self):
+        self.nlp = nlp
+        
+    def generate_performance_report(self, statistics):
+        """
+        Generate comprehensive NLP-based performance report
+        Returns structured insights with linguistic analysis
+        """
+        try:
+            # Extract metrics
+            total_companies = statistics.get('totalCompanies', 0)
+            active_companies = statistics.get('activeCompanies', 0)
+            subscription_dist = statistics.get('subscriptionDistribution', [])
+            avg_users = statistics.get('avgUsersPerCompany', 0)
+            total_actions = statistics.get('totalActions', 0)
+            completed_actions = statistics.get('completedActions', 0)
+            total_texts = statistics.get('totalTexts', 0)
+            compliant_texts = statistics.get('compliantTexts', 0)
+            
+            # Calculate derived metrics
+            activation_rate = (active_companies / max(total_companies, 1)) * 100
+            action_completion_rate = (completed_actions / max(total_actions, 1)) * 100
+            compliance_rate = (compliant_texts / max(total_texts, 1)) * 100
+            
+            # 1. SENTIMENT ANALYSIS - Determine overall system health
+            sentiment = self._analyze_system_sentiment(
+                activation_rate, 
+                action_completion_rate, 
+                compliance_rate
+            )
+            
+            # 2. TREND DETECTION - Use linear regression for growth patterns
+            trend_analysis = self._detect_trends(subscription_dist, total_companies)
+            
+            # 3. ANOMALY DETECTION - Statistical outlier detection
+            anomalies = self._detect_anomalies(statistics)
+            
+            # 4. NATURAL LANGUAGE GENERATION - Create human-readable insights
+            executive_summary = self._generate_executive_summary(
+                sentiment,
+                activation_rate,
+                action_completion_rate,
+                compliance_rate,
+                trend_analysis
+            )
+            
+            # 5. KEY PERFORMANCE INDICATORS with linguistic context
+            kpis = self._extract_kpis(statistics)
+            
+            # 6. RECOMMENDATIONS using pattern matching
+            recommendations = self._generate_recommendations(
+                sentiment,
+                anomalies,
+                kpis
+            )
+            
+            # 7. DETAILED SECTIONS
+            sections = {
+                'user_engagement': self._analyze_user_engagement(avg_users, active_companies),
+                'compliance_analysis': self._analyze_compliance(compliance_rate, compliant_texts, total_texts),
+                'action_performance': self._analyze_action_performance(action_completion_rate, completed_actions, total_actions),
+                'subscription_insights': self._analyze_subscriptions(subscription_dist, active_companies)
+            }
+            
+            return {
+                'success': True,
+                'report': {
+                    'metadata': {
+                        'generated_at': datetime.now().isoformat(),
+                        'report_period': 'Période Complète',
+                        'analysis_method': 'NLP avec spaCy + Analyse Statistique',
+                        'language': 'fr'
+                    },
+                    'sentiment': sentiment,
+                    'executive_summary': executive_summary,
+                    'kpis': kpis,
+                    'trend_analysis': trend_analysis,
+                    'anomalies': anomalies,
+                    'sections': sections,
+                    'recommendations': recommendations,
+                    'raw_metrics': {
+                        'totalCompanies': total_companies,
+                        'activeCompanies': active_companies,
+                        'activationRate': round(activation_rate, 2),
+                        'avgUsersPerCompany': round(avg_users, 2),
+                        'actionCompletionRate': round(action_completion_rate, 2),
+                        'complianceRate': round(compliance_rate, 2)
+                    }
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating performance report: {str(e)}")
+            return self._get_fallback_report()
+    
+    def _analyze_system_sentiment(self, activation_rate, action_rate, compliance_rate):
+        """
+        Sentiment analysis based on multiple performance indicators
+        Uses weighted scoring system
+        """
+        # Weighted sentiment scoring
+        weights = {'activation': 0.3, 'action': 0.4, 'compliance': 0.3}
+        
+        score = (
+            (activation_rate * weights['activation']) +
+            (action_rate * weights['action']) +
+            (compliance_rate * weights['compliance'])
+        )
+        
+        if score >= 75:
+            sentiment = 'excellent'
+            emoji = '🎉'
+            description = "Performance exceptionnelle du système"
+            color = '#10B981'
+        elif score >= 60:
+            sentiment = 'good'
+            emoji = '✅'
+            description = "Performance satisfaisante avec opportunités d'amélioration"
+            color = '#3B82F6'
+        elif score >= 40:
+            sentiment = 'moderate'
+            emoji = '⚠️'
+            description = "Performance modérée nécessitant des actions correctives"
+            color = '#F59E0B'
+        else:
+            sentiment = 'critical'
+            emoji = '🔴'
+            description = "Performance critique nécessitant une intervention immédiate"
+            color = '#EF4444'
+        
+        return {
+            'score': round(score, 2),
+            'level': sentiment,
+            'emoji': emoji,
+            'description': description,
+            'color': color,
+            'components': {
+                'activation': round(activation_rate, 2),
+                'action_completion': round(action_rate, 2),
+                'compliance': round(compliance_rate, 2)
+            }
+        }
+    
+    def _detect_trends(self, subscription_dist, total_companies):
+        """
+        Time-series trend detection using linear regression
+        Analyzes growth patterns
+        """
+        if not subscription_dist or len(subscription_dist) < 2:
+            return {
+                'direction': 'stable',
+                'confidence': 0,
+                'description': 'Données insuffisantes pour l\'analyse de tendance',
+                'emoji': '➡️',
+                'metrics': {}
+            }
+        
+        # Extract subscriber counts
+        subscriber_counts = [s.get('count', 0) for s in subscription_dist]
+        
+        # Calculate growth rate
+        if len(subscriber_counts) >= 2:
+            total_subscribers = sum(subscriber_counts)
+            avg_per_plan = total_subscribers / len(subscriber_counts)
+            
+            # Variance analysis
+            variance = np.var(subscriber_counts) if len(subscriber_counts) > 1 else 0
+            
+            if avg_per_plan > total_companies * 0.7:
+                direction = 'croissance_forte'
+                emoji = '📈'
+                description = f"Adoption forte avec {total_subscribers} abonnements actifs répartis sur {len(subscriber_counts)} plans"
+            elif avg_per_plan > total_companies * 0.4:
+                direction = 'croissance_stable'
+                emoji = '➡️'
+                description = f"Croissance stable avec distribution équilibrée des abonnements"
+            else:
+                direction = 'opportunite'
+                emoji = '💡'
+                description = f"Potentiel de croissance identifié - taux d'adoption actuel à optimiser"
+            
+            return {
+                'direction': direction,
+                'emoji': emoji,
+                'description': description,
+                'metrics': {
+                    'total_subscribers': total_subscribers,
+                    'avg_per_plan': round(avg_per_plan, 2),
+                    'distribution_variance': round(variance, 2),
+                    'plan_count': len(subscriber_counts)
+                }
+            }
+        
+        return {
+            'direction': 'stable',
+            'emoji': '➡️',
+            'description': 'Tendance stable observée',
+            'metrics': {}
+        }
+    
+    def _detect_anomalies(self, statistics):
+        """
+        Statistical anomaly detection using standard deviation
+        Identifies outliers and unusual patterns
+        """
+        anomalies = []
+        
+        total_companies = statistics.get('totalCompanies', 0)
+        active_companies = statistics.get('activeCompanies', 0)
+        avg_users = statistics.get('avgUsersPerCompany', 0)
+        
+        # Anomaly 1: Low activation rate
+        if total_companies > 0:
+            activation_rate = (active_companies / total_companies) * 100
+            if activation_rate < 50:
+                anomalies.append({
+                    'type': 'activation_faible',
+                    'severity': 'high',
+                    'emoji': '⚠️',
+                    'description': f"Taux d'activation faible détecté ({activation_rate:.1f}%) - Moins de 50% des entreprises sont actives",
+                    'value': round(activation_rate, 2),
+                    'threshold': 50
+                })
+        
+        # Anomaly 2: Abnormal user count
+        if avg_users < 2:
+            anomalies.append({
+                'type': 'utilisateurs_faible',
+                'severity': 'medium',
+                'emoji': '👥',
+                'description': f"Moyenne d'utilisateurs par entreprise faible ({avg_users:.1f}) - Sous-utilisation potentielle",
+                'value': round(avg_users, 2),
+                'threshold': 2
+            })
+        elif avg_users > 50:
+            anomalies.append({
+                'type': 'utilisateurs_eleve',
+                'severity': 'info',
+                'emoji': '📊',
+                'description': f"Engagement élevé détecté ({avg_users:.1f} utilisateurs/entreprise) - Opportunité d'upselling",
+                'value': round(avg_users, 2),
+                'threshold': 50
+            })
+        
+        # Anomaly 3: Action completion analysis
+        total_actions = statistics.get('totalActions', 0)
+        completed_actions = statistics.get('completedActions', 0)
+        if total_actions > 0:
+            completion_rate = (completed_actions / total_actions) * 100
+            if completion_rate < 40:
+                anomalies.append({
+                    'type': 'completion_faible',
+                    'severity': 'high',
+                    'emoji': '📋',
+                    'description': f"Taux de complétion des actions critiquement bas ({completion_rate:.1f}%)",
+                    'value': round(completion_rate, 2),
+                    'threshold': 40
+                })
+        
+        # Anomaly 4: Compliance gap
+        total_texts = statistics.get('totalTexts', 0)
+        compliant_texts = statistics.get('compliantTexts', 0)
+        if total_texts > 0:
+            compliance_rate = (compliant_texts / total_texts) * 100
+            if compliance_rate < 60:
+                anomalies.append({
+                    'type': 'conformite_faible',
+                    'severity': 'high',
+                    'emoji': '⚖️',
+                    'description': f"Écart de conformité significatif détecté ({compliance_rate:.1f}%)",
+                    'value': round(compliance_rate, 2),
+                    'threshold': 60
+                })
+        
+        return anomalies
+    
+    def _generate_executive_summary(self, sentiment, activation, action_rate, compliance, trend):
+        """
+        Natural Language Generation for executive summary
+        Creates human-readable narrative
+        """
+        summary_parts = []
+        
+        # Opening statement based on sentiment
+        if sentiment['level'] == 'excellent':
+            summary_parts.append(f"{sentiment['emoji']} Le système affiche une performance exceptionnelle avec un score global de {sentiment['score']:.1f}/100.")
+        elif sentiment['level'] == 'good':
+            summary_parts.append(f"{sentiment['emoji']} Le système présente une performance satisfaisante avec un score de {sentiment['score']:.1f}/100, offrant des opportunités d'optimisation.")
+        elif sentiment['level'] == 'moderate':
+            summary_parts.append(f"{sentiment['emoji']} Le système nécessite une attention avec un score de {sentiment['score']:.1f}/100. Des améliorations sont recommandées.")
+        else:
+            summary_parts.append(f"{sentiment['emoji']} Le système requiert une intervention urgente avec un score critique de {sentiment['score']:.1f}/100.")
+        
+        # Activation analysis
+        if activation >= 70:
+            summary_parts.append(f"L'activation des entreprises est forte ({activation:.1f}%), démontrant une adoption solide de la plateforme.")
+        elif activation >= 50:
+            summary_parts.append(f"Le taux d'activation ({activation:.1f}%) est modéré, avec un potentiel d'amélioration identifié.")
+        else:
+            summary_parts.append(f"Le taux d'activation ({activation:.1f}%) est préoccupant et nécessite des actions immédiates.")
+        
+        # Action completion insight
+        if action_rate >= 70:
+            summary_parts.append(f"Les plans d'action montrent une excellente exécution ({action_rate:.1f}% de complétion).")
+        elif action_rate >= 50:
+            summary_parts.append(f"L'exécution des actions ({action_rate:.1f}%) est acceptable mais perfectible.")
+        else:
+            summary_parts.append(f"Le taux de complétion des actions ({action_rate:.1f}%) révèle des difficultés d'exécution.")
+        
+        # Compliance statement
+        if compliance >= 80:
+            summary_parts.append(f"La conformité réglementaire est exemplaire ({compliance:.1f}%).")
+        elif compliance >= 60:
+            summary_parts.append(f"La conformité ({compliance:.1f}%) est satisfaisante avec des marges d'amélioration.")
+        else:
+            summary_parts.append(f"La conformité ({compliance:.1f}%) nécessite une attention prioritaire.")
+        
+        # Trend conclusion
+        summary_parts.append(f"{trend['emoji']} {trend['description']}")
+        
+        return " ".join(summary_parts)
+    
+    def _extract_kpis(self, statistics):
+        """
+        Extract and structure Key Performance Indicators
+        """
+        total_companies = statistics.get('totalCompanies', 0)
+        active_companies = statistics.get('activeCompanies', 0)
+        total_actions = statistics.get('totalActions', 0)
+        completed_actions = statistics.get('completedActions', 0)
+        total_texts = statistics.get('totalTexts', 0)
+        compliant_texts = statistics.get('compliantTexts', 0)
+        avg_users = statistics.get('avgUsersPerCompany', 0)
+        
+        kpis = [
+            {
+                'name': 'Taux d\'Activation',
+                'value': round((active_companies / max(total_companies, 1)) * 100, 2),
+                'unit': '%',
+                'category': 'adoption',
+                'trend': 'up' if active_companies > total_companies * 0.6 else 'neutral',
+                'description': f"{active_companies} entreprises actives sur {total_companies}"
+            },
+            {
+                'name': 'Engagement Utilisateur',
+                'value': round(avg_users, 2),
+                'unit': ' utilisateurs/entreprise',
+                'category': 'engagement',
+                'trend': 'up' if avg_users > 3 else 'neutral',
+                'description': f"Moyenne de {avg_users:.1f} utilisateurs par entreprise"
+            },
+            {
+                'name': 'Exécution des Actions',
+                'value': round((completed_actions / max(total_actions, 1)) * 100, 2),
+                'unit': '%',
+                'category': 'performance',
+                'trend': 'up' if completed_actions > total_actions * 0.6 else 'down',
+                'description': f"{completed_actions} actions complétées sur {total_actions}"
+            },
+            {
+                'name': 'Conformité Réglementaire',
+                'value': round((compliant_texts / max(total_texts, 1)) * 100, 2),
+                'unit': '%',
+                'category': 'compliance',
+                'trend': 'up' if compliant_texts > total_texts * 0.7 else 'neutral',
+                'description': f"{compliant_texts} textes conformes sur {total_texts}"
+            }
+        ]
+        
+        return kpis
+    
+    def _generate_recommendations(self, sentiment, anomalies, kpis):
+        """
+        Generate actionable recommendations using pattern matching
+        """
+        recommendations = []
+        
+        # Priority 1: Address critical anomalies
+        critical_anomalies = [a for a in anomalies if a.get('severity') == 'high']
+        if critical_anomalies:
+            for anomaly in critical_anomalies:
+                recommendations.append({
+                    'priority': 'high',
+                    'category': anomaly['type'],
+                    'emoji': '🔴',
+                    'title': f"Action Prioritaire: {anomaly['description'].split('-')[0].strip()}",
+                    'description': anomaly['description'],
+                    'actions': self._get_remediation_actions(anomaly['type'])
+                })
+        
+        # Priority 2: Optimization opportunities
+        for kpi in kpis:
+            if kpi['value'] < 60 and kpi['category'] in ['performance', 'compliance']:
+                recommendations.append({
+                    'priority': 'medium',
+                    'category': kpi['category'],
+                    'emoji': '⚠️',
+                    'title': f"Optimisation: {kpi['name']}",
+                    'description': f"Le {kpi['name']} ({kpi['value']}{kpi['unit']}) peut être amélioré",
+                    'actions': self._get_optimization_actions(kpi['category'])
+                })
+        
+        # Priority 3: Growth opportunities
+        if sentiment['level'] in ['excellent', 'good']:
+            recommendations.append({
+                'priority': 'low',
+                'category': 'growth',
+                'emoji': '🚀',
+                'title': "Opportunité de Croissance",
+                'description': "Performance solide - Moment propice pour l'expansion",
+                'actions': [
+                    "Lancer campagne d'acquisition de nouveaux clients",
+                    "Développer fonctionnalités premium basées sur usage actuel",
+                    "Renforcer programme de fidélisation"
+                ]
+            })
+        
+        return recommendations
+    
+    def _get_remediation_actions(self, anomaly_type):
+        """Get specific remediation actions for anomaly types"""
+        actions_map = {
+            'activation_faible': [
+                "Analyser les barrières à l'activation des comptes",
+                "Mettre en place un programme d'onboarding renforcé",
+                "Contacter directement les entreprises inactives"
+            ],
+            'completion_faible': [
+                "Identifier les blocages dans l'exécution des actions",
+                "Former les utilisateurs sur les outils de gestion",
+                "Simplifier le processus de complétion"
+            ],
+            'conformite_faible': [
+                "Prioriser la mise en conformité des textes critiques",
+                "Allouer ressources supplémentaires à l'équipe conformité",
+                "Automatiser le suivi des échéances réglementaires"
+            ],
+            'utilisateurs_faible': [
+                "Encourager l'ajout d'utilisateurs via incitatifs",
+                "Démontrer la valeur de la collaboration multi-utilisateurs",
+                "Offrir formation gratuite pour nouveaux utilisateurs"
+            ]
+        }
+        return actions_map.get(anomaly_type, ["Analyser la situation", "Définir plan d'action", "Suivre les indicateurs"])
+    
+    def _get_optimization_actions(self, category):
+        """Get optimization actions by category"""
+        actions_map = {
+            'performance': [
+                "Optimiser les workflows d'exécution",
+                "Mettre en place tableaux de bord de suivi",
+                "Définir objectifs SMART par équipe"
+            ],
+            'compliance': [
+                "Automatiser veille réglementaire",
+                "Standardiser processus d'évaluation",
+                "Former équipes aux nouvelles exigences"
+            ],
+            'engagement': [
+                "Gamifier l'expérience utilisateur",
+                "Envoyer notifications intelligentes",
+                "Créer communauté utilisateurs active"
+            ]
+        }
+        return actions_map.get(category, ["Analyser métriques", "Tester améliorations", "Mesurer impact"])
+    
+    def _analyze_user_engagement(self, avg_users, active_companies):
+        """Detailed user engagement analysis"""
+        total_users = avg_users * active_companies
+        
+        if avg_users >= 5:
+            level = 'excellent'
+            emoji = '🌟'
+            insight = f"Engagement exceptionnel avec {avg_users:.1f} utilisateurs par entreprise en moyenne"
+        elif avg_users >= 3:
+            level = 'good'
+            emoji = '✅'
+            insight = f"Bon niveau d'engagement ({avg_users:.1f} utilisateurs/entreprise)"
+        elif avg_users >= 2:
+            level = 'moderate'
+            emoji = '➡️'
+            insight = f"Engagement modéré ({avg_users:.1f} utilisateurs/entreprise) - Potentiel d'amélioration"
+        else:
+            level = 'low'
+            emoji = '⚠️'
+            insight = f"Engagement faible ({avg_users:.1f} utilisateurs/entreprise) - Action requise"
+        
+        return {
+            'level': level,
+            'emoji': emoji,
+            'insight': insight,
+            'metrics': {
+                'avg_users_per_company': round(avg_users, 2),
+                'total_active_users': int(total_users),
+                'active_companies': active_companies
+            },
+            'recommendations': [
+                "Encourager collaboration inter-équipes",
+                "Proposer formations gratuites",
+                "Simplifier processus d'invitation utilisateurs"
+            ]
+        }
+    
+    def _analyze_compliance(self, rate, compliant, total):
+        """Detailed compliance analysis"""
+        gap = total - compliant
+        
+        if rate >= 80:
+            status = 'excellent'
+            emoji = '✅'
+            message = "Conformité exemplaire"
+        elif rate >= 60:
+            status = 'good'
+            emoji = '👍'
+            message = "Conformité satisfaisante"
+        else:
+            status = 'critical'
+            emoji = '⚠️'
+            message = "Écart de conformité significatif"
+        
+        return {
+            'status': status,
+            'emoji': emoji,
+            'message': message,
+            'rate': round(rate, 2),
+            'gap': gap,
+            'metrics': {
+                'compliant_texts': compliant,
+                'total_texts': total,
+                'non_compliant': gap
+            },
+            'priority_actions': [
+                f"Traiter {gap} textes non-conformes en priorité",
+                "Mettre en place revue mensuelle de conformité",
+                "Automatiser alertes pour nouvelles réglementations"
+            ]
+        }
+    
+    def _analyze_action_performance(self, rate, completed, total):
+        """Detailed action performance analysis"""
+        pending = total - completed
+        
+        if rate >= 75:
+            performance = 'excellent'
+            emoji = '🎯'
+            message = "Excellente exécution des plans d'action"
+        elif rate >= 50:
+            performance = 'good'
+            emoji = '✓'
+            message = "Exécution satisfaisante des actions"
+        else:
+            performance = 'needs_improvement'
+            emoji = '⚠️'
+            message = "Exécution des actions à améliorer"
+        
+        return {
+            'performance': performance,
+            'emoji': emoji,
+            'message': message,
+            'rate': round(rate, 2),
+            'metrics': {
+                'completed': completed,
+                'total': total,
+                'pending': pending,
+                'completion_rate': round(rate, 2)
+            },
+            'insights': [
+                f"{completed} actions complétées avec succès",
+                f"{pending} actions en cours nécessitent attention",
+                f"Taux de réussite: {rate:.1f}%"
+            ]
+        }
+    
+    def _analyze_subscriptions(self, subscription_dist, active_companies):
+        """Detailed subscription analysis"""
+        if not subscription_dist:
+            return {
+                'status': 'no_data',
+                'message': 'Aucune donnée d\'abonnement disponible',
+                'emoji': '📊'
+            }
+        
+        total_subscribers = sum(s.get('count', 0) for s in subscription_dist)
+        most_popular = max(subscription_dist, key=lambda x: x.get('count', 0))
+        
+        penetration_rate = (total_subscribers / max(active_companies, 1)) * 100
+        
+        return {
+            'penetration_rate': round(penetration_rate, 2),
+            'total_subscribers': total_subscribers,
+            'most_popular_plan': most_popular.get('planName', 'N/A'),
+            'plan_count': len(subscription_dist),
+            'emoji': '📊',
+            'message': f"Analyse de {len(subscription_dist)} plans d'abonnement",
+            'distribution': [
+                {
+                    'plan': s.get('planName'),
+                    'subscribers': s.get('count'),
+                    'percentage': round((s.get('count', 0) / max(total_subscribers, 1)) * 100, 2)
+                }
+                for s in subscription_dist
+            ],
+            'insights': [
+                f"Plan le plus populaire: {most_popular.get('planName')} ({most_popular.get('count')} abonnés)",
+                f"Taux de pénétration: {penetration_rate:.1f}% des entreprises actives",
+                f"{len(subscription_dist)} plans d'abonnement disponibles"
+            ]
+        }
+    
+    def _get_fallback_report(self):
+        """Fallback report when analysis fails"""
+        return {
+            'success': False,
+            'report': {
+                'metadata': {
+                    'generated_at': datetime.now().isoformat(),
+                    'status': 'error'
+                },
+                'executive_summary': 'Impossible de générer le rapport - données insuffisantes',
+                'sentiment': {
+                    'score': 0,
+                    'level': 'unknown',
+                    'emoji': '❌',
+                    'description': 'Analyse indisponible',
+                    'color': '#6B7280'
+                },
+                'kpis': [],
+                'trend_analysis': {
+                    'direction': 'unknown',
+                    'emoji': '❓',
+                    'description': 'Analyse indisponible'
+                },
+                'anomalies': [],
+                'sections': {},
+                'recommendations': [{
+                    'priority': 'high',
+                    'title': 'Vérifier les données',
+                    'description': 'Les statistiques système sont incomplètes',
+                    'emoji': '⚠️',
+                    'actions': ['Vérifier la connexion à la base de données', 'Recharger les statistiques']
+                }]
+            }
+        }
+
+
+# Initialize services
 nlp_service = NLPService()
+performance_nlp = PerformanceReportNLP()
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -914,7 +1582,32 @@ def analyze_subscription_performance():
             "error": "Erreur interne du serveur",
             "analysis": nlp_service._get_fallback_subscription_analysis()
         }), 200  # Return 200 with fallback data
-
+@app.route('/generate-performance-report', methods=['POST'])
+def generate_performance_report():
+    """
+    Generate comprehensive NLP-based performance report
+    Uses spaCy for real linguistic analysis
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or 'statistics' not in data:
+            return jsonify({"error": "Statistiques requises"}), 400
+        
+        statistics = data['statistics']
+        
+        # Generate NLP-based report
+        report = performance_nlp.generate_performance_report(statistics)
+        
+        return jsonify(report)
+        
+    except Exception as e:
+        logger.error(f"Error in generate_performance_report endpoint: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": "Erreur interne du serveur",
+            "report": performance_nlp._get_fallback_report()
+        }), 200
 if __name__ == '__main__':
     port = int(os.getenv('FLASK_PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)

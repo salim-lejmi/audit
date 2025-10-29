@@ -26,6 +26,7 @@ import {
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, LineElement, PointElement } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import axios from 'axios';
+import PerformanceReport from './PerformanceReport';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement);
 
@@ -110,16 +111,27 @@ const Dashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/admin/dashboard-detailed');
-      setDashboardData(response.data);
+      // Fetch both dashboard stats and subscription insights
+      const [dashboardResponse, insightsResponse] = await Promise.all([
+        axios.get('/api/admin/dashboard-detailed'),
+        axios.get('/api/statistics/subscription-insights')
+      ]);
+      
+      // Merge the data
+      const mergedData = {
+        ...dashboardResponse.data,
+        ...insightsResponse.data
+      };
+      
+      setDashboardData(mergedData);
+      console.log('Dashboard data for NLP:', mergedData); // Debug log
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  const handleRefresh = async () => {
+    const handleRefresh = async () => {
     setRefreshing(true);
     await fetchDashboardData();
     setRefreshing(false);
@@ -702,7 +714,10 @@ const Dashboard: React.FC = () => {
           </ChartCard>
         </Grid>
       </Grid>
-
+   {/* Performance Report Section */}
+      <Box sx={{ mt: 3 }}>
+        <PerformanceReport statistics={dashboardData} />
+      </Box>
       {/* Scroll to Top Button */}
       <Box position="fixed" bottom={20} right={20} zIndex={1000}>
         <Button
