@@ -181,7 +181,7 @@ const UserDashboard: React.FC = () => {
       <div className="dashboard-container">
         <div className="dashboard-header">
   <div className="dashboard-title">
-    <h4>Tableau de Bord Utilisateur</h4>
+    <h2>Tableau de Bord Utilisateur</h2>
     <p>
       {userInfo?.companyName
         ? `Bienvenue, ${userInfo.userName} - ${userInfo.companyName}`

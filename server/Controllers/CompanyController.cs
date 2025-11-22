@@ -114,21 +114,18 @@ namespace server.Controllers
         [HttpGet("users")]
         public async Task<IActionResult> GetCompanyUsers()
         {
-            // Check if user is a SubscriptionManager
             var userRole = HttpContext.Session.GetString("UserRole");
             if (userRole != "SubscriptionManager")
             {
                 return Forbid();
             }
 
-            // Get companyId from session
             var companyId = HttpContext.Session.GetInt32("CompanyId");
             if (!companyId.HasValue)
             {
                 return BadRequest(new { message = "Invalid company ID" });
             }
 
-            // Get users for the company
             var users = await _context.Users
                 .Where(u => u.CompanyId == companyId)
                 .Select(u => new
@@ -148,7 +145,6 @@ namespace server.Controllers
 [HttpPost("users")]
 public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
 {
-    // Check if user is a SubscriptionManager
     var userRole = HttpContext.Session.GetString("UserRole");
     if (userRole != "SubscriptionManager")
     {
@@ -177,7 +173,6 @@ public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request
         return BadRequest(new { message = "All fields are required" });
     }
 
-    // Check if email is already registered
     if (await _context.Users.AnyAsync(u => u.Email == request.Email))
     {
         return BadRequest(new { message = "Email is already registered" });
@@ -192,11 +187,9 @@ public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request
 
     try
     {
-        // Generate verification token
         var verificationToken = GenerateEmailVerificationToken();
         var tokenExpiry = DateTime.Now.AddHours(24);
 
-        // Create user with pending status
         var user = new User
         {
             CompanyId = companyId.Value,
@@ -205,7 +198,7 @@ public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request
             PhoneNumber = request.PhoneNumber ?? "",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Role = request.Role,
-            CreatedAt = null, // Will be set when email is verified
+            CreatedAt = null, 
             IsEmailVerified = false,
             EmailVerificationToken = verificationToken,
             EmailVerificationTokenExpiry = tokenExpiry,
@@ -215,7 +208,6 @@ public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Send verification email
         var baseUrl = _configuration["App:BaseUrl"];
         var verificationLink = $"{baseUrl}/verify-email?token={verificationToken}&type=user";
         

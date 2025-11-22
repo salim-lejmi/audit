@@ -96,27 +96,29 @@ namespace server.Controllers
                     })
                     .ToListAsync();
 
-                var requirementStatuses = await _context.TextRequirements
-                    .Where(tr => textIds.Contains(tr.TextId))
-                    .GroupJoin(
-                        _context.ComplianceEvaluations,
-                        tr => tr.RequirementId,
-                        ce => ce.RequirementId,
-                        (tr, ceGroup) => new
-                        {
-                            TextId = tr.TextId,
-                            Status = ceGroup.Any() ? ceGroup.First().Status : tr.Status
-                        }
-                    )
-                    .GroupBy(x => new { x.TextId, x.Status })
-                    .Select(g => new
-                    {
-                        TextId = g.Key.TextId,
-                        Status = g.Key.Status,
-                        Count = g.Count()
-                    })
-                    .ToListAsync();
-
+var requirementStatuses = await _context.TextRequirements
+    .Where(tr => textIds.Contains(tr.TextId))
+    .GroupJoin(
+        _context.ComplianceEvaluations,
+        tr => tr.RequirementId,
+        ce => ce.RequirementId,
+        (tr, ceGroup) => new
+        {
+            TextId = tr.TextId,
+            // Get the LATEST evaluation status, or fall back to requirement status
+            Status = ceGroup.Any() 
+                ? ceGroup.OrderByDescending(ce => ce.EvaluatedAt).First().Status 
+                : tr.Status
+        }
+    )
+    .GroupBy(x => new { x.TextId, x.Status })
+    .Select(g => new
+    {
+        TextId = g.Key.TextId,
+        Status = g.Key.Status,
+        Count = g.Count()
+    })
+    .ToListAsync();
                 var result = textsWithDetails.Select(t => 
                 {
                     var reqCount = requirementCounts

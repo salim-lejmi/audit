@@ -48,14 +48,14 @@ namespace server.Controllers
                 
                 if (!userId.HasValue || !companyId.HasValue)
                 {
-                    return Unauthorized(new { message = "Not authenticated" });
+                    return Unauthorized(new { message = "Non authentifié" });
                 }
 
                 // Get user role
                 var user = await _context.Users.FindAsync(userId.Value);
                 if (user == null)
                 {
-                    return Unauthorized(new { message = "User not found" });
+                    return Unauthorized(new { message = "Utilisateur non trouvé" });
                 }
 
                 // Build query with filters
@@ -82,7 +82,7 @@ namespace server.Controllers
                     var responsible = await _context.Users.FindAsync(responsibleId.Value);
                     if (responsible == null || responsible.CompanyId != companyId)
                     {
-                        return BadRequest(new { message = "Invalid responsible user" });
+                        return BadRequest(new { message = "Utilisateur responsable invalide" });
                     }
                     
                     query = query.Where(a => a.ResponsibleId == responsibleId);
@@ -165,7 +165,7 @@ namespace server.Controllers
             
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             var action = await _context.Actions
@@ -177,7 +177,7 @@ namespace server.Controllers
 
             if (action == null)
             {
-                return NotFound(new { message = "Action not found" });
+                return NotFound(new { message = "Action non trouvée" });
             }
 
             // Get user
@@ -186,7 +186,7 @@ namespace server.Controllers
             // Check if user has access to this action
             if (user.Role != "SubscriptionManager" && action.ResponsibleId != userId)
             {
-                return StatusCode(403, new { message = "You don't have permission to view this action" });
+                return StatusCode(403, new { message = "Vous n'avez pas la permission de voir cette action" });
             }
 
             var result = new
@@ -221,14 +221,14 @@ namespace server.Controllers
             
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             // Validate request
             if (request.TextId <= 0 || string.IsNullOrEmpty(request.Description) ||
                 request.Deadline == default)
             {
-                return BadRequest(new { message = "TextId, description, and deadline are required" });
+                return BadRequest(new { message = "TextId, description et date limite sont requis" });
             }
 
             // Verify text exists and belongs to the same company
@@ -237,7 +237,7 @@ namespace server.Controllers
                 
             if (text == null)
             {
-                return NotFound(new { message = "Text not found" });
+                return NotFound(new { message = "Texte non trouvé" });
             }
 
             // Verify requirement exists if provided
@@ -246,11 +246,11 @@ namespace server.Controllers
                 var requirement = await _context.TextRequirements.FindAsync(request.RequirementId.Value);
                 if (requirement == null)
                 {
-                    return NotFound(new { message = "Requirement not found" });
+                    return NotFound(new { message = "Exigence non trouvée" });
                 }
                 if (requirement.TextId != request.TextId)
                 {
-                    return BadRequest(new { message = "Requirement does not belong to the specified text" });
+                    return BadRequest(new { message = "L'exigence n'appartient pas au texte spécifié" });
                 }
             }
 
@@ -264,19 +264,19 @@ namespace server.Controllers
                 var responsible = await _context.Users.FindAsync(request.ResponsibleId.Value);
                 if (responsible == null)
                 {
-                    return NotFound(new { message = "Responsible user not found" });
+                    return NotFound(new { message = "Utilisateur responsable non trouvé" });
                 }
 
                 // Check permission: Only SubscriptionManager can assign actions to other users
                 if (currentUser.Role != "SubscriptionManager" && request.ResponsibleId != userId)
                 {
-                    return StatusCode(403, new { message = "You can only create actions for yourself" });
+                    return StatusCode(403, new { message = "Vous ne pouvez créer des actions que pour vous-même" });
                 }
 
                 // If SubscriptionManager, ensure responsible user is in the same company
                 if (currentUser.Role == "SubscriptionManager" && responsible.CompanyId != currentUser.CompanyId)
                 {
-                    return StatusCode(403, new { message = "You can only assign actions to users in your company" });
+                    return StatusCode(403, new { message = "Vous ne pouvez assigner des actions qu'aux utilisateurs de votre entreprise" });
                 }
             }
 
@@ -304,244 +304,245 @@ namespace server.Controllers
             {
                 await _notificationService.CreateNotificationAsync(
                     request.ResponsibleId.Value,
-                 "Nouvelle action assignée",
-        $"Une nouvelle action vous a été assignée : {request.Description}",
-        "ActionAssignée",
+                    "Nouvelle action assignée",
+                    $"Une nouvelle action vous a été assignée : {request.Description}",
+                    "ActionAssignée",
                     action.ActionId
                 );
             }
 
             return CreatedAtAction(nameof(GetAction), new { actionId = action.ActionId },
-                new { actionId = action.ActionId, message = "Action created successfully" });
+                new { actionId = action.ActionId, message = "Action créée avec succès" });
         }
 
-[HttpPut("{actionId}")]
-public async Task<IActionResult> UpdateAction(int actionId, [FromBody] UpdateActionRequest request)
-{
-    // Check authentication
-    var userId = HttpContext.Session.GetInt32("UserId");
-    var companyId = HttpContext.Session.GetInt32("CompanyId");
-    
-    if (!userId.HasValue || !companyId.HasValue)
-    {
-        return Unauthorized(new { message = "Not authenticated" });
-    }
-
-    // Find action and ensure it belongs to the user's company
-    var action = await _context.Actions
-        .Include(a => a.CreatedBy)
-        .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
-        
-    if (action == null)
-    {
-        return NotFound(new { message = "Action not found" });
-    }
-
-    // Get current user
-    var currentUser = await _context.Users.FindAsync(userId.Value);
-
-    // Check permission based on user role
-    bool isAuditor = currentUser.Role != "SuperAdmin" && currentUser.Role != "SubscriptionManager";
-    bool canEdit = false;
-
-    if (!isAuditor)
-    {
-        // SuperAdmin or SubscriptionManager can edit any action in their company
-        canEdit = true;
-    }
-    else
-    {
-        // Auditors can only edit actions assigned to them
-        canEdit = action.ResponsibleId == userId.Value;
-    }
-
-    if (!canEdit)
-    {
-        return StatusCode(403, new { message = "You don't have permission to update this action" });
-    }
-
-    var oldStatus = action.Status;
-    var wasAssignedToSomeoneElse = false;
-    var oldResponsibleId = action.ResponsibleId;
-
-    // Track changes to specific fields
-    var entry = _context.Entry(action);
-
-    if (isAuditor)
-    {
-        // Auditors can only update progress and status
-        if (request.Progress.HasValue)
+        [HttpPut("{actionId}")]
+        public async Task<IActionResult> UpdateAction(int actionId, [FromBody] UpdateActionRequest request)
         {
-            entry.Property(a => a.Progress).IsModified = true;
-            action.Progress = request.Progress.Value;
-        }
-
-        if (!string.IsNullOrEmpty(request.Status))
-        {
-            entry.Property(a => a.Status).IsModified = true;
-            action.Status = request.Status;
-        }
-
-        if (request.Effectiveness != null) // Check for null to allow clearing
-        {
-            entry.Property(a => a.Effectiveness).IsModified = true;
-            action.Effectiveness = request.Effectiveness;
-        }
-    }
-    else
-    {
-        // SuperAdmin/SubscriptionManager can update all fields
-        if (!string.IsNullOrEmpty(request.Description))
-        {
-            entry.Property(a => a.Description).IsModified = true;
-            action.Description = request.Description;
-        }
-
-        if (request.ResponsibleId.HasValue)
-        {
-            // If ResponsibleId is provided and not zero, verify responsible user exists and is in the same company
-            if (request.ResponsibleId.Value > 0)
+            // Check authentication
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var companyId = HttpContext.Session.GetInt32("CompanyId");
+            
+            if (!userId.HasValue || !companyId.HasValue)
             {
-                var responsible = await _context.Users.FindAsync(request.ResponsibleId.Value);
-                if (responsible == null)
+                return Unauthorized(new { message = "Non authentifié" });
+            }
+
+            // Find action and ensure it belongs to the user's company
+            var action = await _context.Actions
+                .Include(a => a.CreatedBy)
+                .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
+                
+            if (action == null)
+            {
+                return NotFound(new { message = "Action non trouvée" });
+            }
+
+            // Get current user
+            var currentUser = await _context.Users.FindAsync(userId.Value);
+
+            // Check permission based on user role
+            bool isAuditor = currentUser.Role != "SuperAdmin" && currentUser.Role != "SubscriptionManager";
+            bool canEdit = false;
+
+            if (!isAuditor)
+            {
+                // SuperAdmin or SubscriptionManager can edit any action in their company
+                canEdit = true;
+            }
+            else
+            {
+                // Auditors can only edit actions assigned to them
+                canEdit = action.ResponsibleId == userId.Value;
+            }
+
+            if (!canEdit)
+            {
+                return StatusCode(403, new { message = "Vous n'avez pas la permission de modifier cette action" });
+            }
+
+            var oldStatus = action.Status;
+            var wasAssignedToSomeoneElse = false;
+            var oldResponsibleId = action.ResponsibleId;
+
+            // Track changes to specific fields
+            var entry = _context.Entry(action);
+
+            if (isAuditor)
+            {
+                // Auditors can only update progress and status
+                if (request.Progress.HasValue)
                 {
-                    return BadRequest(new { message = "Responsible user not found" });
-                }
-                if (responsible.CompanyId != currentUser.CompanyId)
-                {
-                    return StatusCode(403, new { message = "You can only assign actions to users in your company" });
+                    entry.Property(a => a.Progress).IsModified = true;
+                    action.Progress = request.Progress.Value;
                 }
 
-                // Check if action is being assigned to someone else
-                if (request.ResponsibleId.Value != oldResponsibleId && request.ResponsibleId.Value != userId.Value)
+                if (!string.IsNullOrEmpty(request.Status))
                 {
-                    wasAssignedToSomeoneElse = true;
+                    entry.Property(a => a.Status).IsModified = true;
+                    action.Status = request.Status;
+                }
+
+                if (request.Effectiveness != null) // Check for null to allow clearing
+                {
+                    entry.Property(a => a.Effectiveness).IsModified = true;
+                    action.Effectiveness = request.Effectiveness;
                 }
             }
-            entry.Property(a => a.ResponsibleId).IsModified = true;
-            action.ResponsibleId = request.ResponsibleId;
+            else
+            {
+                // SuperAdmin/SubscriptionManager can update all fields
+                if (!string.IsNullOrEmpty(request.Description))
+                {
+                    entry.Property(a => a.Description).IsModified = true;
+                    action.Description = request.Description;
+                }
+
+                if (request.ResponsibleId.HasValue)
+                {
+                    // If ResponsibleId is provided and not zero, verify responsible user exists and is in the same company
+                    if (request.ResponsibleId.Value > 0)
+                    {
+                        var responsible = await _context.Users.FindAsync(request.ResponsibleId.Value);
+                        if (responsible == null)
+                        {
+                            return BadRequest(new { message = "Utilisateur responsable non trouvé" });
+                        }
+                        if (responsible.CompanyId != currentUser.CompanyId)
+                        {
+                            return StatusCode(403, new { message = "Vous ne pouvez assigner des actions qu'aux utilisateurs de votre entreprise" });
+                        }
+
+                        // Check if action is being assigned to someone else
+                        if (request.ResponsibleId.Value != oldResponsibleId && request.ResponsibleId.Value != userId.Value)
+                        {
+                            wasAssignedToSomeoneElse = true;
+                        }
+                    }
+                    entry.Property(a => a.ResponsibleId).IsModified = true;
+                    action.ResponsibleId = request.ResponsibleId;
+                }
+
+                if (request.Deadline.HasValue)
+                {
+                    entry.Property(a => a.Deadline).IsModified = true;
+                    action.Deadline = request.Deadline.Value;
+                }
+
+                if (request.Progress.HasValue)
+                {
+                    entry.Property(a => a.Progress).IsModified = true;
+                    action.Progress = request.Progress.Value;
+                }
+
+                if (request.Effectiveness != null) // Check for null to allow clearing
+                {
+                    entry.Property(a => a.Effectiveness).IsModified = true;
+                    action.Effectiveness = request.Effectiveness;
+                }
+
+                if (!string.IsNullOrEmpty(request.Status))
+                {
+                    entry.Property(a => a.Status).IsModified = true;
+                    action.Status = request.Status;
+                }
+            }
+
+            action.UpdatedAt = DateTime.Now;
+            entry.Property(a => a.UpdatedAt).IsModified = true;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, new { message = "Erreur lors de la sauvegarde des modifications", error = ex.InnerException?.Message ?? ex.Message });
+            }
+
+            // Create notifications based on what changed
+            if (wasAssignedToSomeoneElse && action.ResponsibleId.HasValue)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    action.ResponsibleId.Value,
+                    "Action assignée pour vous",
+                    $"Une action vous a été assignée : {action.Description}",
+                    "ActionAssignée",
+                    action.ActionId
+                );
+            }
+
+            if (oldStatus != "completed" && action.Status == "completed" && action.CreatedById != userId.Value)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    action.CreatedById,
+                    "Action terminée",
+                    $"L'action a été terminée : {action.Description}",
+                    "ActionCompleted",
+                    action.ActionId
+                );
+            }
+
+            return Ok(new { message = "Action mise à jour avec succès" });
         }
 
-        if (request.Deadline.HasValue)
+        [HttpDelete("{actionId}")]
+        public async Task<IActionResult> DeleteAction(int actionId)
         {
-            entry.Property(a => a.Deadline).IsModified = true;
-            action.Deadline = request.Deadline.Value;
-        }
+            try
+            {
+                // Check authentication
+                var userId = HttpContext.Session.GetInt32("UserId");
+                var companyId = HttpContext.Session.GetInt32("CompanyId");
+                
+                if (!userId.HasValue || !companyId.HasValue)
+                {
+                    return Unauthorized(new { message = "Non authentifié" });
+                }
 
-        if (request.Progress.HasValue)
-        {
-            entry.Property(a => a.Progress).IsModified = true;
-            action.Progress = request.Progress.Value;
-        }
+                // Find action and ensure it belongs to the user's company
+                var action = await _context.Actions
+                    .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
+                    
+                if (action == null)
+                {
+                    return NotFound(new { message = "Action non trouvée" });
+                }
 
-        if (request.Effectiveness != null) // Check for null to allow clearing
-        {
-            entry.Property(a => a.Effectiveness).IsModified = true;
-            action.Effectiveness = request.Effectiveness;
-        }
+                // Get current user
+                var currentUser = await _context.Users.FindAsync(userId.Value);
 
-        if (!string.IsNullOrEmpty(request.Status))
-        {
-            entry.Property(a => a.Status).IsModified = true;
-            action.Status = request.Status;
-        }
-    }
+                // Check permission: Only SubscriptionManager or creator can delete the action
+                if (currentUser.Role != "SubscriptionManager" && action.CreatedById != userId)
+                {
+                    return StatusCode(403, new { message = "Vous n'avez pas la permission de supprimer cette action" });
+                }
 
-    action.UpdatedAt = DateTime.Now;
-    entry.Property(a => a.UpdatedAt).IsModified = true;
-
-    try
-    {
-        await _context.SaveChangesAsync();
-    }
-    catch (DbUpdateException ex)
-    {
-        return StatusCode(500, new { message = "Error saving changes", error = ex.InnerException?.Message ?? ex.Message });
-    }
-
-    // Create notifications based on what changed
-    if (wasAssignedToSomeoneElse && action.ResponsibleId.HasValue)
-    {
-        await _notificationService.CreateNotificationAsync(
-            action.ResponsibleId.Value,
-         "Action assignée pour vous",
-$"Une action vous a été assignée : {action.Description}",
-"ActionAssignée",
-
-            action.ActionId
-        );
-    }
-
-    if (oldStatus != "completed" && action.Status == "completed" && action.CreatedById != userId.Value)
-    {
-        await _notificationService.CreateNotificationAsync(
-            action.CreatedById,
-            "Action Completed",
-            $"Action has been completed: {action.Description}",
-            "ActionCompleted",
-            action.ActionId
-        );
-    }
-
-    return Ok(new { message = "Action updated successfully" });
-}
-[HttpDelete("{actionId}")]
-public async Task<IActionResult> DeleteAction(int actionId)
-{
-    try
-    {
-        // Check authentication
-        var userId = HttpContext.Session.GetInt32("UserId");
-        var companyId = HttpContext.Session.GetInt32("CompanyId");
-        
-        if (!userId.HasValue || !companyId.HasValue)
-        {
-            return Unauthorized(new { message = "Not authenticated" });
-        }
-
-        // Find action and ensure it belongs to the user's company
-        var action = await _context.Actions
-            .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
-            
-        if (action == null)
-        {
-            return NotFound(new { message = "Action not found" });
-        }
-
-        // Get current user
-        var currentUser = await _context.Users.FindAsync(userId.Value);
-
-        // Check permission: Only SubscriptionManager or creator can delete the action
-        if (currentUser.Role != "SubscriptionManager" && action.CreatedById != userId)
-        {
-            return StatusCode(403, new { message = "You don't have permission to delete this action" });
-        }
-
-        // --- DELETE RELATED NOTIFICATIONS FIRST ---
-        
-        // Delete all notifications that reference this action
-        var relatedNotifications = await _context.Notifications
+                // --- DELETE RELATED NOTIFICATIONS FIRST ---
+                
+                // Delete all notifications that reference this action
+                var relatedNotifications = await _context.Notifications
                                                 .Where(n => n.RelatedActionId == actionId)
                                                 .ToListAsync();
-        
-        if (relatedNotifications.Any())
-        {
-            _context.Notifications.RemoveRange(relatedNotifications);
+                
+                if (relatedNotifications.Any())
+                {
+                    _context.Notifications.RemoveRange(relatedNotifications);
+                }
+
+                // Delete the action
+                _context.Actions.Remove(action);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Action supprimée avec succès" });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Erreur lors de la suppression de l'action : {ex.Message}");
+                return StatusCode(500, new { message = "Une erreur est survenue lors de la suppression de l'action", details = ex.Message });
+            }
         }
 
-        // Delete the action
-        _context.Actions.Remove(action);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Action deleted successfully" });
-    }
-    catch (Exception ex)
-    {
-        // Log the exception
-        Console.WriteLine($"Error deleting action: {ex.Message}");
-        return StatusCode(500, new { message = "An error occurred while deleting the action", details = ex.Message });
-    }
-}
         [HttpGet("export")]
         public async Task<IActionResult> ExportActionPlan(
             [FromQuery] int? textId = null,
@@ -553,14 +554,14 @@ public async Task<IActionResult> DeleteAction(int actionId)
             
             if (!userId.HasValue || !companyId.HasValue)
             {
-                return Unauthorized(new { message = "Not authenticated" });
+                return Unauthorized(new { message = "Non authentifié" });
             }
 
             // Get user
             var user = await _context.Users.FindAsync(userId.Value);
             if (user == null)
             {
-                return Unauthorized(new { message = "User not found" });
+                return Unauthorized(new { message = "Utilisateur non trouvé" });
             }
 
             // Build query
@@ -583,7 +584,7 @@ public async Task<IActionResult> DeleteAction(int actionId)
                 var responsible = await _context.Users.FindAsync(responsibleId.Value);
                 if (responsible == null || responsible.CompanyId != user.CompanyId)
                 {
-                    return BadRequest(new { message = "Invalid responsible user" });
+                    return BadRequest(new { message = "Utilisateur responsable invalide" });
                 }
                 query = query.Where(a => a.ResponsibleId == responsibleId);
             }
@@ -597,7 +598,7 @@ public async Task<IActionResult> DeleteAction(int actionId)
                     
                 if (text == null)
                 {
-                    return BadRequest(new { message = "Invalid text" });
+                    return BadRequest(new { message = "Texte invalide" });
                 }
                 
                 query = query.Where(a => a.TextId == textId);
@@ -639,126 +640,127 @@ public async Task<IActionResult> DeleteAction(int actionId)
 
             return Ok(exportData);
         }
+
         [HttpGet("{actionId}/tips")]
-public async Task<IActionResult> GetActionTips(int actionId)
-{
-    try
-    {
-        // Check authentication
-        var userId = HttpContext.Session.GetInt32("UserId");
-        var companyId = HttpContext.Session.GetInt32("CompanyId");
-        
-        if (!userId.HasValue || !companyId.HasValue)
+        public async Task<IActionResult> GetActionTips(int actionId)
         {
-            return Unauthorized(new { message = "Not authenticated" });
-        }
-
-        // Get the action
-        var action = await _context.Actions
-            .Include(a => a.Text)
-            .ThenInclude(t => t.DomainObject)
-            .Include(a => a.Text)
-            .ThenInclude(t => t.ThemeObject)
-            .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
-
-        if (action == null)
-        {
-            return NotFound(new { message = "Action not found" });
-        }
-
-        // Get user
-        var user = await _context.Users.FindAsync(userId.Value);
-
-        // Check if user has access to this action
-        if (user.Role != "SubscriptionManager" && action.ResponsibleId != userId)
-        {
-            return StatusCode(403, new { message = "You don't have permission to view this action" });
-        }
-
-        // Call Flask NLP service
-        var tips = await CallNLPService(action);
-
-        return Ok(new { 
-            actionId = actionId,
-            tips = tips,
-            success = true
-        });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new { message = ex.Message });
-    }
-}
-
-private async Task<object> CallNLPService(Action action)
-{
-    try
-    {
-        using (var httpClient = new HttpClient())
-        {
-            var requestData = new
+            try
             {
-                description = action.Description,
-                domain = action.Text?.DomainObject?.Name,
-                theme = action.Text?.ThemeObject?.Name
-            };
+                // Check authentication
+                var userId = HttpContext.Session.GetInt32("UserId");
+                var companyId = HttpContext.Session.GetInt32("CompanyId");
+                
+                if (!userId.HasValue || !companyId.HasValue)
+                {
+                    return Unauthorized(new { message = "Non authentifié" });
+                }
 
-            var json = System.Text.Json.JsonSerializer.Serialize(requestData);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                // Get the action
+                var action = await _context.Actions
+                    .Include(a => a.Text)
+                    .ThenInclude(t => t.DomainObject)
+                    .Include(a => a.Text)
+                    .ThenInclude(t => t.ThemeObject)
+                    .FirstOrDefaultAsync(a => a.ActionId == actionId && a.CompanyId == companyId.Value);
 
-            var response = await httpClient.PostAsync("http://localhost:5000/analyze-action", content);
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var responseContent = await response.Content.ReadAsStringAsync();
-                return System.Text.Json.JsonSerializer.Deserialize<object>(responseContent);
+                if (action == null)
+                {
+                    return NotFound(new { message = "Action non trouvée" });
+                }
+
+                // Get user
+                var user = await _context.Users.FindAsync(userId.Value);
+
+                // Check if user has access to this action
+                if (user.Role != "SubscriptionManager" && action.ResponsibleId != userId)
+                {
+                    return StatusCode(403, new { message = "Vous n'avez pas la permission de voir cette action" });
+                }
+
+                // Call Flask NLP service
+                var tips = await CallNLPService(action);
+
+                return Ok(new { 
+                    actionId = actionId,
+                    tips = tips,
+                    success = true
+                });
             }
-            else
+            catch (Exception ex)
             {
-                // Return fallback tips if service is unavailable
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        private async Task<object> CallNLPService(Action action)
+        {
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    var requestData = new
+                    {
+                        description = action.Description,
+                        domain = action.Text?.DomainObject?.Name,
+                        theme = action.Text?.ThemeObject?.Name
+                    };
+
+                    var json = System.Text.Json.JsonSerializer.Serialize(requestData);
+                    var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                    var response = await httpClient.PostAsync("http://localhost:5000/analyze-action", content);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseContent = await response.Content.ReadAsStringAsync();
+                        return System.Text.Json.JsonSerializer.Deserialize<object>(responseContent);
+                    }
+                    else
+                    {
+                        // Return fallback tips if service is unavailable
+                        return new
+                        {
+                            success = false,
+                            analysis = new
+                            {
+                                priority_level = "Moyen",
+                                risk_assessment = "Service temporairement indisponible",
+                                recommended_tips = new[]
+                                {
+                                    "Examinez attentivement les exigences de l'action",
+                                    "Consultez les parties prenantes concernées",
+                                    "Documentez régulièrement les progrès"
+                                },
+                                estimated_effort = "Moyen",
+                                suggested_timeline = "2-4 semaines"
+                            }
+                        };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Return fallback tips on error
                 return new
                 {
                     success = false,
+                    error = "Service NLP indisponible",
                     analysis = new
                     {
-                        priority_level = "Medium",
-                        risk_assessment = "Service temporarily unavailable",
+                        priority_level = "Moyen",
+                        risk_assessment = "Analyse impossible pour le moment",
                         recommended_tips = new[]
                         {
-                            "Review action requirements carefully",
-                            "Consult with relevant stakeholders",
-                            "Document progress regularly"
-                        },
-                        estimated_effort = "Medium",
-                        suggested_timeline = "2-4 weeks"
+                            "Vérifiez les exigences de l'action",
+                            "Collaborez avec les membres de l'équipe",
+                            "Suivez les progrès de près"
+                        }
                     }
                 };
             }
         }
-    }
-    catch (Exception ex)
-    {
-        // Return fallback tips on error
-        return new
-        {
-            success = false,
-            error = "NLP service unavailable",
-            analysis = new
-            {
-                priority_level = "Medium",
-                risk_assessment = "Unable to analyze at this time",
-                recommended_tips = new[]
-                {
-                    "Review action requirements",
-                    "Engage with team members",
-                    "Monitor progress closely"
-                }
-            }
-        };
-    }
-}
 
-       public class CreateActionRequest
+        public class CreateActionRequest
         {
             public int TextId { get; set; }
             public int? RequirementId { get; set; }
@@ -770,15 +772,14 @@ private async Task<object> CallNLPService(Action action)
             public string Status { get; set; } = "active";
         }       
         
-    public class UpdateActionRequest
-{
-    public string Description { get; set; }
-    public int? ResponsibleId { get; set; }
-    public DateTime? Deadline { get; set; }
-    public int? Progress { get; set; }
-    public string Effectiveness { get; set; }
-    public string Status { get; set; }
-}
-
+        public class UpdateActionRequest
+        {
+            public string Description { get; set; }
+            public int? ResponsibleId { get; set; }
+            public DateTime? Deadline { get; set; }
+            public int? Progress { get; set; }
+            public string Effectiveness { get; set; }
+            public string Status { get; set; }
+        }
     }
 }

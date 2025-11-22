@@ -20,7 +20,6 @@ namespace server.Controllers
             _context = context;
         }
 
-        // DOMAINS
 
         [HttpGet("domains")]
         public async Task<IActionResult> GetDomains()
@@ -54,7 +53,6 @@ namespace server.Controllers
                 return BadRequest(new { message = "Domain name is required" });
             }
 
-            // Check for duplicate domain name
             var duplicateExists = await _context.Domains
                 .AnyAsync(d => d.Name.ToLower() == request.Name.ToLower());
             if (duplicateExists)
@@ -190,7 +188,6 @@ namespace server.Controllers
 
             if (!string.IsNullOrEmpty(request.Name))
             {
-                // Check for duplicate domain name (excluding current domain)
                 var duplicateExists = await _context.Domains
                     .AnyAsync(d => d.Name.ToLower() == request.Name.ToLower() && d.DomainId != id);
                 if (duplicateExists)
@@ -222,7 +219,6 @@ namespace server.Controllers
                 return NotFound(new { message = "Domain not found" });
             }
 
-            // Check if domain is in use by texts
             var inUseByTexts = await _context.Texts.AnyAsync(t => t.DomainId == id);
             if (inUseByTexts)
             {
@@ -276,7 +272,6 @@ namespace server.Controllers
             }
         }
 
-        // THEMES
 
         [HttpGet("themes")]
         public async Task<IActionResult> GetThemes([FromQuery] int? domainId = null)

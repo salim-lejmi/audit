@@ -193,13 +193,7 @@ const NotificationDropdown: React.FC = () => {
             )}
           </div>
 
-          {notifications.length > 0 && (
-            <div className="notification-footer">
-              <button className="view-all-btn">
-                Voir toutes les notifications
-              </button>
-            </div>
-          )}
+      
         </div>
       )}
     </div>

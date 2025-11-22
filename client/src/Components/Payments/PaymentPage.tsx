@@ -141,7 +141,7 @@ const PaymentPage: React.FC = () => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'TND'
     }).format(amount);
   };
 

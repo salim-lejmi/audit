@@ -115,7 +115,6 @@ const TaxonomyManager: React.FC = () => {
     }
   };
 
-  // Load themes for a specific domain
   const loadThemes = async (domainId: number): Promise<void> => {
     setLoading(true);
     setError(null);
@@ -131,7 +130,6 @@ const TaxonomyManager: React.FC = () => {
     }
   };
 
-  // Load subthemes for a specific theme
   const loadSubThemes = async (themeId: number): Promise<void> => {
     setLoading(true);
     setError(null);
