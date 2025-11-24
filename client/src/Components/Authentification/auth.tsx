@@ -5,7 +5,7 @@ import axios from 'axios';
 import CountryPhoneInput from '../shared/CountryPhoneInput';
 
 const Auth: React.FC = () => {
-  const [isLoginView, setIsLoginView] = useState(true);
+  const [currentView, setCurrentView] = useState<'login' | 'signup' | 'forgot-password'>('login');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -23,6 +23,11 @@ const Auth: React.FC = () => {
   const [signupError, setSignupError] = useState('');
   const [signupSuccess, setSignupSuccess] = useState('');
   const [signupIsLoading, setSignupIsLoading] = useState(false);
+
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordError, setForgotPasswordError] = useState('');
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState('');
+  const [forgotPasswordIsLoading, setForgotPasswordIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -127,7 +132,7 @@ const Auth: React.FC = () => {
         confirmPassword: ''
       });
       setTimeout(() => {
-        setIsLoginView(true);
+        setCurrentView('login');
         setSignupSuccess('');
       }, 3000);
     } catch (error: unknown) {
@@ -138,6 +143,36 @@ const Auth: React.FC = () => {
       }
     } finally {
       setSignupIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail) {
+      setForgotPasswordError('Veuillez entrer votre adresse e-mail');
+      return;
+    }
+    setForgotPasswordIsLoading(true);
+    setForgotPasswordError('');
+    setForgotPasswordSuccess('');
+    try {
+      const response = await axios.post('/api/auth/forgot-password', {
+        email: forgotPasswordEmail
+      });
+      setForgotPasswordSuccess(response.data.message);
+      setForgotPasswordEmail('');
+      setTimeout(() => {
+        setCurrentView('login');
+        setForgotPasswordSuccess('');
+      }, 3000);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        setForgotPasswordError(error.response.data.message || 'Une erreur s\'est produite');
+      } else {
+        setForgotPasswordError('Impossible de se connecter au serveur. Veuillez réessayer plus tard.');
+      }
+    } finally {
+      setForgotPasswordIsLoading(false);
     }
   };
   
@@ -160,22 +195,44 @@ const Auth: React.FC = () => {
           <div className="auth-form-container">
             <h1 className="auth-title">Prevention Plus</h1>
 
-            <div className="auth-toggle-buttons">
-              <button
-                className={`toggle-button ${isLoginView ? 'active' : ''}`}
-                onClick={() => setIsLoginView(true)}
-              >
-                Connexion
-              </button>
-              <button
-                className={`toggle-button ${!isLoginView ? 'active' : ''}`}
-                onClick={() => setIsLoginView(false)}
-              >
-                Inscription
-              </button>
-            </div>
+            {currentView !== 'forgot-password' && (
+              <div className="auth-toggle-buttons">
+                <button
+                  className={`toggle-button ${currentView === 'login' ? 'active' : ''}`}
+                  onClick={() => setCurrentView('login')}
+                >
+                  Connexion
+                </button>
+                <button
+                  className={`toggle-button ${currentView === 'signup' ? 'active' : ''}`}
+                  onClick={() => setCurrentView('signup')}
+                >
+                  Inscription
+                </button>
+              </div>
+            )}
 
-            {isLoginView ? (
+            {currentView === 'forgot-password' && (
+              <div style={{ marginBottom: '20px' }}>
+                <button
+                  onClick={() => setCurrentView('login')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#007bff',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                >
+                  <span>←</span> Retour
+                </button>
+              </div>
+            )}
+
+            {currentView === 'login' && (
               <form className="auth-form" onSubmit={handleLogin}>
                 {loginError && <div className="error-message">{loginError}</div>}
                 <div className="form-group">
@@ -206,6 +263,22 @@ const Auth: React.FC = () => {
                     />
                   </div>
                 </div>
+                <div style={{ textAlign: 'right', marginBottom: '15px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('forgot-password')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'red',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    Mot de passe oublié ?
+                  </button>
+                </div>
                 <button
                   type="submit"
                   className="auth-button"
@@ -213,9 +286,10 @@ const Auth: React.FC = () => {
                 >
                   {loginIsLoading ? 'Connexion en cours...' : 'Connexion'}
                 </button>
-                
               </form>
-            ) : (
+            )}
+
+            {currentView === 'signup' && (
               <form className="auth-form" onSubmit={handleSignup}>
                 {signupError && <div className="error-message">{signupError}</div>}
                 {signupSuccess && <div className="success-message">{signupSuccess}</div>}
@@ -312,6 +386,35 @@ const Auth: React.FC = () => {
                   disabled={signupIsLoading}
                 >
                   {signupIsLoading ? 'Création du compte...' : 'Créer un compte'}
+                </button>
+              </form>
+            )}
+
+            {currentView === 'forgot-password' && (
+              <form className="auth-form" onSubmit={handleForgotPassword}>
+                {forgotPasswordError && <div className="error-message">{forgotPasswordError}</div>}
+                {forgotPasswordSuccess && <div className="success-message">{forgotPasswordSuccess}</div>}
+                
+                <div className="form-group">
+                  <label htmlFor="forgot-password-email">Adresse email</label>
+                  <div className="input-wrapper">
+                    <input
+                      type="email"
+                      id="forgot-password-email"
+                      className="form-input"
+                      placeholder="Entrez votre adresse email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="auth-button"
+                  disabled={forgotPasswordIsLoading}
+                >
+                  {forgotPasswordIsLoading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
                 </button>
               </form>
             )}

@@ -25,6 +25,7 @@ import PaymentPage from './Components/Payments/PaymentPage';
 import CompanySettings from './Components/Company/CompanySettings';
 import AdminCompanyManagement from './Components/Admin/admincompanymanagement';
 import Dashboard from "./Components/Admin/Dashboard";
+import ResetPassword from './Components/Authentification/ResetPassword';
 
 const AppRoutes = () => {
   return (
@@ -33,7 +34,8 @@ const AppRoutes = () => {
         {/* Public Routes */}
         <Route path="/" element={<Auth />} />
         <Route path="/verify-email" element={<EmailVerification />} />
-        
+        <Route path="/reset-password" element={<ResetPassword />} />
+
         {/* Super Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute role="SuperAdmin" />}>
           <Route path="dashboard" element={<SuperAdminDashboard />} />

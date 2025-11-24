@@ -309,6 +309,88 @@ namespace server.Controllers
             HttpContext.Session.Clear();
             return Ok(new { message = "Logged out successfully" });
         }
+[HttpPost("forgot-password")]
+public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+{
+    if (string.IsNullOrEmpty(request.Email))
+    {
+        return BadRequest(new { message = "L'adresse e-mail est requise" });
+    }
+
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+    // Don't reveal if user exists or not for security
+    if (user == null)
+    {
+        return Ok(new { message = "Si l'adresse e-mail existe, un lien de réinitialisation a été envoyé" });
+    }
+
+    try
+    {
+        // Generate password reset token
+        var resetToken = GenerateEmailVerificationToken();
+        var tokenExpiry = DateTime.Now.AddHours(24);
+
+        user.PasswordResetToken = resetToken;
+        user.PasswordResetTokenExpiry = tokenExpiry;
+
+        await _context.SaveChangesAsync();
+
+        // Send password reset email
+        var baseUrl = _configuration["App:BaseUrl"];
+        var resetLink = $"{baseUrl}/reset-password?token={resetToken}";
+
+        await _emailService.SendPasswordResetEmailAsync(user.Email, user.Name, resetLink);
+
+        return Ok(new { message = "Si l'adresse e-mail existe, un lien de réinitialisation a été envoyé" });
+    }
+    catch
+    {
+        return StatusCode(500, new { message = "Une erreur s'est produite lors de l'envoi de l'e-mail" });
+    }
+}
+
+[HttpPost("reset-password")]
+public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+{
+    if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.NewPassword))
+    {
+        return BadRequest(new { message = "Le token et le nouveau mot de passe sont requis" });
+    }
+
+    if (request.NewPassword.Length < 8)
+    {
+        return BadRequest(new { message = "Le mot de passe doit contenir au moins 8 caractères" });
+    }
+
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == request.Token);
+
+    if (user == null)
+    {
+        return BadRequest(new { message = "Lien de réinitialisation invalide" });
+    }
+
+    if (user.PasswordResetTokenExpiry < DateTime.Now)
+    {
+        return BadRequest(new { message = "Le lien de réinitialisation a expiré" });
+    }
+
+    try
+    {
+        // Update password
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        user.PasswordResetToken = null;
+        user.PasswordResetTokenExpiry = null;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Mot de passe réinitialisé avec succès" });
+    }
+    catch
+    {
+        return StatusCode(500, new { message = "Une erreur s'est produite lors de la réinitialisation du mot de passe" });
+    }
+}
 
         private string GenerateEmailVerificationToken()
         {
@@ -344,5 +426,16 @@ namespace server.Controllers
         {
             public string Email { get; set; }
         }
+        public class ForgotPasswordRequest
+{
+    public string Email { get; set; }
+}
+
+public class ResetPasswordRequest
+{
+    public string Token { get; set; }
+    public string NewPassword { get; set; }
+}
+
     }
 }

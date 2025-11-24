@@ -41,11 +41,31 @@ namespace server.Services
                 <html>
                 <body>
                     <h2>Bienvenue sur Prevention Plus, {name} !</h2>
-                    <p>Un compte a été créé pour vous par l’administrateur de votre entreprise.</p>
+                    <p>Un compte a été créé pour vous par l'administrateur de votre entreprise.</p>
                     <p>Veuillez cliquer sur le lien ci-dessous pour vérifier votre adresse e-mail et activer votre compte :</p>
                     <p><a href='{verificationLink}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Vérifier et activer le compte</a></p>
                     <p>Une fois vérifié, vous pourrez vous connecter à votre compte.</p>
-                    <p>Si vous ne vous attendiez pas à recevoir cet e-mail, veuillez contacter l’administrateur de votre entreprise.</p>
+                    <p>Si vous ne vous attendiez pas à recevoir cet e-mail, veuillez contacter l'administrateur de votre entreprise.</p>
+                    <br>
+                    <p>Cordialement,<br>L'équipe Prevention Plus</p>
+                </body>
+                </html>";
+
+            await SendEmailAsync(email, subject, body);
+        }
+
+        public async Task SendPasswordResetEmailAsync(string email, string name, string resetLink)
+        {
+            var subject = "Réinitialisation de votre mot de passe - Prevention Plus";
+            var body = $@"
+                <html>
+                <body>
+                    <h2>Bonjour {name},</h2>
+                    <p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte Prevention Plus.</p>
+                    <p>Veuillez cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :</p>
+                    <p><a href='{resetLink}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Réinitialiser le mot de passe</a></p>
+                    <p>Ce lien expirera dans 24 heures.</p>
+                    <p>Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet e-mail.</p>
                     <br>
                     <p>Cordialement,<br>L'équipe Prevention Plus</p>
                 </body>
@@ -106,8 +126,7 @@ namespace server.Services
             }
             catch (Exception ex)
             {
-                // Enregistrer l’erreur (ajouter un vrai système de journalisation)
-                Console.WriteLine($"Échec de l’envoi de l’e-mail : {ex.Message}");
+                Console.WriteLine($"Échec de l'envoi de l'e-mail : {ex.Message}");
                 throw;
             }
         }
