@@ -39,6 +39,8 @@ interface StatsResponse {
 const SubscriptionManagerDashboard: React.FC = () => {
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [stats, setStats] = useState<StatsResponse | null>(null);
+  const [totalCompanyUsers, setTotalCompanyUsers] = useState(0);
+  const [totalRevues, setTotalRevues] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -48,14 +50,18 @@ const SubscriptionManagerDashboard: React.FC = () => {
 
     const fetchAll = async () => {
       try {
-        const [companyRes, statsRes] = await Promise.all([
+        const [companyRes, statsRes, usersRes, revuesRes] = await Promise.all([
           axios.get('/api/company/dashboard-info'),
           axios.get('/api/statistics'),
+          axios.get('/api/company/users'),
+          axios.get('/api/revue')
         ]);
 
         if (!mounted) return;
         setCompanyInfo(companyRes.data);
         setStats(statsRes.data);
+        setTotalCompanyUsers(usersRes.data.length || 0);
+        setTotalRevues(revuesRes.data.length || 0);
         setLoading(false);
       } catch {
         if (!mounted) return;
@@ -69,14 +75,18 @@ const SubscriptionManagerDashboard: React.FC = () => {
       mounted = false;
     };
   }, []);
+const getStatusLabel = (status: string) => {
+  const statusMap: { [key: string]: string } = {
+    'approved': 'Approuvé',
+    'rejected': 'Rejeté',
+    'pending': 'En attente'
+  };
+  return statusMap[status?.toLowerCase()] || status;
+};
 
   // Compute key metrics from statistics
   const {
     totalTexts,
-    totalRequirements,
-    compliantRequirements,
-    pendingEvaluations,
-    complianceScore,
     totalActions,
     completedActions,
     openActions,
@@ -85,19 +95,9 @@ const SubscriptionManagerDashboard: React.FC = () => {
       (s || '').toString().trim().toLowerCase();
 
     const textsByStatus = stats?.textsByStatus ?? [];
-    const requirementsByStatus = stats?.requirementsByStatus ?? [];
     const actionsByStatus = stats?.actionsByStatus ?? [];
 
     const totalTextsCalc = textsByStatus.reduce((acc, t) => acc + (t?.count || 0), 0);
-
-    const totalReqCalc = requirementsByStatus.reduce((acc, r) => acc + (r?.count || 0), 0);
-    const compliantReqCalc =
-      requirementsByStatus.find(r => normalize(r.status) === 'conforme')?.count || 0;
-    const pendingEvalCalc =
-      requirementsByStatus.find(r => normalize(r.status) === 'à vérifier')?.count || 0;
-
-    const complianceScoreCalc =
-      totalReqCalc > 0 ? Math.round((compliantReqCalc / totalReqCalc) * 100) : 0;
 
     const totalActionsCalc = actionsByStatus.reduce((acc, a) => acc + (a?.count || 0), 0);
     const completedActionsCalc =
@@ -106,10 +106,6 @@ const SubscriptionManagerDashboard: React.FC = () => {
 
     return {
       totalTexts: totalTextsCalc,
-      totalRequirements: totalReqCalc,
-      compliantRequirements: compliantReqCalc,
-      pendingEvaluations: pendingEvalCalc,
-      complianceScore: complianceScoreCalc,
       totalActions: totalActionsCalc,
       completedActions: completedActionsCalc,
       openActions: openActionsCalc,
@@ -153,7 +149,7 @@ const SubscriptionManagerDashboard: React.FC = () => {
                 <div className="info-item">
                   <span className="info-label">Statut :</span>
                   <span className={`status-badge ${companyInfo?.status?.toLowerCase()}`}>
-                    {companyInfo?.status}
+{getStatusLabel(companyInfo?.status || '')}
                   </span>
                 </div>
               </div>
@@ -178,34 +174,30 @@ const SubscriptionManagerDashboard: React.FC = () => {
 
         {/* Indicateurs Clés */}
         <div className="stats-container">
-          <div className="stat-card compliance">
+          <div className="stat-card users">
             <div className="stat-icon">
-              <i className="fas fa-shield-alt"></i>
+              <i className="fas fa-users"></i>
             </div>
             <div className="stat-content">
-              <h5 className="stat-title">Score de Conformité</h5>
-              <p className="stat-value">{isFinite(complianceScore) ? `${complianceScore}%` : '0%'}</p>
-              <span className="stat-subtitle">
-                Basé sur {totalRequirements} exigences
-              </span>
-              <Link to="/company/compliance" className="stat-link">
-                Consulter la conformité <i className="fas fa-arrow-right"></i>
+              <h5 className="stat-title">Utilisateurs de l&apos;Entreprise</h5>
+              <p className="stat-value">{totalCompanyUsers}</p>
+              <span className="stat-subtitle">Membres de votre équipe</span>
+              <Link to="/company/users" className="stat-link">
+                Gérer les utilisateurs <i className="fas fa-arrow-right"></i>
               </Link>
             </div>
           </div>
 
           <div className="stat-card evaluations">
             <div className="stat-icon">
-              <i className="fas fa-clipboard-check"></i>
+              <i className="fas fa-clipboard-list"></i>
             </div>
             <div className="stat-content">
-              <h5 className="stat-title">Évaluations à Vérifier</h5>
-              <p className="stat-value">{pendingEvaluations}</p>
-              <span className="stat-subtitle">
-                {compliantRequirements} exigences conformes
-              </span>
-              <Link to="/company/compliance" className="stat-link">
-                Gérer les évaluations <i className="fas fa-arrow-right"></i>
+              <h5 className="stat-title">Revues de Direction</h5>
+              <p className="stat-value">{totalRevues}</p>
+              <span className="stat-subtitle">Revues enregistrées</span>
+              <Link to="/company/revue" className="stat-link">
+                Consulter les revues <i className="fas fa-arrow-right"></i>
               </Link>
             </div>
           </div>

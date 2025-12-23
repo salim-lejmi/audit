@@ -93,7 +93,7 @@ namespace server.Controllers
                 CompanyId = companyId.Value,
                 DomainId = request.DomainId,
                 ReviewDate = request.ReviewDate,
-                Status = "Brouillon",
+                Status = "Draft",
                 CreatedById = userId.Value,
                 CreatedAt = DateTime.Now
             };
@@ -208,12 +208,12 @@ namespace server.Controllers
                 return NotFound(new { message = "Revue non trouvée" });
             }
 
-            if (review.Status != "En cours")
+            if (review.Status != "In Progress")
             {
                 return BadRequest(new { message = "La revue ne peut être complétée qu'à partir du statut En cours" });
             }
 
-            review.Status = "Terminé";
+            review.Status = "Completed";
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Revue complétée avec succès" });
@@ -885,10 +885,10 @@ namespace server.Controllers
                     return NotFound(new { message = "Revue non trouvée" });
                 }
 
-                if (review.Status != "Complété" && review.Status != "Annulé")
-                {
-                    return BadRequest(new { message = "Le PDF ne peut être généré que pour les revues terminées ou annulées" });
-                }
+            if (review.Status != "Completed" && review.Status != "Canceled")
+            {
+                return BadRequest(new { message = "Le PDF ne peut être généré que pour les revues terminées ou annulées" });
+            }
 
                 var pdfFileName = $"revue_{review.RevueId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
                 var directory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "pdfs");

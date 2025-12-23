@@ -38,7 +38,7 @@ except:
 class NLPService:
     def __init__(self):
         # Updated model name - use gemini-1.5-flash which is available
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('models/gemini-flash-latest')
         
     def analyze_action_description(self, description, domain=None, theme=None):
         """Analyze action plan description and generate tips"""

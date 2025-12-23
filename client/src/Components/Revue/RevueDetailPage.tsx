@@ -130,14 +130,24 @@ const RevueDetailPage: React.FC = () => {
     fetchTexts();
   }, [id]);
 
-  const canModifyReviewStatus = () => {
+const getStatusDisplay = (status: string) => {
+  const displayMap:  { [key: string]: string } = {
+    'Draft': 'Brouillon',
+    'In Progress': 'En cours',
+    'Completed': 'Terminé',
+    'Canceled': 'Annulé'
+  };
+  return displayMap[status] || status;
+};
+
+const canModifyReviewStatus = () => {
     return userRole === 'SubscriptionManager';
   };
 
-  const canAddContent = () => {
-    return (userRole === 'SubscriptionManager' || userRole === 'Auditor') && 
-           review?.status === 'In Progress';
-  };
+const canAddContent = () => {
+  return (userRole === 'SubscriptionManager' || userRole === 'Auditor') && 
+         review?.status === 'In Progress';
+};
 
   const canDeleteItem = (itemCreatedById: number) => {
     if (review?.status !== 'In Progress') return false;
@@ -153,9 +163,9 @@ const RevueDetailPage: React.FC = () => {
     return false;
   };
 
-  const canGeneratePdf = () => {
-    return review?.status === 'Completed' || review?.status === 'Canceled';
-  };
+const canGeneratePdf = () => {
+  return review?.status === 'Completed' || review?.status === 'Canceled';
+};
 
   const fetchReview = () => {
     setLoading(true);
@@ -205,28 +215,31 @@ const RevueDetailPage: React.FC = () => {
 
     axios.post(`/api/revue/${review?.revueId}/complete`)
       .then(() => fetchReview())
-      .catch(err => alert('Échec de la finalisation de la revue'));
+      .catch(err => {
+        console.error('Complete review error:', err.response);
+        const errorMsg = err.response?.data?.message || err.response?.data || 'Échec de la finalisation de la revue';
+        alert(`Échec de la finalisation de la revue: ${errorMsg}`);
+      });
   };
+const handleStartReview = () => {
+  if (! window.confirm('Êtes-vous sûr de vouloir démarrer cette revue ?')) {
+    return;
+  }
 
-  const handleStartReview = () => {
-    if (!window.confirm('Êtes-vous sûr de vouloir démarrer cette revue ?')) {
-      return;
-    }
+  axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'In Progress' })
+    .then(() => fetchReview())
+    .catch(err => alert('Échec du démarrage de la revue'));
+};
 
-    axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'In Progress' })
-      .then(() => fetchReview())
-      .catch(err => alert('Échec du démarrage de la revue'));
-  };
+const handleCancelReview = () => {
+  if (!window.confirm('Êtes-vous sûr de vouloir annuler cette revue ?  Cette action est irréversible. ')) {
+    return;
+  }
 
-  const handleCancelReview = () => {
-    if (!window.confirm('Êtes-vous sûr de vouloir annuler cette revue ? Cette action est irréversible.')) {
-      return;
-    }
-
-    axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'Canceled' })
-      .then(() => fetchReview())
-      .catch(err => alert('Échec de l\'annulation de la revue'));
-  };
+  axios.put(`/api/revue/${review?.revueId}`, { reviewDate: review?.reviewDate, status: 'Canceled' })
+    .then(() => fetchReview())
+    .catch(err => alert('Échec de l\'annulation de la revue'));
+};
 
   // Edit handlers
   const handleEditLegalText = (legalText: any) => {
@@ -492,35 +505,33 @@ const RevueDetailPage: React.FC = () => {
         <div className="info-card">
           <p><strong>Domaine :</strong> {review.domainName}</p>
           <p><strong>Date de la revue :</strong> {new Date(review.reviewDate).toLocaleDateString('fr-FR')}</p>
-          <p><strong>Statut :</strong> <span className={`status-badge status-${review.status.toLowerCase().replace(' ', '')}`}>{review.status === 'Draft' ? 'Brouillon' : review.status === 'In Progress' ? 'En cours' : review.status === 'Completed' ? 'Terminé' : review.status === 'Canceled' ? 'Annulé' : review.status}</span></p>
+          <p><strong>Statut :</strong> <span className={`status-badge status-${review.status.toLowerCase().replace(' ', '')}`}>{getStatusDisplay(review.status)}</span></p>
           {review.pdfFilePath && (
             <p><strong>PDF :</strong> <a href={review.pdfFilePath} download>Télécharger</a></p>
           )}
         </div>
 
         <div className="action-buttons-row">
-          {/* Start Review Button - Only for SubscriptionManager on Draft status */}
-          {review.status === 'Draft' && canModifyReviewStatus() && (
-            <button onClick={handleStartReview} className="action-btn-primary btn-start">
-              Démarrer la revue
-            </button>
-          )}
+{/* Start Review Button */}
+{review.status === 'Draft' && canModifyReviewStatus() && (
+  <button onClick={handleStartReview} className="action-btn-primary btn-start">
+    Démarrer la revue
+  </button>
+)}
+
+{review.status === 'In Progress' && canModifyReviewStatus() && (
+  <button onClick={handleCompleteReview} className="action-btn-primary btn-complete">
+    Finaliser la revue
+  </button>
+)}
+
+{review.status === 'In Progress' && canModifyReviewStatus() && (
+  <button onClick={handleCancelReview} className="action-btn-primary btn-cancel">
+    Annuler la revue
+  </button>
+)}
           
-          {/* Complete Review Button - Only for SubscriptionManager on In Progress status */}
-          {review.status === 'In Progress' && canModifyReviewStatus() && (
-            <button onClick={handleCompleteReview} className="action-btn-primary btn-complete">
-              Finaliser la revue
-            </button>
-          )}
-          
-          {/* Cancel Review Button - Only for SubscriptionManager on In Progress status */}
-          {review.status === 'In Progress' && canModifyReviewStatus() && (
-            <button onClick={handleCancelReview} className="action-btn-primary btn-cancel">
-              Annuler la revue
-            </button>
-          )}
-          
-          {/* Generate PDF Button - Only for Completed or Canceled status */}
+          {/* Generate PDF Button */}
           {canGeneratePdf() && (
             <button onClick={handleGeneratePdf} className="action-btn-primary btn-pdf">
               Générer le PDF

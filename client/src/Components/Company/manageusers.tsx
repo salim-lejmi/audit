@@ -43,7 +43,8 @@ const ManageUsers: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('Tous');
+  const [nameSort, setNameSort] = useState('none');
+  const [dateSort, setDateSort] = useState('none');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
@@ -55,7 +56,7 @@ const ManageUsers: React.FC = () => {
     email: '',
     phoneNumber: '',
     password: '',
-    role: 'User'
+    role: 'Auditor'
   });
 
   const [editForm, setEditForm] = useState<Partial<User>>({
@@ -65,41 +66,87 @@ const ManageUsers: React.FC = () => {
     role: ''
   });
 
-  const availableRoles = ['User', 'Auditor', 'Manager'];
   const roleLabelMap: Record<string, string> = {
-    'User': 'Utilisateur',
-    'Auditor': 'Auditeur',
-    'Manager': 'Gestionnaire'
+    'Auditor': 'Auditeur'
   };
+
+  const nameSortOptions = [
+    { value: 'none', label: 'Aucun tri' },
+    { value: 'asc', label: 'A → Z' },
+    { value: 'desc', label: 'Z → A' }
+  ];
+
+  const dateSortOptions = [
+    { value: 'none', label: 'Aucun tri' },
+    { value: 'asc', label: 'Plus ancien → Plus récent' },
+    { value: 'desc', label: 'Plus récent → Plus ancien' }
+  ];
 
   useEffect(() => {
     fetchUsers();
   }, [currentPage]);
 
-  const fetchUsers = async () => {
+  const sortUsersByName = (usersToSort: User[], sortOrder: string): User[] => {
+    if (sortOrder === 'none') return usersToSort;
+    
+    return [... usersToSort]. sort((a, b) => {
+      const nameA = a. name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+      
+      const comparison = nameA.localeCompare(nameB, 'fr', { sensitivity: 'base' });
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  };
+
+  const sortUsersByDate = (usersToSort: User[], sortOrder: string): User[] => {
+    if (sortOrder === 'none') return usersToSort;
+    
+    return [... usersToSort]. sort((a, b) => {
+      // Handle null/undefined dates - put them at the end
+      if (! a.createdAt && !b.createdAt) return 0;
+      if (! a.createdAt) return 1;
+      if (!b.createdAt) return -1;
+      
+      const dateA = new Date(a.createdAt). getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      
+      const comparison = dateA - dateB;
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  };
+
+  const fetchUsers = async (appliedNameSort: string = 'none', appliedDateSort: string = 'none') => {
     try {
       setLoading(true);
       setError(null);
       
       const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (roleFilter !== 'Tous') params.append('role', roleFilter);
+      if (searchTerm) params. append('search', searchTerm);
       params.append('page', currentPage.toString());
-      params.append('pageSize', pageSize.toString());
+      params. append('pageSize', pageSize. toString());
       
-      const response = await axios.get(`/api/company/users?${params.toString()}`);
-      setUsers(response.data.users || response.data);
+      const response = await axios. get(`/api/company/users?${params.toString()}`);
+      let fetchedUsers = response.data.users || response.data;
       
-      if (response.data.totalCount !== undefined) {
-        setTotalCount(response.data.totalCount);
-        setTotalPages(response.data.totalPages || Math.ceil(response.data.totalCount / pageSize));
-      } else {
-        setTotalCount(response.data.length || 0);
-        setTotalPages(Math.ceil((response.data.length || 0) / pageSize));
-      }
+      // Filter out SubscriptionManagers - only show Auditors
+      fetchedUsers = fetchedUsers.filter((user: User) => user.role !== 'SubscriptionManager');
+      
+      // Apply name sorting first
+      fetchedUsers = sortUsersByName(fetchedUsers, appliedNameSort);
+      
+      // Apply date sorting (will override name sort if both are set)
+      fetchedUsers = sortUsersByDate(fetchedUsers, appliedDateSort);
+      
+      setUsers(fetchedUsers);
+      
+      // Update counts based on filtered results
+      setTotalCount(fetchedUsers.length);
+      setTotalPages(Math. ceil(fetchedUsers.length / pageSize));
       
     } catch (err) {
-      setError('Échec du chargement des utilisateurs');
+      setError('Échec du chargement des auditeurs');
     } finally {
       setLoading(false);
     }
@@ -119,50 +166,46 @@ const ManageUsers: React.FC = () => {
     });
   };
 
- const handleCreateSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  // Debug: Log the form data being sent
-  console.log('Creating user with data:', createForm);
-  
-  try {
-    const response = await axios.post('/api/company/users', createForm);
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Debug: Log successful response
-    console.log('User created successfully:', response.data);
+    console.log('Creating auditor with data:', createForm);
     
-    setShowCreateModal(false);
-    setCreateForm({
-      name: '',
-      email: '',
-      phoneNumber: '',
-      password: '',
-      role: 'User'
-    });
-    fetchUsers();
-  } catch (err) {
-    // Debug: Log detailed error information
-    console.error('Error creating user:', err);
-    
-    if (axios.isAxiosError(err)) {
-      console.error('Error status:', err.response?.status);
-      console.error('Error data:', err.response?.data);
-      console.error('Error headers:', err.response?.headers);
+    try {
+      const response = await axios.post('/api/company/users', createForm);
       
-      // Set more specific error message based on response
-      if (err.response?.data?.message) {
-        setError(`Échec de la création de l'utilisateur: ${err.response.data.message}`);
-      } else if (err.response?.status === 400) {
-        setError('Échec de la création de l\'utilisateur: Données invalides');
+      console.log('Auditor created successfully:', response.data);
+      
+      setShowCreateModal(false);
+      setCreateForm({
+        name: '',
+        email: '',
+        phoneNumber: '',
+        password: '',
+        role: 'Auditor'
+      });
+      fetchUsers();
+    } catch (err) {
+      console.error('Error creating auditor:', err);
+      
+      if (axios.isAxiosError(err)) {
+        console.error('Error status:', err.response?. status);
+        console.error('Error data:', err.response?. data);
+        console.error('Error headers:', err.response?. headers);
+        
+        if (err.response?. data?. message) {
+          setError(`Échec de la création de l'auditeur: ${err.response.data.message}`);
+        } else if (err.response?. status === 400) {
+          setError('Échec de la création de l\'auditeur: Données invalides');
+        } else {
+          setError('Échec de la création de l\'auditeur');
+        }
       } else {
-        setError('Échec de la création de l\'utilisateur');
+        console.error('Non-Axios error:', err);
+        setError('Échec de la création de l\'auditeur');
       }
-    } else {
-      console.error('Non-Axios error:', err);
-      setError('Échec de la création de l\'utilisateur');
     }
-  }
-};
+  };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,7 +216,7 @@ const ManageUsers: React.FC = () => {
       setShowEditModal(false);
       fetchUsers();
     } catch (err) {
-      setError('Échec de la mise à jour de l\'utilisateur');
+      setError('Échec de la mise à jour de l\'auditeur');
     }
   };
 
@@ -185,7 +228,7 @@ const ManageUsers: React.FC = () => {
       setShowDeleteModal(false);
       fetchUsers();
     } catch (err) {
-      setError('Échec de la suppression de l\'utilisateur');
+      setError('Échec de la suppression de l\'auditeur');
     }
   };
 
@@ -207,14 +250,15 @@ const ManageUsers: React.FC = () => {
 
   const applyFilters = () => {
     setCurrentPage(1);
-    fetchUsers();
+    fetchUsers(nameSort, dateSort);
   };
 
   const resetFilters = () => {
     setSearchTerm('');
-    setRoleFilter('Tous');
+    setNameSort('none');
+    setDateSort('none');
     setCurrentPage(1);
-    fetchUsers();
+    fetchUsers('none', 'none');
   };
 
   const goToPage = (page: number) => {
@@ -223,20 +267,18 @@ const ManageUsers: React.FC = () => {
     }
   };
 
-  const uniqueRoles = ['Tous', ...new Set(users.map(user => user.role))];
-
   return (
     <div className="page-container">
       {/* Header */}
       <div className="page-header">
-        <h1>Gestion des utilisateurs de l'entreprise</h1>
+        <h1>Gestion des auditeurs</h1>
         <div className="header-actions">
           <button 
             className="btn-primary"
             onClick={() => setShowCreateModal(true)}
           >
             <Plus size={18} />
-            Ajouter un utilisateur
+            Ajouter un auditeur
           </button>
         </div>
       </div>
@@ -250,7 +292,7 @@ const ManageUsers: React.FC = () => {
               type="text" 
               placeholder="Rechercher par nom, email..." 
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target. value)}
               onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
             />
             {searchTerm && (
@@ -266,7 +308,7 @@ const ManageUsers: React.FC = () => {
             )}
           </div>
           <button 
-            className={`btn-filter ${showFilters ? 'active' : ''}`}
+            className={`btn-filter ${showFilters ?  'active' : ''}`}
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter size={18} />
@@ -286,14 +328,27 @@ const ManageUsers: React.FC = () => {
             
             <div className="filters-grid">
               <div className="form-group">
-                <label>Rôle</label>
+                <label>Trier par nom</label>
                 <select 
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
+                  value={nameSort}
+                  onChange={(e) => setNameSort(e.target.value)}
                 >
-                  {uniqueRoles.map(role => (
-                    <option key={role} value={role}>
-                      {role === 'Tous' ? 'Tous les rôles' : (roleLabelMap[role] || role)}
+                  {nameSortOptions.map(option => (
+                    <option key={option. value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Trier par date de création</label>
+                <select 
+                  value={dateSort}
+                  onChange={(e) => setDateSort(e.target.value)}
+                >
+                  {dateSortOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option. label}
                     </option>
                   ))}
                 </select>
@@ -312,13 +367,13 @@ const ManageUsers: React.FC = () => {
       {/* Results */}
       <div className="results-section">
         <div className="results-info">
-          {totalCount > 0 ? `${totalCount} utilisateur${totalCount > 1 ? 's' : ''} trouvé${totalCount > 1 ? 's' : ''}` : 'Aucun résultat'}
+          {totalCount > 0 ?  `${totalCount} auditeur${totalCount > 1 ? 's' : ''} trouvé${totalCount > 1 ? 's' : ''}` : 'Aucun résultat'}
         </div>
         
-        {loading ? (
+        {loading ?  (
           <div className="loading-state">
             <div className="spinner"></div>
-            <p>Chargement...</p>
+            <p>Chargement... </p>
           </div>
         ) : error ? (
           <div className="error-state">
@@ -326,7 +381,7 @@ const ManageUsers: React.FC = () => {
           </div>
         ) : users.length === 0 ? (
           <div className="empty-state">
-            <p>Aucun utilisateur trouvé. Créez votre premier utilisateur pour commencer.</p>
+            <p>Aucun auditeur trouvé.  Créez votre premier auditeur pour commencer.</p>
           </div>
         ) : (
           <>
@@ -343,13 +398,13 @@ const ManageUsers: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(user => (
+                  {users. map(user => (
                     <tr key={user.userId}>
                       <td>{user.name}</td>
                       <td>{user.email}</td>
                       <td>{user.phoneNumber || '-'}</td>
                       <td>
-                        <span className={`status-badge role-${user.role.toLowerCase()}`}>
+                        <span className={`status-badge role-${user.role. toLowerCase()}`}>
                           {roleLabelMap[user.role] || user.role}
                         </span>
                       </td>
@@ -422,18 +477,18 @@ const ManageUsers: React.FC = () => {
         )}
       </div>
       
-      {/* Create User Modal */}
+      {/* Create Auditor Modal */}
       <Modal 
         isOpen={showCreateModal} 
         onClose={() => setShowCreateModal(false)} 
-        title="Créer un nouvel utilisateur"
+        title="Créer un nouvel auditeur"
         footer={
           <>
             <button className="btn-secondary" onClick={() => setShowCreateModal(false)}>
               Annuler
             </button>
             <button className="btn-primary" type="submit" form="createForm">
-              Créer un utilisateur
+              Créer un auditeur
             </button>
           </>
         }
@@ -445,7 +500,7 @@ const ManageUsers: React.FC = () => {
               type="text"
               placeholder="Nom complet"
               value={createForm.name}
-              onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
+              onChange={(e) => setCreateForm({...createForm, name: e. target.value})}
               required
             />
           </div>
@@ -455,7 +510,7 @@ const ManageUsers: React.FC = () => {
               type="email"
               placeholder="Adresse email"
               value={createForm.email}
-              onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
+              onChange={(e) => setCreateForm({... createForm, email: e.target.value})}
               required
             />
           </div>
@@ -474,39 +529,25 @@ const ManageUsers: React.FC = () => {
               type="password"
               placeholder="Mot de passe"
               value={createForm.password}
-              onChange={(e) => setCreateForm({...createForm, password: e.target.value})}
+              onChange={(e) => setCreateForm({... createForm, password: e.target.value})}
               required
             />
-          </div>
-          <div className="form-group">
-            <label>Rôle</label>
-            <select
-              value={createForm.role}
-              onChange={(e) => setCreateForm({...createForm, role: e.target.value})}
-              required
-            >
-              {availableRoles.map(role => (
-                <option key={role} value={role}>
-                  {roleLabelMap[role] || role}
-                </option>
-              ))}
-            </select>
           </div>
         </form>
       </Modal>
 
-      {/* Edit User Modal */}
+      {/* Edit Auditor Modal */}
       <Modal 
         isOpen={showEditModal} 
         onClose={() => setShowEditModal(false)} 
-        title="Modifier l'utilisateur"
+        title="Modifier l'auditeur"
         footer={
           <>
             <button className="btn-secondary" onClick={() => setShowEditModal(false)}>
               Annuler
             </button>
             <button className="btn-primary" type="submit" form="editForm">
-              Mettre à jour l'utilisateur
+              Mettre à jour l'auditeur
             </button>
           </>
         }
@@ -518,7 +559,7 @@ const ManageUsers: React.FC = () => {
               type="text"
               placeholder="Nom complet"
               value={editForm.name || ''}
-              onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+              onChange={(e) => setEditForm({...editForm, name: e. target.value})}
               required
             />
           </div>
@@ -541,28 +582,14 @@ const ManageUsers: React.FC = () => {
               required
             />
           </div>
-          <div className="form-group">
-            <label>Rôle</label>
-            <select
-              value={editForm.role || ''}
-              onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-              required
-            >
-              {availableRoles.map(role => (
-                <option key={role} value={role}>
-                  {roleLabelMap[role] || role}
-                </option>
-              ))}
-            </select>
-          </div>
         </form>
       </Modal>
 
-      {/* Delete User Modal */}
+      {/* Delete Auditor Modal */}
       <Modal 
         isOpen={showDeleteModal} 
         onClose={() => setShowDeleteModal(false)} 
-        title="Supprimer l'utilisateur"
+        title="Supprimer l'auditeur"
         footer={
           <>
             <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
@@ -576,7 +603,7 @@ const ManageUsers: React.FC = () => {
         size="sm"
       >
         <div className="delete-confirmation">
-          <p>Êtes-vous sûr de vouloir supprimer <strong>{selectedUser?.name}</strong> ?</p>
+          <p>Êtes-vous sûr de vouloir supprimer l'auditeur <strong>{selectedUser?.name}</strong> ?</p>
           <p className="warning-text">Cette action est irréversible.</p>
         </div>
       </Modal>

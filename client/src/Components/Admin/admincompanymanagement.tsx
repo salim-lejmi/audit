@@ -32,6 +32,7 @@ interface UpdateCompanyForm {
 
 const AdminCompanyManagement: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
@@ -39,6 +40,9 @@ const AdminCompanyManagement: React.FC = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Tous');
+  const [industryFilter, setIndustryFilter] = useState('Tous');
+  const [nameSort, setNameSort] = useState('none');
+  const [dateSort, setDateSort] = useState('none');
   const [showFilters, setShowFilters] = useState(false);
 
   const [editForm, setEditForm] = useState<UpdateCompanyForm>({
@@ -49,15 +53,58 @@ const AdminCompanyManagement: React.FC = () => {
 
   const availableStatuses = ['En attente', 'Approuvé', 'Rejeté'];
 
+  const nameSortOptions = [
+    { value: 'none', label: 'Aucun tri' },
+    { value: 'asc', label: 'A → Z' },
+    { value: 'desc', label: 'Z → A' }
+  ];
+
+  const dateSortOptions = [
+    { value: 'none', label: 'Aucun tri' },
+    { value: 'asc', label: 'Plus ancien → Plus récent' },
+    { value: 'desc', label: 'Plus récent → Plus ancien' }
+  ];
+
   useEffect(() => {
     fetchCompanies();
   }, []);
 
+  const sortCompaniesByName = (companiesToSort: Company[], sortOrder: string): Company[] => {
+    if (sortOrder === 'none') return companiesToSort;
+    
+    return [... companiesToSort]. sort((a, b) => {
+      const nameA = a.companyName. toLowerCase();
+      const nameB = b. companyName.toLowerCase();
+      
+      const comparison = nameA.localeCompare(nameB, 'fr', { sensitivity: 'base' });
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  };
+
+  const sortCompaniesByDate = (companiesToSort: Company[], sortOrder: string): Company[] => {
+    if (sortOrder === 'none') return companiesToSort;
+    
+    return [...companiesToSort].sort((a, b) => {
+      if (! a.createdAt && !b.createdAt) return 0;
+      if (! a.createdAt) return 1;
+      if (!b. createdAt) return -1;
+      
+      const dateA = new Date(a.createdAt). getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      
+      const comparison = dateA - dateB;
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  };
+
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/admin/companies/detailed');
+      const response = await axios. get('/api/admin/companies/detailed');
       setCompanies(response.data);
+      setFilteredCompanies(response.data);
       setLoading(false);
     } catch {
       setError('Échec du chargement des entreprises');
@@ -70,7 +117,7 @@ const AdminCompanyManagement: React.FC = () => {
     if (!selectedCompany) return;
     
     try {
-      await axios.put(`/api/admin/companies/${selectedCompany.companyId}`, editForm);
+      await axios. put(`/api/admin/companies/${selectedCompany.companyId}`, editForm);
       setShowEditModal(false);
       fetchCompanies();
     } catch {
@@ -82,13 +129,13 @@ const AdminCompanyManagement: React.FC = () => {
     if (!selectedCompany) return;
     
     try {
-      const response = await axios.delete(`/api/admin/companies/${selectedCompany.companyId}`);
+      const response = await axios. delete(`/api/admin/companies/${selectedCompany.companyId}`);
       setShowDeleteModal(false);
       fetchCompanies();
       
-      if (response.data.deletedCounts) {
-        const counts = response.data.deletedCounts;
-        alert(`Entreprise supprimée avec succès !\nSupprimé : ${counts.users} utilisateurs, ${counts.texts} textes, ${counts.actions} actions`);
+      if (response.data. deletedCounts) {
+        const counts = response.data. deletedCounts;
+        alert(`Entreprise supprimée avec succès !\nSupprimé : ${counts.users} utilisateurs, ${counts.texts} textes, ${counts. actions} actions`);
       }
     } catch {
       setError('Échec de la suppression de l\'entreprise');
@@ -117,28 +164,40 @@ const AdminCompanyManagement: React.FC = () => {
   };
 
   const applyFilters = () => {
-    fetchCompanies();
+    let result = companies. filter(company => {
+      const matchesSearch = 
+        company.companyName.toLowerCase(). includes(searchTerm.toLowerCase()) || 
+        company. industry.toLowerCase().includes(searchTerm. toLowerCase()) ||
+        company. subscriptionManagerName?. toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company. subscriptionManagerEmail?. toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'Tous' || company. status === statusFilter;
+      const matchesIndustry = industryFilter === 'Tous' || company.industry === industryFilter;
+      
+      return matchesSearch && matchesStatus && matchesIndustry;
+    });
+
+    // Apply name sorting
+    result = sortCompaniesByName(result, nameSort);
+    
+    // Apply date sorting (will override name sort if both are set)
+    result = sortCompaniesByDate(result, dateSort);
+
+    setFilteredCompanies(result);
   };
 
   const resetFilters = () => {
     setSearchTerm('');
     setStatusFilter('Tous');
-    fetchCompanies();
+    setIndustryFilter('Tous');
+    setNameSort('none');
+    setDateSort('none');
+    setFilteredCompanies(companies);
   };
 
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = 
-      company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      company.industry.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.subscriptionManagerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.subscriptionManagerEmail?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'Tous' || company.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-
-  const uniqueStatuses = ['Tous', ...new Set(companies.map(company => company.status))];
+  // Get unique industries for the filter dropdown
+  const uniqueIndustries = ['Tous', ...new Set(companies.map(company => company.industry). filter(Boolean))];
+  const uniqueStatuses = ['Tous', ...new Set(companies.map(company => company. status))];
 
   const editModalFooter = (
     <>
@@ -186,7 +245,6 @@ const AdminCompanyManagement: React.FC = () => {
                 className="search-clear" 
                 onClick={() => {
                   setSearchTerm('');
-                  applyFilters();
                 }}
               >
                 ×
@@ -214,13 +272,57 @@ const AdminCompanyManagement: React.FC = () => {
             
             <div className="filters-grid">
               <div className="form-group">
+                <label>Trier par nom</label>
+                <select 
+                  value={nameSort}
+                  onChange={(e) => setNameSort(e.target.value)}
+                >
+                  {nameSortOptions. map(option => (
+                    <option key={option. value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Trier par date de création</label>
+                <select 
+                  value={dateSort}
+                  onChange={(e) => setDateSort(e.target.value)}
+                >
+                  {dateSortOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option. label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Secteur</label>
+                <select 
+                  value={industryFilter}
+                  onChange={(e) => setIndustryFilter(e.target.value)}
+                >
+                  {uniqueIndustries.map(industry => (
+                    <option key={industry} value={industry}>
+                      {industry === 'Tous' ? 'Tous les secteurs' : industry}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
                 <label>Statut</label>
                 <select 
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                  {uniqueStatuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
+                  {uniqueStatuses. map(status => (
+                    <option key={status} value={status}>
+                      {status === 'Tous' ? 'Tous les statuts' : status}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -238,21 +340,21 @@ const AdminCompanyManagement: React.FC = () => {
       {/* Results */}
       <div className="results-section">
         <div className="results-info">
-          {companies.length > 0 ? `${companies.length} entreprise${companies.length > 1 ? 's' : ''} trouvée${companies.length > 1 ? 's' : ''}` : 'Aucun résultat'}
+          {filteredCompanies. length > 0 ?  `${filteredCompanies.length} entreprise${filteredCompanies.length > 1 ? 's' : ''} trouvée${filteredCompanies.length > 1 ? 's' : ''}` : 'Aucun résultat'}
         </div>
         
-        {loading ? (
+        {loading ?  (
           <div className="loading-state">
             <div className="spinner"></div>
-            <p>Chargement des entreprises...</p>
+            <p>Chargement des entreprises... </p>
           </div>
         ) : error ? (
           <div className="error-state">
             <p>{error}</p>
           </div>
-        ) : companies.length === 0 ? (
+        ) : filteredCompanies. length === 0 ? (
           <div className="empty-state">
-            <p>Aucune entreprise trouvée.</p>
+            <p>Aucune entreprise trouvée. </p>
           </div>
         ) : (
           <div className="table-container">
@@ -296,9 +398,14 @@ const AdminCompanyManagement: React.FC = () => {
                       <span className="badge bg-info">{company.totalTexts}</span>
                     </td>
                     <td>
-                      <span className="badge bg-warning">{company.totalActions}</span>
+                      <span className="badge bg-warning">{company. totalActions}</span>
                     </td>
-                    <td>{new Date(company.createdAt).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                      {company.createdAt ?  
+                        new Date(company.createdAt).toLocaleDateString('fr-FR') : 
+                        <span className="badge bg-secondary">En attente</span>
+                      }
+                    </td>
                     <td>
                       <button 
                         className="btn-action btn-delete" 
@@ -325,7 +432,7 @@ const AdminCompanyManagement: React.FC = () => {
       >
         <Form id="editForm" onSubmit={handleEditSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Nom de l'entreprise</Form.Label>
+            <Form.Label>Nom de l'entreprise</Form. Label>
             <Form.Control
               type="text"
               placeholder="Nom de l'entreprise"
@@ -343,19 +450,19 @@ const AdminCompanyManagement: React.FC = () => {
               onChange={(e) => setEditForm({...editForm, industry: e.target.value})}
               required
             />
-          </Form.Group>
+          </Form. Group>
           <Form.Group className="mb-3">
             <Form.Label>Statut</Form.Label>
             <Form.Select
               value={editForm.status}
-              onChange={(e) => setEditForm({...editForm, status: e.target.value})}
+              onChange={(e) => setEditForm({...editForm, status: e.target. value})}
               required
             >
               {availableStatuses.map(status => (
                 <option key={status} value={status}>{status}</option>
               ))}
             </Form.Select>
-          </Form.Group>
+          </Form. Group>
         </Form>
       </Modal>
 

@@ -179,7 +179,7 @@ public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request
     }
 
     // Check if role is valid
-    var validRoles = new[] { "User", "Auditor", "Manager" };
+    var validRoles = new[] {"Auditor"};
     if (!validRoles.Contains(request.Role))
     {
         return BadRequest(new { message = "Invalid role" });
@@ -271,7 +271,7 @@ private string GenerateEmailVerificationToken()
             // Check if role is valid
             if (!string.IsNullOrEmpty(request.Role))
             {
-                var validRoles = new[] { "User", "Auditor", "Manager", "SubscriptionManager" };
+                var validRoles = new[] { "Auditor","SubscriptionManager" };
                 if (!validRoles.Contains(request.Role))
                 {
                     return BadRequest(new { message = "Invalid role" });
@@ -432,7 +432,7 @@ public async Task<IActionResult> DeleteUser(int userId)
             }
 
             // Check if role is valid
-            var validRoles = new[] { "User", "Auditor", "Manager" };
+            var validRoles = new[] { "Auditor" };
             if (!validRoles.Contains(request.Role))
             {
                 return BadRequest(new { message = "Invalid role" });

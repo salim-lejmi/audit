@@ -33,6 +33,7 @@ interface ActionTip {
 const UserDashboard: React.FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [actionTips, setActionTips] = useState<ActionTip[]>([]);
+  const [totalRevues, setTotalRevues] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [loadingTips, setLoadingTips] = useState(false);
@@ -40,8 +41,13 @@ const UserDashboard: React.FC = () => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await axios.get('/api/company/user-dashboard-info');
-        setUserInfo(response.data);
+        const [userResponse, revuesResponse] = await Promise.all([
+          axios.get('/api/company/user-dashboard-info'),
+          axios.get('/api/revue')
+        ]);
+        
+        setUserInfo(userResponse.data);
+        setTotalRevues(revuesResponse.data.length || 0);
         setLoading(false);
         await fetchActionTips();
       } catch (err) {
@@ -94,15 +100,18 @@ const UserDashboard: React.FC = () => {
     if (!status) return 'pending';
     return status.toLowerCase();
   };
-
+const getStatusLabel = (status: string) => {
+  const statusMap: { [key: string]: string } = {
+    'approved': 'Approuvé',
+    'rejected': 'Rejeté',
+    'pending': 'En attente'
+  };
+  return statusMap[status?.toLowerCase()] || status;
+};
   const assignedActions = userInfo?.assignedActions || 0;
   const completedActions = userInfo?.completedActions || 0;
-  const pendingEvaluations = userInfo?.pendingEvaluations || 0;
-  const completionPercentage = assignedActions > 0
-    ? Math.round((completedActions / assignedActions) * 100)
-    : 0;
 
-  // Build auditor-oriented stat cards with unique links (or no link)
+  // Build user-oriented stat cards
   const statCards = useMemo(() => {
     const cards: {
       key: string;
@@ -114,31 +123,29 @@ const UserDashboard: React.FC = () => {
       className?: string;
     }[] = [];
 
-    // 1) Completion (only if there are assigned actions)
-    if (assignedActions > 0) {
-      cards.push({
-        key: 'completion',
-        title: "Taux d'Accomplissement",
-        value: `${completionPercentage}%`,
-        subtitle: `Basé sur ${assignedActions} actions`,
-        link: { to: '/user/action-plan', label: 'Voir mes actions' },
-        icon: 'fas fa-chart-line',
-        className: 'compliance',
-      });
+    // 1) Revues de Direction
+    cards.push({
+      key: 'revues',
+      title: 'Revues de Direction',
+      value: totalRevues,
+      subtitle: 'Revues enregistrées',
+      link: { to: '/user/revue', label: 'Consulter les revues' },
+      icon: 'fas fa-clipboard-list',
+      className: 'evaluations',
+    });
 
-      // 2) Action summary (counts) — links to a different page to avoid duplication
+    // 2) Action summary
+    if (assignedActions > 0) {
       cards.push({
         key: 'actions-summary',
         title: "Résumé des Actions",
         value: `${completedActions}/${assignedActions}`,
         subtitle: `${assignedActions - completedActions} en cours`,
-        // use a different sensible route to avoid duplicate link targets
-        link: { to: '/user/revue', label: "Revue des actions" },
+        link: { to: '/user/action-plan', label: "Voir mes actions" },
         icon: 'fas fa-tasks',
         className: 'actions',
       });
     } else {
-      // If none assigned, show informative card without duplicating links
       cards.push({
         key: 'no-actions',
         title: "Plans d'Action",
@@ -150,18 +157,7 @@ const UserDashboard: React.FC = () => {
       });
     }
 
-    // 3) Pending evaluations — always relevant to auditors
-    cards.push({
-      key: 'pending-evals',
-      title: 'Évaluations à Vérifier',
-      value: pendingEvaluations,
-      subtitle: `${completedActions} actions terminées`,
-      link: { to: '/user/compliance', label: 'Gérer les évaluations' },
-      icon: 'fas fa-clipboard-check',
-      className: 'evaluations',
-    });
-
-    // 4) AI tips count — no link (to avoid duplicating the action-plan target)
+    // 3) AI tips count
     if (actionTips && actionTips.length > 0) {
       cards.push({
         key: 'ai-tips',
@@ -174,19 +170,19 @@ const UserDashboard: React.FC = () => {
     }
 
     return cards;
-  }, [assignedActions, completedActions, pendingEvaluations, completionPercentage, actionTips]);
+  }, [assignedActions, completedActions, totalRevues, actionTips]);
 
   return (
     <section className="subscription-dashboard">
       <div className="dashboard-container">
         <div className="dashboard-header">
-  <div className="dashboard-title">
-    <h2>Tableau de Bord Utilisateur</h2>
-    <p>
-      {userInfo?.companyName
-        ? `Bienvenue, ${userInfo.userName} - ${userInfo.companyName}`
-        : 'Accédez aux ressources de votre tableau de bord'}
-    </p>
+          <div className="dashboard-title">
+            <h2>Tableau de Bord Utilisateur</h2>
+            <p>
+              {userInfo?.companyName
+                ? `Bienvenue, ${userInfo.userName} - ${userInfo.companyName}`
+                : 'Accédez aux ressources de votre tableau de bord'}
+            </p>
           </div>
         </div>
 
@@ -219,8 +215,7 @@ const UserDashboard: React.FC = () => {
                 <div className="info-item">
                   <span className="info-label">Statut :</span>
                   <span className={`status-badge ${getStatusClass(userInfo?.status || '')}`}>
-                    {userInfo?.status}
-                  </span>
+{getStatusLabel(userInfo?.status || '')}                  </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Membre Depuis :</span>
@@ -231,7 +226,7 @@ const UserDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Auditor stat cards (no Textes card, no duplicate links) */}
+        {/* User stat cards */}
         <div className="stats-container">
           {statCards.map(card => (
             <div key={card.key} className={`stat-card ${card.className || ''}`}>
@@ -252,7 +247,7 @@ const UserDashboard: React.FC = () => {
           ))}
         </div>
 
-        {/* AI-Powered Tips (kept as-is) */}
+        {/* AI-Powered Tips */}
         <div className="overview-card">
           <div className="card-header">
             <h5>
