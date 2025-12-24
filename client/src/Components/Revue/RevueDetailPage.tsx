@@ -128,8 +128,14 @@ const RevueDetailPage: React.FC = () => {
     verifyAuth();
     fetchReview();
     fetchTexts();
+    
   }, [id]);
-
+  
+useEffect(() => {
+  if (showLegalTextModal || showRequirementModal || showActionModal || showStakeholderModal) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}, [showLegalTextModal, showRequirementModal, showActionModal, showStakeholderModal]);
 const getStatusDisplay = (status: string) => {
   const displayMap:  { [key: string]: string } = {
     'Draft': 'Brouillon',

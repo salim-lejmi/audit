@@ -1,8 +1,9 @@
-Flask==2.3.3
-Flask-CORS==4.0.0
-google-generativeai==0.3.2
-python-dotenv==1.0.0
-requests==2.31.0
-spacy==3.7.2
-numpy==1.26.4
-scikit-learn==1.3.2 
+flask
+flask-cors
+google-generativeai
+python-dotenv
+spacy
+numpy
+scikit-learn
+textblob
+textblob-fr

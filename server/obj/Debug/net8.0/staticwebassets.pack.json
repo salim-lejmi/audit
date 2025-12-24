@@ -69,6 +69,42 @@
       "PackagePath": "staticwebassets\\pdfs\\revue_23_20250730_002538.pdf"
     },
     {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_23_20251223_222633.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_23_20251223_222633.pdf"
+    },
+    {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_23_20251223_222650.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_23_20251223_222650.pdf"
+    },
+    {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_23_20251223_222651.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_23_20251223_222651.pdf"
+    },
+    {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_23_20251224_102715.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_23_20251224_102715.pdf"
+    },
+    {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_26_20251223_221353.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_26_20251223_221353.pdf"
+    },
+    {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_26_20251223_221354.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_26_20251223_221354.pdf"
+    },
+    {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_26_20251223_221422.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_26_20251223_221422.pdf"
+    },
+    {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_28_20251224_083320.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_28_20251224_083320.pdf"
+    },
+    {
+      "Id": "C:\\Users\\salim\\Documents\\audit\\server\\wwwroot\\pdfs\\revue_28_20251224_083323.pdf",
+      "PackagePath": "staticwebassets\\pdfs\\revue_28_20251224_083323.pdf"
+    },
+    {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.server.props",
       "PackagePath": "build\\server.props"
     },
